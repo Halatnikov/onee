@@ -1,5 +1,5 @@
 
-version = "0.0.1-1" -- pre-alpha
+version = "0.0.1-2" -- pre-alpha
 
 --nest = require("src/libs/3ds-nest"):init({mode = "ctr", scale = 1, emulateJoystick = false})
 

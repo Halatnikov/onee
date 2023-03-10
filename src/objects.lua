@@ -5,13 +5,27 @@ instances = {}
 assets = {}
 sprites = {}
 
+function instances_main() -- MAIN UPDATE LOOP --
+	for k,v in pairs(instances) do
+		if type(v) ~= "function" then
+		
+			-- update all instances
+			if instances[k].update and instances[k].active then instances[k].update(k) end
+			
+			-- animate the instances
+			if instances[k].animation then instances.animate(k) end
+			
+		end
+	end
+end
+
 --------------------------------------------------------------- INSTANCES
 
 function instances.draw_all() -- MAIN DRAW LOOP --
 	for k,v in pairs(instances) do
 		if type(v) ~= "function" then
-			instances.draw(k)
 			if instances[k].draw then instances[k].draw(k) end
+			instances.draw(k)
 		end
 	end
 end
@@ -28,13 +42,24 @@ function instances.draw(id) -- DRAW INSTANCE --
 	local scalex = instances[id].scalex or 1
 	local scaley = instances[id].scaley or 1
 	
-	if objects[object].sprite then -- instance is of a sprite
+	local rgb = instances[id].rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
+	local opacity = instances[id].opacity or 1
+	love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+	
+	if objects[object].sprite then -- SPRITE
 		local sprite = objects[object].sprite
 		local anim = instances[id].animation.name
 		local frame = instances[id].animation.frame
 		
 		local frame_x = sprites[sprite].animations[anim].frames[frame].x or 0
 		local frame_y = sprites[sprite].animations[anim].frames[frame].y or 0
+		
+		if instances[id].width then
+			scalex = instances[id].width / sprites[sprite].animations[anim].frames[frame].width
+		end
+		if instances[id].height then
+			scaley = instances[id].height / sprites[sprite].animations[anim].frames[frame].height
+		end
 	
 		local image
 		if not sprites[sprite].animations[anim].anim then
@@ -43,11 +68,11 @@ function instances.draw(id) -- DRAW INSTANCE --
 			image = assets[sprite][sprites[sprite].animations[anim].anim][frame]
 		end
 		
-		if not sprites[sprite].tiled then
+		if not sprites[sprite].tiled then -- REGULAR SPRITE
 			love.graphics.draw(image, x, y, angle, scalex, scaley, frame_x, frame_y)
 		end
 		
-		if sprites[sprite].tiled then -- tiled sprite
+		if sprites[sprite].tiled then -- TILED SPRITE
 			local quad = instances[id].quad
 			
 			local qref_width = sprites[sprite].animations[anim].frames[frame].width
@@ -65,18 +90,55 @@ function instances.draw(id) -- DRAW INSTANCE --
 	
 end
 
-function instances_main() -- MAIN UPDATE LOOP --
-	for k,v in pairs(instances) do
-		if type(v) ~= "function" then
-		
-			-- update all instances
-			if instances[k].update and instances[k].active then instances[k].update(k) end
-			
-			-- animate the instances
-			if instances[k].animation then instances.animate(k) end
-			
-		end
+function instances.animate(id) -- ANIMATE INSTANCE --
+	
+	local object = instances[id].object
+	
+	local anim = instances[id].animation -- this is the INSTANCE, what's being WRITTEN
+	local data							 -- this is the SPRITE, what's being READ
+
+	if objects[object].sprite then -- instance is of a sprite
+		data = sprites[objects[object].sprite].animations[anim.name]
 	end
+	
+	anim.timer = anim.timer + dt
+	
+	local speed = anim.speed or data.speed or 1
+	
+	-- animation was changed from outside
+	if anim.current ~= anim.name then
+		anim.speed = nil
+		
+		anim.current = anim.name
+	
+		anim.timer = 0
+		anim.seq = "seq_start"
+		anim.seq_index = 1
+		anim.frame = data[anim.seq][anim.seq_index]
+	end
+	
+	-- frame was changed from outside
+	if data[anim.seq][anim.seq_index] ~= anim.frame then
+		anim.seq_index = table.find(data[anim.seq], anim.frame)
+		
+		anim.timer = 0
+	end
+	
+	-- advance frame
+	if anim.timer > 1 / (speed / data.frames[anim.frame].speed) then
+		anim.timer = 0
+		
+		anim.seq_index = anim.seq_index + 1
+		if anim.seq_index > #data[anim.seq] then -- loop
+			anim.seq = "seq"
+			anim.seq_index = 1
+		end
+		anim.frame = data[anim.seq][anim.seq_index]
+		
+	end
+	
+	instances[id].animation = anim -- done
+	
 end
 
 function instances.new(object, params) -- CREATE NEW INSTANCE --
@@ -85,7 +147,7 @@ function instances.new(object, params) -- CREATE NEW INSTANCE --
 
 	objects[object].instances = objects[object].instances + 1
 
-	local id = object.."_"..string.random(8)
+	local id = object.."_"..string.random(6)
 	
 	local instance = {}
 	
@@ -156,53 +218,6 @@ function instances.get(object, string) -- GET ALL INSTANCE IDs OF AN OBJECT --
 	return t
 end
 
-function instances.animate(id) -- ANIMATE INSTANCE --
-	
-	local object = instances[id].object
-	
-	local anim = instances[id].animation
-	local data
-
-	if objects[object].sprite then -- instance is of a sprite
-		data = sprites[objects[object].sprite].animations[anim.name]
-	end
-	
-	anim.timer = anim.timer + dt
-	
-	-- animation was changed from outside
-	if anim.current ~= anim.name then
-		anim.current = anim.name
-	
-		anim.timer = 0
-		anim.seq = "seq_start"
-		anim.seq_index = 1
-		anim.frame = data[anim.seq][anim.seq_index]
-	end
-	
-	-- frame was changed from outside
-	if data[anim.seq][anim.seq_index] ~= anim.frame then
-		anim.seq_index = table.find(data[anim.seq], anim.frame)
-		
-		anim.timer = 0
-	end
-	
-	-- advance frame
-	if anim.timer > 1/(data.speed/data.frames[anim.frame].speed) then
-		anim.timer = 0
-		
-		anim.seq_index = anim.seq_index + 1
-		if anim.seq_index > #data[anim.seq] then -- loop
-			anim.seq = "seq"
-			anim.seq_index = 1
-		end
-		anim.frame = data[anim.seq][anim.seq_index]
-		
-	end
-	
-	instances[id].animation = anim
-	
-end
-
 --------------------------------------------------------------- OBJECTS
 
 function objects.new(name, image) -- CREATE NEW OBJECT --
@@ -214,7 +229,7 @@ function objects.new(name, image) -- CREATE NEW OBJECT --
 	local object = {}
 	
 	if love.filesystem.getInfo("objects/"..name..".lua") then 
-		object = require("objects/"..name) -- add functions to object if object.lua exists
+		object = require("objects/"..name) -- add script to object if object.lua exists
 	end
 	
 	object.instances = 0

@@ -18,12 +18,10 @@ function nuklear_ui_debug()
 		
 		gui:tree("tab","Player", function ()
 			gui:layoutRow('dynamic', 16, 1)
-			if player.x_speed then
 			gui:label("XY "..math.roundtodp(instances[player_inst].x,2).." "..math.roundtodp(instances[player_inst].y,2))
 			gui:label("Speed "..math.roundtodp(player.x_speed,2).." "..math.roundtodp(player.y_speed,2))
 			gui:label("Direction "..player.facing.." Ground "..tostring(player.ground))
 			gui:label("Animation "..player.animation)
-			end
 		end)
 		
 		gui:tree("tab","Input", function ()

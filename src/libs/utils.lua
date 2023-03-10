@@ -19,7 +19,7 @@ function math.roundtodp(var,dec)
 end
 
 function math.flipsign(var)
-	if var >= 0 then return -var else math.abs(var) end
+	if var >= 0 then return -var else return math.abs(var) end
 end
 
 function table.find(table, var)
@@ -32,13 +32,13 @@ function string.random(length)
 	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 	local t = {}; local r
 	for i=1, length do
-		r = math.random(1, #charset)
+		r = love.math.random(1, #charset)
 		table.insert(t, string.sub(charset, r, r))
 	end
 	return table.concat(t)
 end
 
--- % is the escape character, because this thing uses regex
+-- % is the escape character, because this thing uses patterns (not regex funnily enough)
 function string.tokenize(string, sep, index) -- what the hell is this
 	local string = string; local t = {}
 	for i in string.gmatch(string, "[^"..sep..sep.."]+") do -- replace ",," with ", ," so it doesn't skip it

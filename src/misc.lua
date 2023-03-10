@@ -23,7 +23,7 @@ function debug_main()
 	if not n3ds then love.setDeprecationOutput(true) end
 	nuklear_open.debug = true
 	function love.keypressed_debug(k)
-		if k == "lctrl" then end -- do whatever
+		if k == "lctrl" then  end -- do whatever
 		if k == "rctrl" then assets.clear() objects.clear() end -- do whatever 2
 		if k == "ralt" then instances.clear("yorb") end -- do whatever 3???
 		
@@ -40,6 +40,7 @@ function debug_main()
 							assets.sprite("skins/"..skin, "skin")
 							objects.new("player","skin")
 							instances.new("player") 
+							--instances.new("player",{x=32,y=32})
 							
 							assets.sprite("objects/yorb", "yorb")
 							objects.new("yorb","yorb")
@@ -48,6 +49,9 @@ function debug_main()
 							assets.sprite("objects/example_sprite_tiled", "example_sprite_tiled")
 							objects.new("example_sprite_tiled","example_sprite_tiled")
 							instances.new("example_sprite_tiled",{x=64,y=64,qwidth=112,qheight=76})
+							
+							objects.new("example_object")
+							--for i=1,8 do instances.new("example_object",{x=32*i,y=32}) end
 							
 	end
 end

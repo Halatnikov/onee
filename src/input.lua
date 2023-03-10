@@ -5,7 +5,9 @@ input = {
 	mouse_wheel = 0
 }
 
+-- initialize the input table
 for key in pairs(config.input.keyboard) do 
+	input[key] = false
 	input.time[key] = 0
 end
 
@@ -85,27 +87,46 @@ function input_main()
 	end
 	
 	if n3ds then
-		function love.gamepadpressed(joystick,button)
-			if button == "dpleft" then input.left = true end
-			if button == "dpright" then input.right = true end
-			if button == "a" then input.a = true end
-			
+		function love.gamepadpressed(joystick,button)	
+			for but in pairs(config.input.gamepad) do
+				if config.input.gamepad[but].b then
+					for i in pairs(config.input.gamepad[but].b) do
+						if button == config.input.gamepad[but].b[i] then input[but] = true end
+					end
+				end
+			end
 		end
-		
 		function love.gamepadreleased(joystick,button)
-			if button == "dpleft" then input.left = false end
-			if button == "dpright" then input.right = false end
-			if button == "a" then input.a = false end
-			
+			for but in pairs(config.input.gamepad) do
+				if config.input.gamepad[but].b then
+					for i in pairs(config.input.gamepad[but].b) do
+						if button == config.input.gamepad[but].b[i] then input[but] = false end
+					end
+				end
+			end
 		end
-		
 		function love.gamepadaxis(joystick,axis,value)
-			if axis == 1 then
+			if axis == "leftx" then
 				if value == 0 then input.left = false; input.right = false end
 				if value > 0 then input.right = true end
 				if value < 0 then input.left = true end
 			end
-			
+			if axis == "lefty" then
+				if value == 0 then input.up = false; input.down = false end
+				if value > 0 then input.down = true end
+				if value < 0 then input.up = true end
+			end
+			for but in pairs(config.input.gamepad) do
+				if config.input.gamepad[but].axis then
+					for i in pairs(config.input.gamepad[but].axis) do
+					-- if axis == config.input.gamepad[but].axis[i][1] then
+						-- if math.sign(value) == config.input.gamepad[but].axis[i][2] then
+						
+						-- end
+					-- end
+					end
+				end
+			end
 		end
 	end
 	
