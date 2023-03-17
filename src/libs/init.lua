@@ -4,6 +4,7 @@ require("src/libs/utils")
 
 require("src/libs/tserial")
 json = require("src/libs/json")
+require("src/libs/photon")
 
 -- nuklear gui
 

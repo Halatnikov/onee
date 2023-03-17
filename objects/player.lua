@@ -30,7 +30,7 @@ function object.init(id)
 	
 	local startpos = instances[instances.get("startpos",true)]
 	
-	if startpos ~= nil then
+	if startpos then
 		instances[id].x = startpos.x
 		instances[id].y = startpos.y
 	else
@@ -47,7 +47,6 @@ function object.update(id)
 	instances[id].animation.name = player.animation
 	
 	instances[id].player = player
-	
 	
 end
 

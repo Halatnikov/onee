@@ -5,7 +5,7 @@ instances = {}
 assets = {}
 sprites = {}
 
-function instances_main() -- MAIN UPDATE LOOP --
+function instances_update() -- MAIN UPDATE LOOP --
 	for k,v in pairs(instances) do
 		if type(v) ~= "function" then
 		
@@ -19,16 +19,19 @@ function instances_main() -- MAIN UPDATE LOOP --
 	end
 end
 
---------------------------------------------------------------- INSTANCES
-
-function instances.draw_all() -- MAIN DRAW LOOP --
+function instances_draw() -- MAIN DRAW LOOP --
 	for k,v in pairs(instances) do
 		if type(v) ~= "function" then
+			
 			if instances[k].draw then instances[k].draw(k) end
+			
 			instances.draw(k)
+			
 		end
 	end
 end
+
+--------------------------------------------------------------- INSTANCES
 
 function instances.draw(id) -- DRAW INSTANCE --
 	
@@ -43,7 +46,8 @@ function instances.draw(id) -- DRAW INSTANCE --
 	local scaley = instances[id].scaley or 1
 	
 	local rgb = instances[id].rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
-	local opacity = instances[id].opacity or 1
+	local opacity = instances[id].opacity or 100; opacity = opacity/100
+	
 	love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 	
 	if objects[object].sprite then -- SPRITE
@@ -94,16 +98,16 @@ function instances.animate(id) -- ANIMATE INSTANCE --
 	
 	local object = instances[id].object
 	
+	if not objects[object].sprite then return end
+	
 	local anim = instances[id].animation -- this is the INSTANCE, what's being WRITTEN
 	local data							 -- this is the SPRITE, what's being READ
-
+	
 	if objects[object].sprite then -- instance is of a sprite
 		data = sprites[objects[object].sprite].animations[anim.name]
 	end
 	
 	anim.timer = anim.timer + dt
-	
-	local speed = anim.speed or data.speed or 1
 	
 	-- animation was changed from outside
 	if anim.current ~= anim.name then
@@ -123,6 +127,8 @@ function instances.animate(id) -- ANIMATE INSTANCE --
 		
 		anim.timer = 0
 	end
+	
+	local speed = anim.speed or data.speed or 0
 	
 	-- advance frame
 	if anim.timer > 1 / (speed / data.frames[anim.frame].speed) then

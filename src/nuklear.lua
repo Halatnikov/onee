@@ -39,7 +39,7 @@ function nuklear_ui_debug()
 			local renderer = {}; renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 			
 			gui:layoutRow('dynamic', 16, 1)
-			gui:label("Timer "..string.format("%.2f",timer_ms).." "..timer_frames.." "..string.format("%.2f",love.timer.getTime()))
+			gui:label("Timer "..string.format("%.2f",ms).." "..frames.." "..string.format("%.2f",love.timer.getTime()))
 			gui:label("dt "..string.format("%.4f",dt).." "..string.format("%.2f",1000*dt).."ms")
 			if gui:widgetIsHovered() then gui:tooltip('Textures and garbage collector') end
 			gui:label("RAM "..string.format("%.2f",stats.texturememory/1024/1024).."MB "..string.format("%.2f",collectgarbage("count")/1024).."MB")

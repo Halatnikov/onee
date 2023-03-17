@@ -1,5 +1,5 @@
 
-version = "0.0.1-2" -- pre-alpha
+version = "0.0.1-3" -- pre-alpha
 
 --nest = require("src/libs/3ds-nest"):init({mode = "ctr", scale = 1, emulateJoystick = false})
 
@@ -34,21 +34,23 @@ function love.update(dt)
 	
 	misc_main()
 	
-	instances_main()
+	instances_update()
+	
+	if photon then photon_update() end
 	
 end
 
 function love.draw(screen)
 	
 	if not n3ds then
-		instances.draw_all()
+		instances_draw()
 	
 		if nuklear then gui:draw() end -- nuklear gui draw
 	end
 	
 	if n3ds then
 		if screen ~= "bottom" then
-			instances.draw_all()
+			instances_draw()
 		end
 		if screen == "bottom" then
 			love.graphics.print("poopoo peepee 3d 2")

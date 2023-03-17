@@ -1,8 +1,8 @@
 
 player = {}
 
-timer_ms = 0 
-timer_frames = 0
+ms = 0 
+frames = 0
 
 function misc_main()
 	
@@ -10,8 +10,8 @@ function misc_main()
 	
 	dt = love.timer.getDelta()
 	fps = 1/dt
-	timer_ms = timer_ms + dt
-	timer_frames = timer_frames + 1
+	ms = ms + dt
+	frames = frames + 1
 	
 	player_inst = instances.get("player",true)
 	if player_inst then player = instances[player_inst].player end
@@ -23,14 +23,14 @@ function debug_main()
 	if not n3ds then love.setDeprecationOutput(true) end
 	nuklear_open.debug = true
 	function love.keypressed_debug(k)
-		if k == "lctrl" then  end -- do whatever
+		if k == "lctrl" then photon = require("src/photon") end -- do whatever
 		if k == "rctrl" then assets.clear() objects.clear() end -- do whatever 2
-		if k == "ralt" then instances.clear("yorb") end -- do whatever 3???
+		if k == "ralt" then print(string.tokenize("a,b,c","%,",2)) end -- do whatever 3???
 		
 		if k == "lshift" then instances[player_inst].x, instances[player_inst].y = love.mouse.getPosition() end
 		if k == "f2" then love.event.quit("restart") end
 	end
-	if timer_frames == 5 then
+	if frames == 5 then
 							
 							level.load("test")
 							

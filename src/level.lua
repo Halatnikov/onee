@@ -3,7 +3,7 @@ level = {
 	tiled = {map = {}, tilesets = {}, templates = {},}
 }
 
-skin = "earless"
+skin = "scruffy"
 
 function level.load(name)
 	
