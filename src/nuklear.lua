@@ -1,78 +1,136 @@
-nuklear_open = {}
+nuklear = {
+	open = {},
+	window = {},
+}
 
-function nuklear_gui()
-	gui:frameBegin()
-	
-	if nuklear_open.debug then nuklear_ui_debug() end
-
-	gui:frameEnd()
+-- init
+if love._os == "Windows" then 
+	ui = require("nuklear").newUI()
 end
 
-function nuklear_ui_debug()
-	
-	gui:window("v"..version, 500, 100, 300, 300,
-			'border', 'title', 'movable', 'scalable', 'minimizable', 'scrollbar', 'scroll auto hide', function ()
-		gui:layoutRow('dynamic', 16, 1)
+-- event redirection
+function nuklear.keypressed(key, scancode, isrepeat)
+	if not ui then return end
+	if ui:keypressed(key, scancode, isrepeat) then return end 
+end
+function love.keyreleased(key, scancode)
+	if not ui then return end
+	if ui:keyreleased(key, scancode) then return end
+end
+function nuklear.mousepressed(x, y, button, istouch, presses)
+	if not ui then return end
+	if ui:mousepressed(x, y, button, istouch, presses) then return end
+end
+function love.mousereleased(x, y, button, istouch, presses)
+	if not ui then return end
+	if ui:mousereleased(x, y, button, istouch, presses) then return end
+end
+function love.mousemoved(x, y, dx, dy, istouch)
+	if not ui then return end
+	if ui:mousemoved(x, y, dx, dy, istouch) then return end
+end
+function love.textinput(text)
+	if not ui then return end
+	if ui:textinput(text) then return end
+end
+function nuklear.wheelmoved(x, y)
+	if not ui then return end
+	if ui:wheelmoved(x, y) then return end
+end
+
+-- main loop
+function nuklear.update()
+	if not ui then return end
+	ui:frameBegin()
+		if nuklear.open.debug then nuklear.window.debug() end
+	ui:frameEnd()
+end
+function nuklear.draw()
+	if not ui then return end
+	ui:draw()
+end
+
+
+function nuklear.table(arg, caption, show_functions)
+	ui:tree("tab", caption,
+	function ()
+		for k,v in pairs(arg) do
+			if type(k) == "table" then nuklear.table(k, tostring(k), show_functions) end
+			if type(k) ~= "table" then
+				if not v then ui:label(tostring(k)) end
+				if v then
+					if type(v) == "table" then nuklear.table(v, tostring(k), show_functions) end
+					if type(v) ~= "table" then
+						if not show_functions then
+							if type(v) ~= "function" then nuklear.table_label(k,v) end
+						else
+							nuklear.table_label(k,v)
+						end
+					end
+				end
+			end
+		end
+	end)
+end
+
+function nuklear.table_label(k,v)
+	if type(v) == "userdata" then
+		local type = v:type()
+		if type == "Image" then
+			ui:layoutRow('dynamic', 32, 6)
+			ui:image(v)
+		end
+	end
+	if type(v) ~= "userdata" then ui:label(tostring(k)..": "..tostring(v)) end
+end
+
+
+function nuklear.window.debug()
+	ui:window("v"..version,
+		500, 100, 300, 300,
+		'border', 'title', 'movable', 'scalable', 'minimizable', 'scrollbar', 'scroll auto hide',
+	function ()
 		
-		gui:label("FPS "..love.timer.getFPS().." "..math.round(1/dt,2).." "..math.round(1000*love.timer.getAverageDelta(),2).."ms")
+		ui:layoutRow('dynamic', 16, 1)
 		
-		gui:tree("tab","Player", function ()
-			gui:layoutRow('dynamic', 16, 1)
-			gui:label("XY "..math.round(instances[player_inst].x,2).." "..math.round(instances[player_inst].y,2))
-			gui:label("Speed "..math.round(player.x_speed,2).." "..math.round(player.y_speed,2))
-			gui:label("Direction "..player.facing.." Ground "..tostring(player.ground))
-			gui:label("Animation "..player.animation)
-		end)
+		ui:label("FPS "..love.timer.getFPS().." "
+				..math.round(fps,2).." "
+				..math.round(1000*love.timer.getAverageDelta(),2).."ms")
 		
-		gui:tree("tab","Input", function ()
-			gui:layoutRow('dynamic', 16, 1)
-			gui:label("Mouse XY "..love.mouse.getX().." "..love.mouse.getY().." "..input.mouse_wheel)
-			gui:label("Input UDLR "..math.boolint(input.up).." "..math.boolint(input.down).." "..math.boolint(input.left).." "..math.boolint(input.right))
-			gui:label("Input ABS "..math.boolint(input.a).." "..math.boolint(input.b).." "..math.boolint(input.start))
-			gui:label("Input times UDLR "..input.time.up.." "..input.time.down.." "..input.time.left.." "..input.time.right)
-			gui:label("Input times ABS "..input.time.a.." "..input.time.b.." "..input.time.start)
-			gui:label("Input Mode "..input.mode)
-		end)
+		nuklear.table(_G, "Global variables", false)
 		
-		gui:tree("tab","Performance", function ()
+		ui:tree("tab","Performance",
+		function ()
 			local stats = love.graphics.getStats()
 			local renderer = {}; renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 			
-			gui:layoutRow('dynamic', 16, 1)
-			gui:label("Timer "..math.round(ms,2).." "..frames.." "..math.round(love.timer.getTime(),2))
-			gui:label("dt "..math.round(dt,4).." "..math.round(1000*dt,2).."ms")
-			if gui:widgetIsHovered() then gui:tooltip('Textures and garbage collector') end
-			gui:label("RAM "..math.round(stats.texturememory/1024/1024,2).."MB "..math.round(collectgarbage("count")/1024,2).."MB")
+			ui:layoutRow('dynamic', 16, 1)
+			ui:label("Timer "..math.round(ms,2).." "..frames.." "..math.round(love.timer.getTime(),2))
+			ui:label("dt "..math.round(dt,4).." "..math.round(1000*dt,2).."ms")
+			if ui:widgetIsHovered() then ui:tooltip('Textures and garbage collector') end
+			ui:label("RAM "..math.round(stats.texturememory/1024/1024,2).."MB "..math.round(collectgarbage("count")/1024,2).."MB")
 			
-			nuklear_add_table(love.graphics.getStats(),"love.graphics.getStats()")
-			nuklear_add_table(renderer,"love.graphics.getRendererInfo()")
-			nuklear_add_table(love.graphics.getSystemLimits(),"love.graphics.getSystemLimits()")
-			
+			nuklear.table(love.graphics.getStats(),"love.graphics.getStats()")
+			nuklear.table(renderer,"love.graphics.getRendererInfo()")
+			nuklear.table(love.graphics.getSystemLimits(),"love.graphics.getSystemLimits()")
 		end)
 		
-		nuklear_add_table(_G,"Global variables")
-		
-		nuklear_add_table(level,"level")
-		nuklear_add_table(assets,"assets")
-		nuklear_add_table(sprites,"sprites")
-		nuklear_add_table(objects,"objects")
-		nuklear_add_table(instances,"instances")
-		
-	end)
-	
-end
-
-function nuklear_add_table(t, name)
-	gui:tree("tab", name, function ()
-		for k,v in pairs(t) do
-			if type(k) ~= "table" then
-				if not v then gui:label(tostring(k)) end
-				if v then 
-					if type(v) ~= "table" and type(v) ~= "function" then gui:label(tostring(k)..": "..tostring(v)) end
-					if type(v) == "table" then nuklear_add_table(v, tostring(k)) end
-				end
+		ui:tree("tab","Input",
+		function ()
+			ui:layoutRow('dynamic', 16, 1)
+			ui:label("Input mode: "..input.mode)
+			ui:label("Mouse "..love.mouse.getX().." "..love.mouse.getY().." "..input.mouse_wheel)
+			for key in pairs(config.input.keyboard) do 
+				ui:label(key.."   "..math.boolint(input[key]).." "..input.time[key])
 			end
-			if type (k) == "table" then nuklear_add_table(k, tostring(k)) end
-		end
+		end)
+		
+		nuklear.table(scene, "Scene: "..scene.name, true)
+		nuklear.table(objects, "Objects: "..table.length(objects), true)
+		nuklear.table(instances, "Instances: "..table.length(instances), true)
+		
+		nuklear.table(assets, "Assets: "..table.length(assets), true)
+		nuklear.table(sprites, "Sprites: "..table.length(sprites), true)
+		
 	end)
 end

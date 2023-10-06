@@ -5,21 +5,21 @@ input = {
 	mouse_wheel = 0
 }
 
--- initialize the input table
+-- initialize the table
 for key in pairs(config.input.keyboard) do 
 	input[key] = false
 	input.time[key] = 0
 end
 
-function input_main()
-
--- begin loop
-	if not n3ds then
+-- main loop
+function input.update()
+	
+	-- begin loop
 	for key in pairs(input.time) do 
-		input[key] = false
+		input[key] = false -- reset key states
 	end
 	
--- keyboard mode
+	-- keyboard mode
 	for key in pairs(config.input.keyboard) do
 		-- keyboard keys
 		if config.input.keyboard[key].k then
@@ -28,7 +28,7 @@ function input_main()
 				input[key] = true
 			end
 		end
-		-- mouse buttons
+		-- mouse keytons
 		if config.input.keyboard[key].m then
 			if love.mouse.isDown(config.input.keyboard[key].m) then
 				input.mode = "keyboard"
@@ -37,117 +37,79 @@ function input_main()
 		end
 		-- mouse wheel
 		if config.input.keyboard[key].mw then
-			if math.sign(input.mouse_wheel) == config.input.keyboard[key].mw then
-				if math.abs(input.mouse_wheel) > 0 then 
-					input.mode = "keyboard"
-					input[key] = true 
-				end
+			if math.abs(input.mouse_wheel) > 0
+			and math.sign(input.mouse_wheel) == config.input.keyboard[key].mw then
+				input.mode = "keyboard"
+				input[key] = true 
 			end
 		end
 	end
 	
--- gamepad mode
-	if input.gamepads then -- loop through all connected gamepads
-		for p=1,#input.gamepads do
-			for but in pairs(config.input.gamepad) do
+	-- gamepad mode
+	if input.gamepads then
+		for p=1,#input.gamepads do -- loop through all connected gamepads
+			for key in pairs(config.input.gamepad) do
 				-- gamepad buttons
-				if config.input.gamepad[but].b then
-					if input.gamepads[p]:isGamepadDown(config.input.gamepad[but].b) then
+				if config.input.gamepad[key].b then
+					if input.gamepads[p]:isGamepadDown(config.input.gamepad[key].b) then
 						input.mode = "gamepad"
-						input[but] = true
+						input[key] = true
 					end
 				end
 				-- gamepad hats (dpad)
-				if config.input.gamepad[but].hat then
-					for i in pairs(config.input.gamepad[but].hat) do
-						if string.match(input.gamepads[p]:getHat(1),config.input.gamepad[but].hat[i]) then
+				if config.input.gamepad[key].hat then
+					for i in pairs(config.input.gamepad[key].hat) do
+						if string.match(input.gamepads[p]:getHat(1),config.input.gamepad[key].hat[i]) then
 							input.mode = "gamepad"
-							input[but] = true
+							input[key] = true
 						end
 					end
 				end
 				-- gamepad axis
-				if config.input.gamepad[but].axis then
-					for i in pairs(config.input.gamepad[but].axis) do
+				if config.input.gamepad[key].axis then
+					for i in pairs(config.input.gamepad[key].axis) do
 					
-						local axis = config.input.gamepad[but].axis[i][1]
-						local dir = config.input.gamepad[but].axis[i][2]	
+						local axis = config.input.gamepad[key].axis[i][1]
+						local dir = config.input.gamepad[key].axis[i][2]	
 					
-						if math.sign(input.gamepads[p]:getGamepadAxis(axis)) == dir then
-							if math.abs(input.gamepads[p]:getGamepadAxis(axis)) > config.input.gamepad_deadzone then 
-								input.mode = "gamepad"
-								input[but] = true 
-							end
+						if math.abs(input.gamepads[p]:getGamepadAxis(axis)) > config.input.gamepad_deadzone
+						and math.sign(input.gamepads[p]:getGamepadAxis(axis)) == dir then 
+							input.mode = "gamepad"
+							input[key] = true 
 						end
 					end
 				end
 			end
 		end
 	end
-	end
 	
-	if n3ds then
-		function love.gamepadpressed(joystick,button)	
-			for but in pairs(config.input.gamepad) do
-				if config.input.gamepad[but].b then
-					for i in pairs(config.input.gamepad[but].b) do
-						if button == config.input.gamepad[but].b[i] then input[but] = true end
-					end
-				end
-			end
-		end
-		function love.gamepadreleased(joystick,button)
-			for but in pairs(config.input.gamepad) do
-				if config.input.gamepad[but].b then
-					for i in pairs(config.input.gamepad[but].b) do
-						if button == config.input.gamepad[but].b[i] then input[but] = false end
-					end
-				end
-			end
-		end
-		function love.gamepadaxis(joystick,axis,value)
-			if axis == "leftx" then
-				if value == 0 then input.left = false; input.right = false end
-				if value > 0 then input.right = true end
-				if value < 0 then input.left = true end
-			end
-			if axis == "lefty" then
-				if value == 0 then input.up = false; input.down = false end
-				if value > 0 then input.down = true end
-				if value < 0 then input.up = true end
-			end
-			for but in pairs(config.input.gamepad) do
-				if config.input.gamepad[but].axis then
-					for i in pairs(config.input.gamepad[but].axis) do
-					-- if axis == config.input.gamepad[but].axis[i][1] then
-						-- if math.sign(value) == config.input.gamepad[but].axis[i][2] then
-						
-						-- end
-					-- end
-					end
-				end
-			end
-		end
-	end
 	
--- end loop
+	-- end loop
 	for key in pairs(input.time) do 
-		if input[key] == true then input.time[key] = input.time[key] + 1 else input.time[key] = 0 end
+		if input[key] == true then 
+			input.time[key] = input.time[key] + 1	-- key is held, count time
+		else
+			input.time[key] = 0						-- key was released
+		end
 	end
-	input.mouse_wheel = 0
+	input.mouse_wheel = 0 -- reset mouse wheel
 	
 end
 
-
+-- update gamepad list
 function love.joystickadded()
-	input.gamepads = love.joystick.getJoysticks() end
+	input.gamepads = love.joystick.getJoysticks()
+end
 function love.joystickremoved()
-	input.gamepads = love.joystick.getJoysticks() end
+	input.gamepads = love.joystick.getJoysticks()
+end
 
 -- press any key to switch modes
-function love.keypressed_input() input.mode = "keyboard" end
-function love.mousepressed_input() input.mode = "keyboard" end
-function love.wheelmoved_input(x,y) 
-	input.mouse_wheel = y; input.mode = "keyboard" end
-function love.joystickpressed(joystick) input.mode = "gamepad" end
-function love.joystickaxis(joystick) input.mode = "gamepad" end
+function input.keypressed() input.mode = "keyboard" end
+function input.mousepressed() input.mode = "keyboard" end
+function input.wheelmoved(x,y) 
+	input.mouse_wheel = y -- mouse wheel input
+	input.mode = "keyboard"
+end
+function love.joystickpressed() input.mode = "gamepad" end
+function love.joystickaxis() input.mode = "gamepad" end

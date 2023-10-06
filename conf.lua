@@ -1,15 +1,10 @@
 function love.conf(t)
-	t.window.title = "Onee"
+	t.window.title = "onee"
 	
 	t.window.vsync = 0
 	--t.window.resizable = true
 	
-	t.identity = "savedata"
-	t.appendidentity = true
 	t.version = "11.3"
-	
-	t.window.fullscreen = (love._os == "Android")
-	
 end
 
 debug_mode = true
@@ -17,17 +12,15 @@ debug_mode = true
 config = {
 	input = {
 		keyboard = {
-		 -- key = {k = {"z","x"}, m = {1,2}, mw = -1}
-			up = {k = {"up","w"}},
-			down = {k = {"down","s"}},
+			up = {k = {"up","w"}, mw = 1},
+			down = {k = {"down","s"}, mw = -1},
 			left = {k = {"left","a"}},
 			right = {k = {"right","d"}},
-			a = {k = {"z"}},
-			b = {k = {"x"}},
-			start = {k = {"return"}},
+			a = {k = {"z","space"}, m = {1}},
+			b = {k = {"x"}, m = {2}},
+			start = {k = {"return","escape"}},
 		},
 		gamepad = {
-		 -- but = {b = {"a","b"}, axis = {{"axis",-1},{"axis",1}}, hat = {"l","r"}},
 			up = {b = {"dpup"}, axis = {{"lefty",-1}}, hat = {"u"}},
 			down = {b = {"dpdown"}, axis = {{"lefty",1}}, hat = {"d"}},
 			left = {b = {"dpleft"}, axis = {{"leftx",-1}}, hat = {"l"}},
@@ -39,3 +32,4 @@ config = {
 		gamepad_deadzone = 0.3,
 	},
 }
+
