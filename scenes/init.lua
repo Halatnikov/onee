@@ -16,8 +16,6 @@ function scene.init()
 	scene.a = 2
 	--debug.table(object.instances("test"))
 	
-	scene.path = "D:\Users\DoorOpener\Desktop\C2andWADs\super_freaks\123\Super Freaks 1 2006 - The Search for Tikiman"
-	
 end
 
 function scene.update()

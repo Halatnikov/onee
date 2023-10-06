@@ -1,20 +1,32 @@
+require("src/libs/errorhandler")
+loveframes = require("src/libs/loveframes")
+require("src/libs/tserial")
+
 require("src/utils")
-require("src/nuklear")
+require("src/gui")
 
 require("src/input")
+require("src/collisions")
 require("src/assets")
 require("src/scene")
 
-require("src/libs/tserial")
-
+---------------------------------------------------------------- 
 
 local major, minor, revision = love.getVersion()
 love.version = "LOVE2D "..major.."."..minor.."."..revision.." (".._VERSION..")"
+
+-- if love._os == "Android" or love._os == "iOS" then
+	mobile = true
+-- end
+
+love.graphics.setDefaultFilter("nearest","nearest",0)
+love.graphics.setBackgroundColor(8/255,8/255,8/255)
 
 before_update = 0
 ms = 0 
 frames = 0
 
+---------------------------------------------------------------- 
 
 misc = {}
 
@@ -24,22 +36,37 @@ function misc.update()
 	ms = ms + dt
 	frames = frames + 1
 	
-	if debug_mode then debug.update() end
+	windowwidth = love.graphics.getWidth()
+	windowheight = love.graphics.getHeight()
 end
 
+---------------------------------------------------------------- 
 
 if debug_mode then
-	nuklear.open.debug = true
+	love.setDeprecationOutput(true)
+	
+	gui.open.debug()
 	
 	function debug.keypressed(k)
 		if k == "f2" then love.event.quit("restart") end
-		if k == "`" or k == "f1" then nuklear.open.debug = not nuklear.open.debug end
+		--if k == "`" or k == "f1" then nuklear.open.debug = not nuklear.open.debug end
 		
 		if k == "q" or k == "f3" then scenes.set("init") end
 	end
-
 end
 
 function debug.update()
 	
+end
+
+function debug.draw()
+	if mobile then
+		love.graphics.print(love.timer.getFPS(), windowwidth-18, 4)
+		
+		for i,id in ipairs(love.touch.getTouches()) do
+			local touchx, touchy = love.touch.getPosition(id)
+			love.graphics.line(touchx-12,touchy, touchx+12,touchy)
+			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
+		end
+	end
 end

@@ -101,7 +101,6 @@ function nuklear.window.debug()
 		
 		ui:tree("tab","Performance",
 		function ()
-			local stats = love.graphics.getStats()
 			local renderer = {}; renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 			
 			ui:layoutRow('dynamic', 16, 1)

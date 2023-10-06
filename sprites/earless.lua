@@ -4,7 +4,7 @@ sprite.animations = {
 
 	["idle"] = {
 				seq_start = {1},
-				seq = {2,3,4,3},
+				seq = {2,2,3,4,3},
 				speed = 10,
 				frames = asset.add_frames(4, 24,34,1)
 	},

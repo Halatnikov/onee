@@ -7,7 +7,7 @@ function object.init(self)
 	self.sprite = sprite.init(self.sprite, "earless")
 	self.sprite.x = love.math.random(100,400)
 	self.sprite.y = 100
-	self.sprite.animation = "walk"
+	self.sprite.animation = "idle"
 	self.sprite.angle = -77
 	
 	self.sprite2 = sprite.init(self.sprite2, "example_tiled")

@@ -2,7 +2,8 @@ input = {
 	mode = "keyboard",
 	time = {},
 	
-	mouse_wheel = 0
+	mouse_wheel = 0,
+	mouse_istouch = {},
 }
 
 -- initialize the table
@@ -11,9 +12,9 @@ for key in pairs(config.input.keyboard) do
 	input.time[key] = 0
 end
 
--- main loop
-function input.update()
-	
+---------------------------------------------------------------- 
+
+function input.update() -- MAIN LOOP --
 	-- begin loop
 	for key in pairs(input.time) do 
 		input[key] = false -- reset key states
@@ -28,9 +29,10 @@ function input.update()
 				input[key] = true
 			end
 		end
-		-- mouse keytons
+		-- mouse buttons
 		if config.input.keyboard[key].m then
-			if love.mouse.isDown(config.input.keyboard[key].m) then
+			if love.mouse.isDown(config.input.keyboard[key].m)
+			and not input.mouse_istouch[1] then -- prevent touch input
 				input.mode = "keyboard"
 				input[key] = true
 			end
@@ -83,6 +85,50 @@ function input.update()
 		end
 	end
 	
+	-- touch screen mode
+	if mobile then
+		local touches = love.touch.getTouches()
+		
+		for key in pairs(config.input.touch) do
+			for i in pairs(config.input.touch[key]) do
+				for n,id in ipairs(touches) do
+					local touchx, touchy = love.touch.getPosition(id)
+					local shape = config.input.touch[key][i]
+					
+					if shape.circle then
+						local x = shape.circle[1]
+						local y = shape.circle[2]
+						local radiusx = shape.circle[3]
+						local radiusy = shape.circle[4] or radiusx
+						
+						if math.sign(x) == -1 then x = windowwidth + x end
+						if math.sign(y) == -1 then y = windowheight + y end
+						
+						if collision.point_ellipse(touchx,touchy, x,y,radiusx,radiusy) then
+							input.mode = "touch"
+							input[key] = true
+						end
+					end
+					
+					if shape.rect then
+						local x = shape.rect[1]
+						local y = shape.rect[2]
+						local width = shape.rect[3]
+						local height = shape.rect[4] or width
+						
+						if math.sign(x) == -1 then x = windowwidth + x end
+						if math.sign(y) == -1 then y = windowheight + y end
+						
+						if collision.point_rect(touchx,touchy, x,y,x+width,y+height) then
+							input.mode = "touch"
+							input[key] = true
+						end
+					end
+					
+				end
+			end
+		end
+	end
 	
 	-- end loop
 	for key in pairs(input.time) do 
@@ -96,6 +142,66 @@ function input.update()
 	
 end
 
+---------------------------------------------------------------- 
+
+function input.draw() -- DRAW LOOP --
+	-- draw touch screen buttons
+	if mobile then
+		for key in pairs(config.input.touch) do
+			for i in pairs(config.input.touch[key]) do
+				local shape = config.input.touch[key][i]
+				
+				if shape.circle then
+					local x = shape.circle[1]
+					local y = shape.circle[2]
+					local radiusx = shape.circle[3]
+					local radiusy = shape.circle[4] or radiusx
+					local segments = shape.circle[5] or nil -- how detailed is the circle
+					
+					if math.sign(x) == -1 then x = windowwidth + x end
+					if math.sign(y) == -1 then y = windowheight + y end
+					
+					if not input[key] == true then
+						love.graphics.setColor(1,1,1,0.5)
+						love.graphics.ellipse("line",x,y,radiusx,radiusy,segments)
+						love.graphics.printf(shape.text or "", x-(radiusx/2), y-8, radiusx, "center")
+					else
+						love.graphics.setColor(1,1,1,0.5)
+						love.graphics.ellipse("fill",x,y,radiusx,radiusy,segments)
+						love.graphics.printf(shape.text or "", x-(radiusx/1.33), y-12, radiusx, "center", 0, 1.5, 1.5)
+					end
+				end
+				
+				if shape.rect then
+					local x = shape.rect[1]
+					local y = shape.rect[2]
+					local width = shape.rect[3]
+					local height = shape.rect[4] or width
+					local rx = shape.rect[5] or nil -- round corners
+					local ry = shape.rect[6] or ry
+					local segments = shape.rect[7] or nil
+					
+					if math.sign(x) == -1 then x = windowwidth + x end
+					if math.sign(y) == -1 then y = windowheight + y end
+					
+					if not input[key] == true then
+						love.graphics.setColor(1,1,1,0.5)
+						love.graphics.rectangle("line",x,y,width,height,rx,ry,segments)
+						love.graphics.printf(shape.text or "", x, y+(height/2)-8, width, "center")
+					else
+						love.graphics.setColor(1,1,1,0.5)
+						love.graphics.rectangle("fill",x,y,width,height,rx,ry,segments)
+						love.graphics.printf(shape.text or "", x-(width/4), y+(height/2)-12, width, "center", 0, 1.5, 1.5)
+					end
+				end
+				
+			end
+		end
+	end
+end
+
+---------------------------------------------------------------- 
+
 -- update gamepad list
 function love.joystickadded()
 	input.gamepads = love.joystick.getJoysticks()
@@ -104,12 +210,15 @@ function love.joystickremoved()
 	input.gamepads = love.joystick.getJoysticks()
 end
 
--- press any key to switch modes
-function input.keypressed() input.mode = "keyboard" end
-function input.mousepressed() input.mode = "keyboard" end
+-- mouse wheel input
 function input.wheelmoved(x,y) 
-	input.mouse_wheel = y -- mouse wheel input
-	input.mode = "keyboard"
+	input.mouse_wheel = y
 end
-function love.joystickpressed() input.mode = "gamepad" end
-function love.joystickaxis() input.mode = "gamepad" end
+
+-- differentiate between mouse and touch inputs (workaround)
+function input.mousepressed(x,y,button,istouch)
+  input.mouse_istouch[button] = istouch
+end
+function input.mousereleased(x,y,button,istouch)
+  input.mouse_istouch[button] = nil
+end

@@ -1,10 +1,14 @@
 function love.conf(t)
 	t.window.title = "onee"
+	t.version = "11.3"
 	
 	t.window.vsync = 0
-	--t.window.resizable = true
+	t.window.resizable = true
+	t.window.fullscreen = ((love._os == "Android") or (love._os == "iOS"))
 	
-	t.version = "11.3"
+	t.identity = "savedata"
+	t.appendidentity = true
+	t.externalstorage = true
 end
 
 debug_mode = true
@@ -30,6 +34,15 @@ config = {
 			start = {b = {"start"}},
 		},
 		gamepad_deadzone = 0.3,
+		touch = {
+			up = {},
+			down = {},
+			left = {},
+			right = {},
+			a = {{circle = {-64,-80,48}, text = "A"}},
+			b = {{circle = {-150,-48,32}, text = "B"}},
+			start = {{rect = {312,-48,88,32}, text = "Start"}},
+		},
 	},
 }
 
