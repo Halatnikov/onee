@@ -1,14 +1,13 @@
 
-version = "0.0.1-3" -- pre-alpha
+version = "0.0.1-4" -- pre-alpha
+before_update = 0
 
 --nest = require("src/libs/3ds-nest"):init({mode = "ctr", scale = 1, emulateJoystick = false})
 
 function love.load()
-
-	before_update = 0
 	
 	local major, minor, revision = love.getVersion()
-    love_ver = string.format("LOVE2D %d.%d.%d (%s)", major, minor, revision, _VERSION)
+    love_ver = "LOVE2D "..major.."."..minor.."."..revision.." (".._VERSION..")"
 	print(love_ver.." | Onee "..version)
 	
 	require("src/objects")
@@ -19,9 +18,11 @@ function love.load()
 	
 	require("src/libs")
 	
+	love.graphics.setBackgroundColor(8/255,8/255,8/255)
+	
 end
 
-function love.update(dt)
+function love.update()
 	
 	if love._console_name == "3DS" then n3ds = true end
 	before_update = before_update + (1/60)

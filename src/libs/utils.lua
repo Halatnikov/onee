@@ -1,30 +1,30 @@
 -- thank you love2d forums, thank you 1492
 
-function math.boolint(var)
-	return var and 1 or 0
+function math.boolint(arg)
+	return arg and 1 or 0
 end
 
-function math.sign(var)
-	return (var > 0) and 1 or (var < 0) and -1 or 0
+function math.sign(arg)
+	return (arg > 0) and 1 or (arg < 0) and -1 or 0
 end
 
-function math.clamp(var, min, max)
+function math.flipsign(arg)
+	return (arg > 0) and -arg or math.abs(arg)
+end
+
+function math.clamp(arg, min, max)
     if min > max then min, max = max, min end -- swap if wrong way around
-    return math.max(min, math.min(max, var))
+    return math.max(min, math.min(max, arg))
 end
 
-function math.roundtodp(var,dec)
-	local mul = math.pow(10, dec or 0)
-    return math.floor(var * mul + 0.5) / mul;
+function math.round(arg, decimals)
+	local mul = math.pow(10, decimals or 0)
+    return math.floor(arg * mul + 0.5) / mul;
 end
 
-function math.flipsign(var)
-	if var >= 0 then return -var else return math.abs(var) end
-end
-
-function table.find(table, var)
+function table.find(table, arg)
     for k,v in pairs(table) do
-        if v == var then return k end
+        if v == arg then return k end
     end
 end
 

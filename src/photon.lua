@@ -5,7 +5,7 @@ local constants = require("photon.loadbalancing.constants")
 local logger = require("photon.common.Logger")
 local tableutil = require("photon.common.util.tableutil") 
 
-local photon = client.new("ns.exitgames.com:5058", "8d2e8053-fa0c-41a7-87a1-afa119efbaf7", version)
+local photon = client.new("ns.exitgames.com:5058", "19e455bf-6e5c-4dc6-816a-200f8b36ac4b", version)
 photon:connectToRegionMaster("US")
 
 function photon_update()

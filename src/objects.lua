@@ -39,8 +39,8 @@ function instances.draw(id) -- DRAW INSTANCE --
 	
 	if not objects[object].sprite then return end
 	
-	local x = instances[id].x or 0
-	local y = instances[id].y or 0
+	local x = math.round(instances[id].x) or 0
+	local y = math.round(instances[id].y) or 0
 	local angle = instances[id].angle or 0; angle = math.rad(angle)
 	local scalex = instances[id].scalex or 1
 	local scaley = instances[id].scaley or 1
@@ -266,13 +266,12 @@ end
 --------------------------------------------------------------- SPRITES
 
 function sprites.add_frames(count, x,y,speed) -- shortcut for adding frames to sprite data ~~
-	local x = x or 0; local y = y or 0; local speed = speed or 1
 	local t = {}
 	for i=1, count do
 		t[i] = {}
-		t[i].x = x
-		t[i].y = y
-		t[i].speed = speed
+		t[i].x = x or 0
+		t[i].y = y or 0
+		t[i].speed = speed or 1
 	end
 	return t
 end
