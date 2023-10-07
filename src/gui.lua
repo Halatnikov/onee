@@ -1,5 +1,6 @@
 gui = {
 	open = {},
+	window = {},
 }
 
 -- event redirection
@@ -54,14 +55,14 @@ function gui.open.debug()
 	window:ShowCloseButton(false)
 	window:CenterWithinArea(0, 0, 800, 600)
 	window:SetName(version)
-	window:SetSize(220,220); window:SetMinSize(window.width,24)
+	window:SetSize(220,220); window:SetMinSize(window.width,58)
 
 	-- main container
 	local container = loveframes.Create("list", window)
-	container:SetPos(0, 24)
+	container:SetPos(1, 24)
 	container:SetPadding(4); container:SetSpacing(4)
 	container.Update = function()
-		container:SetSize(window.width, window.height-24)
+		container:SetSize(window.width-2, window.height-25)
 	end
 	
 	-- object definitions ------------
@@ -92,6 +93,7 @@ function gui.open.debug()
 	-- button: open console
     console:SetText("Open console")
     console.OnClick = function()
+		if gui.window.console then gui.window.console:Remove() end
 		gui.open.console()
     end
     
@@ -100,11 +102,11 @@ function gui.open.debug()
 	grid_reset:SetCellPadding(0)
 	grid_reset.Update = function()
 		if frames%3 == 0 then
-		grid_reset:SetCellSize(console.width/2, 24)
+			grid_reset:SetCellSize(console.width/2, 24)
 		end
 	end
 	
-	-- start grid
+	---- start grid
 	-- button: reset
     reset:SetText("Reload")
     reset.Update = function()
@@ -122,7 +124,7 @@ function gui.open.debug()
     reset_scene.OnClick = function()
 		scenes.set("init")
     end
-    -- end grid
+    ---- end grid
     
     -- category button: input
     tree_input.padding = 0
@@ -136,7 +138,7 @@ function gui.open.debug()
 		container_input:SetSize(tree_input.width, tree_input_inputlist.height + (4 * 2))
 	end
 	
-	-- start container
+	---- start container
 	-- sub category button: current inputs
 	tree_input_inputlist.padding = 0
 	tree_input_inputlist:SetOpen(true)
@@ -157,7 +159,7 @@ function gui.open.debug()
 		gui.collumnlist_fix(inputlist)
 		
 	end
-	-- end container
+	---- end container
     
     -- composition -------------------
     container:AddItem(top)
@@ -172,6 +174,8 @@ function gui.open.debug()
 	container_input:AddItem(tree_input_inputlist)
     tree_input_inputlist:SetObject(inputlist)
     ----------------------------------
+	
+	gui.window.debug = window
     
 end
 
@@ -192,8 +196,10 @@ function gui.open.console()
 	console.Update = function()
 		console:SetSize(window.width-8, window.height-34)
 		if frames%4 == 0 then
-		console:SetText("the \n real \n when")
+			console:SetText("the \n real \n when")
 		end
 	end
+	
+	gui.window.console = window
 
 end

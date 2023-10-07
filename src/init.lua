@@ -15,9 +15,9 @@ require("src/scene")
 local major, minor, revision = love.getVersion()
 love.version = "LOVE2D "..major.."."..minor.."."..revision.." (".._VERSION..")"
 
--- if love._os == "Android" or love._os == "iOS" then
+if love._os == "Android" or love._os == "iOS" then
 	mobile = true
--- end
+end
 
 love.graphics.setDefaultFilter("nearest","nearest",0)
 love.graphics.setBackgroundColor(8/255,8/255,8/255)
