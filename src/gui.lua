@@ -156,7 +156,11 @@ function gui.open.debug()
 	end
 	inputlist:SizeToChildren()
 	inputlist.Update = function()
+		for i=1, #inputlist.internals[1].children do
+			inputlist.internals[1].children[i].height = 16
+		end
 		gui.collumnlist_fix(inputlist)
+		--inputlist.height = inputlist.height - ((25 - inputlist.internals[1].children[1].height) * #inputlist.internals[1].children)
 		
 	end
 	---- end container
@@ -196,7 +200,7 @@ function gui.open.console()
 	console.Update = function()
 		console:SetSize(window.width-8, window.height-34)
 		if frames%4 == 0 then
-			console:SetText("the \n real \n when")
+			console:SetText(love.version.." | onee "..version)
 		end
 	end
 	
