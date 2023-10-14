@@ -13,7 +13,7 @@ function nuklear.keypressed(key, scancode, isrepeat)
 	if not ui then return end
 	if ui:keypressed(key, scancode, isrepeat) then return end 
 end
-function love.keyreleased(key, scancode)
+function nuklear.keyreleased(key, scancode)
 	if not ui then return end
 	if ui:keyreleased(key, scancode) then return end
 end
@@ -21,15 +21,15 @@ function nuklear.mousepressed(x, y, button, istouch, presses)
 	if not ui then return end
 	if ui:mousepressed(x, y, button, istouch, presses) then return end
 end
-function love.mousereleased(x, y, button, istouch, presses)
+function nuklear.mousereleased(x, y, button, istouch)
 	if not ui then return end
-	if ui:mousereleased(x, y, button, istouch, presses) then return end
+	if ui:mousereleased(x, y, button, istouch) then return end
 end
-function love.mousemoved(x, y, dx, dy, istouch)
+function nuklear.mousemoved(x, y, dx, dy, istouch)
 	if not ui then return end
 	if ui:mousemoved(x, y, dx, dy, istouch) then return end
 end
-function love.textinput(text)
+function nuklear.textinput(text)
 	if not ui then return end
 	if ui:textinput(text) then return end
 end
@@ -74,14 +74,13 @@ function nuklear.table(arg, caption, show_functions)
 end
 
 function nuklear.table_label(k,v)
+	if type(v) ~= "userdata" then ui:label(tostring(k)..": "..tostring(v)) end
 	if type(v) == "userdata" then
-		local type = v:type()
-		if type == "Image" then
+		if v:type() == "Image" then
 			ui:layoutRow('dynamic', 32, 6)
 			ui:image(v)
 		end
 	end
-	if type(v) ~= "userdata" then ui:label(tostring(k)..": "..tostring(v)) end
 end
 
 
@@ -101,6 +100,7 @@ function nuklear.window.debug()
 		
 		ui:tree("tab","Performance",
 		function ()
+			local stats = love.graphics.getStats()
 			local renderer = {}; renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 			
 			ui:layoutRow('dynamic', 16, 1)
@@ -109,7 +109,7 @@ function nuklear.window.debug()
 			if ui:widgetIsHovered() then ui:tooltip('Textures and garbage collector') end
 			ui:label("RAM "..math.round(stats.texturememory/1024/1024,2).."MB "..math.round(collectgarbage("count")/1024,2).."MB")
 			
-			nuklear.table(love.graphics.getStats(),"love.graphics.getStats()")
+			nuklear.table(stats,"love.graphics.getStats()")
 			nuklear.table(renderer,"love.graphics.getRendererInfo()")
 			nuklear.table(love.graphics.getSystemLimits(),"love.graphics.getSystemLimits()")
 		end)

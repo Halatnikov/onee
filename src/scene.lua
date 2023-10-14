@@ -8,7 +8,7 @@ instances = {}
 
 ---------------------------------------------------------------- SCENE
 
-function scenes.set(name) -- SWITCH CURRENT SCENE --
+function scenes.set(name, data) -- SWITCH CURRENT SCENE --
 	
 	-- clear the scene
 	for name in pairs(objects) do
@@ -29,6 +29,8 @@ function scenes.set(name) -- SWITCH CURRENT SCENE --
 	end
 	
 	scene.name = name
+	
+	if data then table.append(scene, data) end -- pass additional stuff to scene through this table
 	
 	if scene.init then scene.init() end
 	

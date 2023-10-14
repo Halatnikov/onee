@@ -4,10 +4,10 @@ gui = {
 }
 
 -- event redirection
-function gui.mousepressed(x, y, button)
+function gui.mousepressed(x, y, button, istouch, presses)
     loveframes.mousepressed(x, y, button)
 end
-function gui.mousereleased(x, y, button)
+function gui.mousereleased(x, y, button, istouch)
     loveframes.mousereleased(x, y, button)
 end
 function gui.wheelmoved(x, y)
@@ -16,10 +16,10 @@ end
 function gui.keypressed(key, scancode, isrepeat)
     loveframes.keypressed(key, isrepeat)
 end
-function love.keyreleased(key)
+function gui.keyreleased(key, scancode)
     loveframes.keyreleased(key)
 end
-function love.textinput(text)
+function gui.textinput(text)
     loveframes.textinput(text)
 end
 
@@ -54,7 +54,7 @@ function gui.open.debug()
 	window:SetResizable(true)
 	window:ShowCloseButton(false)
 	window:CenterWithinArea(0, 0, 800, 600)
-	window:SetName(version)
+	window:SetName("v"..version)
 	window:SetSize(220,220); window:SetMinSize(window.width,58)
 
 	-- main container
@@ -154,13 +154,12 @@ function gui.open.debug()
 	for key in pairs(config.input.keyboard) do
 		inputlist:AddRow(key, tostring(input[key]), input.time[key])
 	end
+	for i=1, #inputlist.internals[1].children do
+		inputlist.internals[1].children[i].height = 16
+	end
 	inputlist:SizeToChildren()
 	inputlist.Update = function()
-		for i=1, #inputlist.internals[1].children do
-			inputlist.internals[1].children[i].height = 16
-		end
 		gui.collumnlist_fix(inputlist)
-		--inputlist.height = inputlist.height - ((25 - inputlist.internals[1].children[1].height) * #inputlist.internals[1].children)
 		
 	end
 	---- end container

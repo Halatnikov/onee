@@ -7,7 +7,7 @@ function object.init(self)
 	self.sprite = sprite.init(self.sprite, "earless")
 	self.sprite.x = love.math.random(100,400)
 	self.sprite.y = 100
-	self.sprite.animation = "idle"
+	self.sprite.animation = "walk"
 	self.sprite.angle = -77
 	
 	self.sprite2 = sprite.init(self.sprite2, "example_tiled")
@@ -18,6 +18,8 @@ function object.init(self)
 	self.sprite2.angle = 20
 	self.sprite2.frame = love.math.random(1,4)
 	
+	self.sprite3 = sprite.init(self.sprite3, "greyguy")
+	
 end
 
 function object.update(self)
@@ -26,6 +28,7 @@ function object.update(self)
 	
 	self.sprite = sprite.update(self.sprite)
 	self.sprite2 = sprite.update(self.sprite2)
+	self.sprite3 = sprite.update(self.sprite3)
 	
 end
 
@@ -33,6 +36,7 @@ function object.draw(self)
 	
 	sprite.draw(self.sprite)
 	sprite.draw(self.sprite2)
+	sprite.draw(self.sprite3)
 	
 end
 

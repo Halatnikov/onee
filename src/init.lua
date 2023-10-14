@@ -1,9 +1,11 @@
 require("src/libs/errorhandler")
 loveframes = require("src/libs/loveframes")
 require("src/libs/tserial")
+gifload = require("src/libs/gifload")
 
 require("src/utils")
 require("src/gui")
+require("src/nuklear")
 
 require("src/input")
 require("src/collisions")
@@ -46,6 +48,7 @@ if debug_mode then
 	love.setDeprecationOutput(true)
 	
 	gui.open.debug()
+	if ui then nuklear.open.debug = true end
 	
 	function debug.keypressed(k)
 		if k == "f2" then love.event.quit("restart") end

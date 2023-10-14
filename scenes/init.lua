@@ -5,6 +5,7 @@ function scene.init()
 	asset.sprite("earless")
 	asset.sprite("example_tiled")
 	asset.sprite("yorb")
+	asset.sprite("greyguy")
 	
 	object.new("test",{a=1,{3}})
 	instance.new("test",{b=4})
