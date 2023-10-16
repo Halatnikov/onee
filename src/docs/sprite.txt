@@ -1,0 +1,169 @@
+------- SPRITE (data)
+
+tiled
+[enables the sprite to be tiled, can be a boolean, a string, or a table] 
+[valid values: true (same as "repeat"), "repeat", "mirroredrepeat", "clamp", "clampzero" (default: false)]
+
+gif
+[forces gif mode to all animations (default: false)]
+
+animations
+[an array of all available animations]
+
+	*anim*
+	[single animation]
+	
+		gif
+		[get images and frames from a gif file (default: false)]
+		
+		gif_transparent
+		[requires anim.gif, determines if the gif background should be transparent (default: true)]
+		
+		images
+		[reuse another animation's images and frames, put the animation name here]
+		
+		filename
+		[use a different filename for this animation, has no effect if anim.images is defined]
+		
+		seq_start
+		[frame sequence that plays at the start of the animation (default: seq copy)]
+		
+		seq
+		[frame sequence that plays continously]
+		[(default: {1} if seq_start is undefined, disables looping if otherwise)]
+		
+		loops
+		[controls looping of the animation, true = loop infinitely, false = play once, >1 = play x many times]
+		[(default: true)]
+		
+		speed
+		[speed of the animation in fps (default: 0)]
+		
+		x
+		[defines x origin point for all frames, but frame's x still takes priority]
+		
+		y
+		[defines y origin point for all frames, but frame's y still takes priority]
+		
+		frames
+		[an array of all available frames in that animation]
+		
+			*frame*
+			[single frame, negative numbers mean it counts from the last frame]
+			[you can use `[frame] = asset.add_frames(count, x,y,length)` as a shortcut]
+				
+				x
+				[x origin point of the frame (default: 0)]
+				
+				y
+				[y origin point of the frame (default: 0)]
+				
+				length
+				[frame length multiplier: <1 is faster, >1 is slower (default: 1)] 
+				
+				width
+				[width of the frame (default: image width)]
+				
+				height
+				[height of the frame (default: image height)]
+				
+				gif_dispose
+				[requires anim.gif, overwrite dispose mode of this frame]
+				[valid values: DISPOSE.ANY, DISPOSE.NONE, DISPOSE.BACKGROUND, DISPOSE.PREVIOUS]
+				
+				image
+				[requires anim.images, specify a reused frame number out of order]
+				
+				any other metadata
+				[...]
+				
+		any other metadata
+		[...]
+		
+any other metadata
+[...]
+
+------- SPRITE (instance)
+
+==== default values (get overwritten)
+sprite
+[identifies that this is indeed a sprite (default: true)]
+
+name
+[sprite data to reference]
+
+animation
+[current animation name, you can change that (default: "idle")]
+
+current
+[a workaround to determine animation changes, don't change this (default: animation)]
+
+frame
+[current frame of the animation, you can change that (default: 1)]
+
+timer
+[frame timer that counts time from previous frame to next (default: 0)]
+
+seq
+[currently playing sequence]
+[valid values: "seq_start", "seq" (default: "seq_start")]
+
+seq_index
+[current index in a sequence, you can also change frame instead (default: 1)]
+
+loops
+[increases by 1 every time the animation loops (default: 0)]
+====
+
+speed
+[overwrite the current animation speed in fps, resets when the animation changes]
+
+x
+[x position (default: 0)]
+
+y
+[y position (default: 0)]
+
+angle
+[angle in degrees (default: 0)]
+
+scalex
+[x scale multiplier of the sprite (default: 1)]
+
+scaley
+[y scale multiplier of the sprite (default: scalex)]
+
+width
+[adjust the width directly if you don't feel like working with scalex]
+
+height
+[adjust the height directly if you don't feel like working with scaley]
+
+rgb
+[tint of the sprite, 3 rgb values from 0 to 255 (default: {255, 255, 255})]
+
+opacity
+[opacity of the sprite from 0 to 100 (default: 100)]
+
+skewx
+[x skew factor of the sprite (default: 0)]
+
+skewy
+[y skew factor of the sprite (default: 0)]
+
+==== requires sprite.tiled
+tiled
+[quad that controls tiling of this sprite]
+
+qx
+[x offset of the tiling (default: 0)]
+
+qy
+[y offset of the tiling (default: 0)]
+
+qwidth
+[width of the tiling, can be used independently of scalex and width (default: frame width)]
+
+qheight
+[height of the tiling, can be used independently of scaley and height (default: frame height)]
+====

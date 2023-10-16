@@ -40,13 +40,13 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 			if animdata.gif then
 				local filename = animdata.filename or anim
 				local file = love.filesystem.newFile("sprites/"..path.."/"..filename..".gif", "r")
-				if not file then error("asset.sprite()[2] | incorrect gif path \"sprites/"..path.."/"..filename..".gif\"") end
-				local gifload = gifload()
+				if not file then error("asset.sprite() | incorrect gif path \"sprites/"..path.."/"..filename..".gif\"") end
 				
+				local gifload = gifload()
 				gifload:update(file:read()) -- read the gif file
 				file:close()
 				local gif = gifload:done()
-				if gif.nimages == 0 then error("asset.sprite()[2] | invalid gif \"sprites/"..path.."/"..filename..".gif\"") end
+				if gif.nimages == 0 then error("asset.sprite() | invalid gif \"sprites/"..path.."/"..filename..".gif\"") end
 				
 				local no_seq -- init frames and seq from gif
 				if not animdata.frames then animdata.frames = {} end
@@ -162,7 +162,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 					image = assets[name][animdata.images][framedata.image]
 				end
 			end
-			if not image then error("asset.sprite()[3] | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"") end
+			if not image then error("asset.sprite() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"") end
 			
 			-- frame width/height
 			if not framedata.width then framedata.width = image:getWidth() end
@@ -220,11 +220,9 @@ end
 
 function asset.negative_frames(animdata) -- handle negative frame declarations
 	for frame in pairs(animdata.frames) do
-		local framedata = animdata.frames[frame]
-			
 		if frame < 0 then -- if your frame is -1, that means the last frame and so on
 			local i = (#animdata.frames+1) + frame
-			animdata.frames[i] = table.append(animdata.frames[i], framedata)
+			animdata.frames[i] = table.append(animdata.frames[i], animdata.frames[frame])
 		
 			animdata.frames[frame] = nil
 		end
@@ -234,7 +232,7 @@ end
 ---------------------------------------------------------------- SPRITES
 
 function sprite.init(sprite, name) -- INITIALIZE A NEW SPRITE --
-	if not sprites[name] then print("sprite.init() | "..name.." is not a valid sprite!") return end
+	if not sprites[name] then error("sprite.init() | \""..name.."\" is not a valid sprite!") end
 	local t = {
 		sprite = true,
 		name = name,
@@ -254,7 +252,7 @@ end
 
 function sprite.update(sprite) -- UPDATE SPRITE --
 	
-	if not sprite.name then error("sprite.update() | not a valid sprite") end
+	if not sprite or not sprite.name then error("sprite.update() | not a valid sprite") end
 	local animdata = sprites[sprite.name].animations[sprite.animation]
 	if not animdata then error("sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"") end
 	local framedata = animdata.frames[sprite.frame]
@@ -310,7 +308,7 @@ end
 
 function sprite.draw(sprite) -- DRAW SPRITE --
 
-	if not sprite.name then error("sprite.draw() | not a valid sprite") end
+	if not sprite or not sprite.name then error("sprite.draw() | not a valid sprite") end
 	local data = sprites[sprite.name]
 	if not data then error("sprite.draw() | no such sprite \""..sprite.name.."\"") end
 	
@@ -319,7 +317,9 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	local y = sprite.y or 0; y = math.round(y)
 	local angle = sprite.angle or 0; angle = math.rad(angle)
 	local scalex = sprite.scalex or 1
-	local scaley = sprite.scaley or 1
+	local scaley = sprite.scaley or sprite.scalex or 1
+	local skewx = sprite.skewx or 0
+	local skewy = sprite.skewy or 0
 	
 	-- opacity and tinting
 	local rgb = sprite.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
@@ -374,12 +374,13 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		local qheight = sprite.qheight or qref_height; qheight = math.floor(qheight)
 		
 		quad:setViewport(qx, qy, qwidth, qheight, qref_width, qref_height)
-		love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey)
+		love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		
 	else -- REGULAR SPRITE
 		
-		love.graphics.draw(image, x, y, angle, scalex, scaley, framex, framey)
+		love.graphics.draw(image, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		
 	end
+	
 	love.graphics.setColor(1,1,1,1)
 end
