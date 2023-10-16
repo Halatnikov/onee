@@ -26,9 +26,9 @@ function object.update(self)
 	
 	self.aaa = self.aaa + 1
 	
-	self.sprite = sprite.update(self.sprite)
-	self.sprite2 = sprite.update(self.sprite2)
-	self.sprite3 = sprite.update(self.sprite3)
+	sprite.update(self.sprite)
+	sprite.update(self.sprite2)
+	sprite.update(self.sprite3)
 	
 end
 

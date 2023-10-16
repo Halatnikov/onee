@@ -6,7 +6,7 @@ function object.init(self)
 end
 
 function object.update(self)
-	self.sprite = sprite.update(self.sprite)
+	sprite.update(self.sprite)
 end
 
 function object.draw(self)

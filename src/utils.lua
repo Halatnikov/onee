@@ -45,6 +45,23 @@ function table.length(arg)
 	return i
 end
 
+function table.mostcommon(arg)
+	local count = {}
+	for k, v in pairs(arg) do
+		count[v] = (count[v] or 0) + 1
+	end
+	
+	local common = next(count)
+	local current = count[common]
+	for k, v in pairs(count) do
+		if count[k] > current then
+			common, current = k, v
+		end
+	end
+	
+	return common
+end
+
 function string.random(length)
 	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 	local t = {}
