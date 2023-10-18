@@ -10,8 +10,6 @@ sprite.animations = {
 			x2 = 10,
 			y1 = 10,
 			y2 = 10,
-			sides = TILE.TILE,
-			body = TILE.TILE,
 		},
 		speed = 2,
 		seq = {1,2},
