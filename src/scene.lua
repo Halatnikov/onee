@@ -118,7 +118,7 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 	
 	instances[id] = instance -- done
 	
-	objects[name].instances = objects[name].instances + 1
+	object.instances = object.instances + 1
 	
 	if instance.init then instances[id].init(instances[id]) end
 	

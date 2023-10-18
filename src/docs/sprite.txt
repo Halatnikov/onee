@@ -151,19 +151,21 @@ skewx
 skewy
 [y skew factor of the sprite (default: 0)]
 
-==== requires sprite.tiled
 tiled
-[quad that controls tiling of this sprite]
+[requires sprite.tiled]
 
-qx
-[x offset of the tiling (default: 0)]
+	quad
+	[quad that controls tiling of this sprite]
 
-qy
-[y offset of the tiling (default: 0)]
+	x
+	[x offset of the tiling (default: 0)]
 
-qwidth
-[width of the tiling, can be used independently of scalex and width (default: frame width)]
+	y
+	[y offset of the tiling (default: 0)]
 
-qheight
-[height of the tiling, can be used independently of scaley and height (default: frame height)]
-====
+	width
+	[width of the tiling, can be used independently of scalex and width (default: frame width)]
+
+	height
+	[height of the tiling, can be used independently of scaley and height (default: frame height)]
+

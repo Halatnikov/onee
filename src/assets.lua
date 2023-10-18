@@ -5,6 +5,14 @@ assets = {} -- actual containers
 sprites = {}
 
 -- constants
+TILE = {
+	TILE = "repeat",
+	MIRROR = "mirroredrepeat",
+	ONCE = "clampzero",
+	EDGES = "clamp",
+	
+	STRETCH = 0, -- only for nine-slices
+}
 DISPOSE = {
 	ANY = 0, -- unspecified
 	NONE = 1, -- superimpose on previous
@@ -149,6 +157,10 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 		
 		asset.negative_frames(animdata)
 		
+		-- allow only one at a time
+		if sprite.tiled then sprite.nineslice = nil end
+		if sprite.nineslice then sprite.tiled = nil end
+		
 		for frame in pairs(animdata.frames) do
 			local framedata = animdata.frames[frame]
 			
@@ -169,9 +181,126 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 			if not framedata.height then framedata.height = image:getHeight() end
 			
 			-- tiled sprites
-			if sprite.tiled then image:setWrap("repeat", "repeat") end
+			if sprite.tiled then image:setWrap(TILE.TILE, TILE.TILE) end
 			if type(sprite.tiled) == "string" then image:setWrap(sprite.tiled, sprite.tiled) end
 			if type(sprite.tiled) == "table" then image:setWrap(sprite.tiled[1], sprite.tiled[2]) end
+			
+			-- nine-slices (9patches)
+			if sprite.nineslice then
+				local ninedata = animdata.nineslice
+				
+				-- add missing nine-slice variables
+				if not ninedata.sides then
+					if not ninedata.left then ninedata.left = TILE.TILE end
+					if not ninedata.right then ninedata.right = TILE.TILE end
+					if not ninedata.top then ninedata.top = TILE.TILE end
+					if not ninedata.bottom then ninedata.bottom = TILE.TILE end
+				end
+				if ninedata.sides then
+					ninedata.left = ninedata.sides
+					ninedata.right = ninedata.sides
+					ninedata.top = ninedata.sides
+					ninedata.bottom = ninedata.sides
+					
+					ninedata.sides = nil
+				end
+				if not ninedata.body then ninedata.body = TILE.TILE end
+				if not ninedata.x1 then ninedata.x1 = 1 end
+				if not ninedata.x2 then ninedata.x2 = 1 end
+				if not ninedata.y1 then ninedata.y1 = 1 end
+				if not ninedata.y2 then ninedata.y2 = 1 end
+				
+				-- add new assets entries
+				if not assets[name]._nineslices then assets[name]._nineslices = {} end
+				if not assets[name]._nineslices[anim] then assets[name]._nineslices[anim] = {} end
+				assets[name]._nineslices[anim][frame] = {}
+				
+				local images = assets[name]._nineslices[anim][frame]
+				local canvas = {}
+				
+				-- split into 9 images
+				for i = 1, 9 do
+					local x, y, widht, height
+					
+					-- top left | top | top right
+					if i == 1 then
+						x = 0
+						y = 0
+						width = ninedata.x1
+						height = ninedata.y1
+					elseif i == 2 then
+						x = ninedata.x1
+						y = 0
+						width = framedata.width - (ninedata.x1 + ninedata.x2)
+						height = ninedata.y1
+					elseif i == 3 then
+						x = framedata.width - ninedata.x1
+						y = 0
+						width = ninedata.x2
+						height = ninedata.y1
+					
+					-- middle left | middle | middle right
+					elseif i == 4 then
+						x = 0
+						y = ninedata.y1
+						width = ninedata.x1
+						height = framedata.height - (ninedata.y1 + ninedata.y2)
+					elseif i == 5 then
+						x = ninedata.x1
+						y = ninedata.y1
+						width = framedata.width - (ninedata.x1 + ninedata.x2)
+						height = framedata.height - (ninedata.y1 + ninedata.y2)
+					elseif i == 6 then
+						x = framedata.width - ninedata.x1
+						y = ninedata.y1
+						width = ninedata.x2
+						height = framedata.height - (ninedata.y1 + ninedata.y2)
+					
+					-- bottom left | bottom | bottom right
+					elseif i == 7 then
+						x = 0
+						y = framedata.height - ninedata.y1
+						width = ninedata.x1
+						height = ninedata.y2
+					elseif i == 8 then
+						x = ninedata.x1
+						y = framedata.height - ninedata.y1
+						width = framedata.width - (ninedata.x1 + ninedata.x2)
+						height = ninedata.y2
+					elseif i == 9 then
+						x = framedata.width - ninedata.x1
+						y = framedata.height - ninedata.y1
+						width = ninedata.x2
+						height = ninedata.y2
+					end
+					
+					canvas[i] = love.graphics.newCanvas(width, height)
+					canvas[i]:renderTo(function()
+						love.graphics.draw(image, -x, -y)
+					end)
+					
+					images[i] = love.graphics.newImage(canvas[i]:newImageData())
+				end
+				
+				canvas = nil -- clear from memory
+				
+				if ninedata.left ~= TILE.STRETCH then
+					images[4]:setWrap(ninedata.left, ninedata.left)
+				end
+				if ninedata.right ~= TILE.STRETCH then
+					images[6]:setWrap(ninedata.right, ninedata.right)
+				end
+				if ninedata.top ~= TILE.STRETCH then
+					images[2]:setWrap(ninedata.top, ninedata.top)
+				end
+				if ninedata.bottom ~= TILE.STRETCH then
+					images[8]:setWrap(ninedata.bottom, ninedata.bottom)
+				end
+				if ninedata.body ~= TILE.STRETCH then
+					images[5]:setWrap(ninedata.body, ninedata.body)
+				end
+				
+			end
 			
 			-- add missing frame variables
 			if not framedata.length then framedata.length = 1 end
@@ -233,6 +362,7 @@ end
 
 function sprite.init(sprite, name) -- INITIALIZE A NEW SPRITE --
 	if not sprites[name] then error("sprite.init() | \""..name.."\" is not a valid sprite!") end
+	
 	local t = {
 		sprite = true,
 		name = name,
@@ -244,9 +374,26 @@ function sprite.init(sprite, name) -- INITIALIZE A NEW SPRITE --
 		seq_index = 1,
 		loops = 0,
 	}
+	
 	if sprites[name].tiled then
-		t.tiled = love.graphics.newQuad(0,0,0,0,0,0)
+		
+		t.tiled = {}
+		t.tiled.quad = love.graphics.newQuad(0,0,0,0,0,0)
+		
+	elseif sprites[name].nineslice then
+		
+		local ninedata = sprites[name].animations["idle"].nineslice
+		t.nineslice = {}
+		
+		t.nineslice.qleft = love.graphics.newQuad(0,0,0,0,0,0)
+		t.nineslice.qright = love.graphics.newQuad(0,0,0,0,0,0)
+		t.nineslice.qtop = love.graphics.newQuad(0,0,0,0,0,0)
+		t.nineslice.qbottom = love.graphics.newQuad(0,0,0,0,0,0)
+		
+		t.nineslice.qbody = love.graphics.newQuad(0,0,0,0,0,0)
+		
 	end
+	
 	return table.append(sprite, t)
 end
 
@@ -262,10 +409,9 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	
 	-- animation was changed from outside
 	if sprite.animation ~= sprite.current then
-		sprite.speed = nil
-		
 		sprite.current = sprite.animation
 	
+		sprite.speed = nil
 		sprite.timer = 0
 		sprite.seq = "seq_start"
 		sprite.seq_index = 1
@@ -362,19 +508,118 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	-- finally drawing itself
 	if data.tiled then -- TILED SPRITE
 		
-		local quad = sprite.tiled
-		if not quad then error("sprite.draw() | no tiled quad in \""..sprite.name.."\"") end
+		if not sprite.tiled then error("sprite.draw() | no tiled data in \""..sprite.name.."\"") end
+		local quad = sprite.tiled.quad
 		
 		local qref_width = framedata.width
 		local qref_height = framedata.height
 		
-		local qx = sprite.qx or 0
-		local qy = sprite.qy or 0
-		local qwidth = sprite.qwidth or qref_width; qwidth = math.floor(qwidth)
-		local qheight = sprite.qheight or qref_height; qheight = math.floor(qheight)
+		local qx = sprite.tiled.x or 0
+		local qy = sprite.tiled.y or 0
+		local qwidth = sprite.tiled.width or qref_width; qwidth = math.floor(qwidth)
+		local qheight = sprite.tiled.height or qref_height; qheight = math.floor(qheight)
 		
 		quad:setViewport(qx, qy, qwidth, qheight, qref_width, qref_height)
 		love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+		
+	elseif data.nineslice then -- NINE-SLICE SPRITE
+		
+		if not sprite.nineslice then error("sprite.draw() | no nine-slice data in \""..sprite.name.."\"") end
+		local ninedata = animdata.nineslice
+		local sides = assets[sprite.name]._nineslices[anim][frame]
+		
+		local nwidth = sprite.nineslice.width or framedata.width
+		local nheight = sprite.nineslice.height or framedata.height
+		
+		-- top left
+		local nx = x
+		local ny = y
+		love.graphics.draw(sides[1], nx, ny)
+		
+		-- top
+		local nx = x + ninedata.x1
+		local ny = y
+		local qref_width = framedata.width - (ninedata.x1 + ninedata.x2)
+		local qref_height = ninedata.y1
+		local qwidth = nwidth - (ninedata.x1 + ninedata.x2)
+		local qheight = qref_height
+		if ninedata.top ~= TILE.STRETCH then
+			sprite.nineslice.qtop:setViewport(0, 0, qwidth, qheight, qref_width, qref_height)
+			love.graphics.draw(sides[2], sprite.nineslice.qtop, nx, ny)
+		else
+			love.graphics.draw(sides[2], nx, ny, 0, qwidth/qref_width, qheight/qref_height)
+		end
+		
+		-- top right
+		local nx = x + (nwidth - ninedata.x2)
+		local ny = y
+		love.graphics.draw(sides[3], nx, ny)
+		
+		-- left
+		local nx = x
+		local ny = y + ninedata.y1
+		local qref_width = ninedata.x1
+		local qref_height = framedata.height - (ninedata.y1 + ninedata.y2)
+		local qwidth = qref_width
+		local qheight = nheight - (ninedata.y1 + ninedata.y2)
+		if ninedata.left ~= TILE.STRETCH then
+			sprite.nineslice.qleft:setViewport(0, 0, qwidth, qheight, qref_width, qref_height)
+			love.graphics.draw(sides[4], sprite.nineslice.qleft, nx, ny)
+		else
+			love.graphics.draw(sides[4], nx, ny, 0, qwidth/qref_width, qheight/qref_height)
+		end
+		
+		-- body
+		local nx = x + ninedata.x1
+		local ny = y + ninedata.y1
+		local qref_width = framedata.width - (ninedata.x1 + ninedata.x2)
+		local qref_height = framedata.height - (ninedata.y1 + ninedata.y2)
+		local qwidth = nwidth - (ninedata.x1 + ninedata.x2)
+		local qheight = nheight - (ninedata.y1 + ninedata.y2)
+		if ninedata.body ~= TILE.STRETCH then
+			sprite.nineslice.qbody:setViewport(0, 0, qwidth, qheight, qref_width, qref_height)
+			love.graphics.draw(sides[5], sprite.nineslice.qbody, nx, ny)
+		else
+			love.graphics.draw(sides[5], nx, ny, 0, qwidth/qref_width, qheight/qref_height)
+		end
+		
+		-- right
+		local nx = x + (nwidth - ninedata.x2)
+		local ny = y + ninedata.y1
+		local qref_width = ninedata.x2
+		local qref_height = framedata.height - (ninedata.y1 + ninedata.y2)
+		local qwidth = qref_width
+		local qheight = nheight - (ninedata.y1 + ninedata.y2)
+		if ninedata.right ~= TILE.STRETCH then
+			sprite.nineslice.qright:setViewport(0, 0, qwidth, qheight, qref_width, qref_height)
+			love.graphics.draw(sides[6], sprite.nineslice.qright, nx, ny)
+		else
+			love.graphics.draw(sides[6], nx, ny, 0, qwidth/qref_width, qheight/qref_height)
+		end
+		
+		-- bottom left
+		local nx = x
+		local ny = y + (nheight - ninedata.y2)
+		love.graphics.draw(sides[7], nx, ny)
+		
+		-- bottom
+		local nx = x + ninedata.x1
+		local ny = y + (nheight - ninedata.y2)
+		local qref_width = framedata.width - (ninedata.x1 + ninedata.x2)
+		local qref_height = ninedata.y2
+		local qwidth = nwidth - (ninedata.x1 + ninedata.x2)
+		local qheight = qref_height
+		if ninedata.bottom ~= TILE.STRETCH then
+			sprite.nineslice.qbottom:setViewport(0, 0, qwidth, qheight, qref_width, qref_height)
+			love.graphics.draw(sides[8], sprite.nineslice.qbottom, nx, ny)
+		else
+			love.graphics.draw(sides[8], nx, ny, 0, qwidth/qref_width, qheight/qref_height)
+		end
+		
+		-- bottom right
+		local nx = x + (nwidth - ninedata.x2)
+		local ny = y + (nheight - ninedata.y2)
+		love.graphics.draw(sides[9], nx, ny)
 		
 	else -- REGULAR SPRITE
 		
@@ -382,5 +627,6 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		
 	end
 	
+	-- reset graphics state
 	love.graphics.setColor(1,1,1,1)
 end
