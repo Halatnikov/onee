@@ -39,9 +39,9 @@ config = {
 			down = {},
 			left = {},
 			right = {},
-			a = {{circle = {-64,-80,48}, text = "A"}},
-			b = {{circle = {-150,-48,32}, text = "B"}},
-			start = {{rect = {312,-48,88,32}, text = "Start"}},
+			a = {{circle = {-64,-80, 48}, text = "A"}},
+			b = {{circle = {-150,-48, 32}, text = "B"}},
+			start = {{rect = {312,-48, 88,32}, text = "Start"}},
 		},
 	},
 }

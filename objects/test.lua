@@ -2,8 +2,6 @@ local object = {}
 
 function object.init(self)
 	
-	self.aaa = love.math.random(0,10)
-	
 	self.sprite = sprite.init(self.sprite, "earless")
 	self.sprite.x = love.math.random(100,400)
 	self.sprite.y = 100
@@ -25,14 +23,14 @@ function object.init(self)
 	self.sprite4.y = 100
 	self.sprite4.nineslice.width = 128
 	self.sprite4.nineslice.height = 64
-	self.sprite4.angle = 0
+	self.sprite4.frame = love.math.random(1,2)
 	
 end
 
 function object.update(self)
 	
-	self.aaa = self.aaa + 1
-	self.sprite4.angle = self.sprite4.angle + 2
+	self.aaa = (self.aaa or love.math.random(0,10)) + 1
+	self.sprite4.angle = (self.sprite4.angle or love.math.random(0,360)) + 2
 	
 	sprite.update(self.sprite)
 	sprite.update(self.sprite2)

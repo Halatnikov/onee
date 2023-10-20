@@ -1,8 +1,10 @@
-------- SPRITE (data)
+------- SPRITE (def)
 
 tiled
 [enables the sprite to be tiled, can be a boolean, a string, or a table] 
 [valid values: true (same as "repeat"), "repeat", "mirroredrepeat", "clamp", "clampzero" (default: false)]
+
+nineslice
 
 gif
 [forces gif mode to all animations (default: false)]
@@ -44,6 +46,21 @@ animations
 		
 		y
 		[defines y origin point for all frames, but frame's y still takes priority]
+		
+		nineslice
+		
+			x1
+			x2
+			y1
+			y2
+			
+			left
+			right
+			top
+			bottom
+			body
+			
+			sides
 		
 		frames
 		[an array of all available frames in that animation]
@@ -90,7 +107,7 @@ sprite
 [identifies that this is indeed a sprite (default: true)]
 
 name
-[sprite data to reference]
+[sprite def to reference]
 
 animation
 [current animation name, you can change that (default: "idle")]
@@ -168,4 +185,18 @@ tiled
 
 	height
 	[height of the tiling, can be used independently of scaley and height (default: frame height)]
+	
+nineslice
+
+	qleft
+	qright
+	qtop
+	qbottom
+	qbody
+	
+	canvas
+	
+	width
+	
+	height
 

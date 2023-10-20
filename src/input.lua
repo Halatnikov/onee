@@ -91,7 +91,7 @@ function input.update() -- MAIN LOOP --
 		
 		for key in pairs(config.input.touch) do
 			for i in pairs(config.input.touch[key]) do
-				for n,id in ipairs(touches) do
+				for j,id in ipairs(touches) do
 					local touchx, touchy = love.touch.getPosition(id)
 					local shape = config.input.touch[key][i]
 					
@@ -163,11 +163,11 @@ function input.draw() -- DRAW LOOP --
 					
 					if not input[key] == true then
 						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.ellipse("line",x,y,radiusx,radiusy,segments)
+						love.graphics.ellipse("line",x,y,radiusx,radiusy, segments)
 						love.graphics.printf(shape.text or "", x-(radiusx/2), y-8, radiusx, "center")
 					else
 						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.ellipse("fill",x,y,radiusx,radiusy,segments)
+						love.graphics.ellipse("fill",x,y,radiusx,radiusy, segments)
 						love.graphics.printf(shape.text or "", x-(radiusx/1.33), y-12, radiusx, "center", 0, 1.5, 1.5)
 					end
 				end
@@ -186,14 +186,17 @@ function input.draw() -- DRAW LOOP --
 					
 					if not input[key] == true then
 						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.rectangle("line",x,y,width,height,rx,ry,segments)
+						love.graphics.rectangle("line",x,y,width,height, rx,ry,segments)
 						love.graphics.printf(shape.text or "", x, y+(height/2)-8, width, "center")
 					else
 						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.rectangle("fill",x,y,width,height,rx,ry,segments)
+						love.graphics.rectangle("fill",x,y,width,height, rx,ry,segments)
 						love.graphics.printf(shape.text or "", x-(width/4), y+(height/2)-12, width, "center", 0, 1.5, 1.5)
 					end
 				end
+				
+				-- reset graphics state
+				love.graphics.setColor(1,1,1,1)
 				
 			end
 		end

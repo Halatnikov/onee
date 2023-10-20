@@ -22,11 +22,7 @@ function scenes.set(name, data) -- SWITCH CURRENT SCENE --
 	collectgarbage()
 	
 	-- load new scene
-	if love.filesystem.getInfo("scenes/"..name..".lua") then
-		scene = require("scenes/"..name)
-	else
-		error("scenes.set() | "..name.." is not a valid scene!")
-	end
+	scene = require("scenes/"..name)
 	
 	scene.name = name
 	
@@ -38,7 +34,7 @@ end
 
 function scenes.update() -- SCENE UPDATE LOOP --
 
-	if not scene.name then error("scenes.update() | No scene initialized!") end
+	assert(scene.name, "scenes.update() | No scene initialized!")
 	
 	if scene.update then scene.update() end -- scene
 
