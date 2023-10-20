@@ -98,13 +98,12 @@ function input.update() -- MAIN LOOP --
 					if shape.circle then
 						local x = shape.circle[1]
 						local y = shape.circle[2]
-						local radiusx = shape.circle[3]
-						local radiusy = shape.circle[4] or radiusx
+						local radius = shape.circle[3]
 						
 						if math.sign(x) == -1 then x = windowwidth + x end
 						if math.sign(y) == -1 then y = windowheight + y end
 						
-						if collision.point_ellipse(touchx,touchy, x,y,radiusx,radiusy) then
+						if collision.point_circle(touchx,touchy, x,y,radius) then
 							input.mode = "touch"
 							input[key] = true
 						end
@@ -154,21 +153,20 @@ function input.draw() -- DRAW LOOP --
 				if shape.circle then
 					local x = shape.circle[1]
 					local y = shape.circle[2]
-					local radiusx = shape.circle[3]
-					local radiusy = shape.circle[4] or radiusx
-					local segments = shape.circle[5] or nil -- how detailed is the circle
+					local radius = shape.circle[3]
+					local segments = shape.circle[4] or nil -- how detailed is the circle
 					
 					if math.sign(x) == -1 then x = windowwidth + x end
 					if math.sign(y) == -1 then y = windowheight + y end
 					
 					if not input[key] == true then
 						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.ellipse("line",x,y,radiusx,radiusy, segments)
-						love.graphics.printf(shape.text or "", x-(radiusx/2), y-8, radiusx, "center")
+						love.graphics.circle("line",x,y,radius, segments)
+						love.graphics.printf(shape.text or "", x-(radius/2), y-8, radius, "center")
 					else
 						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.ellipse("fill",x,y,radiusx,radiusy, segments)
-						love.graphics.printf(shape.text or "", x-(radiusx/1.33), y-12, radiusx, "center", 0, 1.5, 1.5)
+						love.graphics.circle("fill",x,y,radius, segments)
+						love.graphics.printf(shape.text or "", x-(radius/1.33), y-12, radius, "center", 0, 1.5, 1.5)
 					end
 				end
 				

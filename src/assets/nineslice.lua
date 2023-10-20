@@ -121,7 +121,7 @@ end
 ----------------------------------------------------------------
 
 function nineslice.draw(sprite, anim, frame, animdef, framedef)
-	assert(sprite.nineslice, "nineslice.draw() | no nine-slice definition in \""..sprite.name.."\"")
+	assert(sprite.nineslice, "nineslice.draw() | no nine-slice instance in \""..sprite.name.."\"")
 	local ninedef = animdef.nineslice
 	assert(ninedef, "nineslice.draw() | no nine-slice definition for animation \""..anim.."\" in \""..sprite.name.."\"")
 	assert(ninedef.x1, "nineslice.draw() | no nine-slice size for animation \""..anim.."\" in \""..sprite.name.."\"")

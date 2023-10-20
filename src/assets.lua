@@ -199,7 +199,8 @@ end
 
 function sprite.update(sprite) -- UPDATE SPRITE --
 	
-	assert(sprite.name, "sprite.update() | not a valid sprite")
+	assert(sprite, "sprite.update() | not a valid sprite")
+	assert(sprite.sprite, "sprite.update() | not a valid sprite")
 	local animdef = sprites[sprite.name].animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	local framedef = animdef.frames[sprite.frame]
@@ -266,7 +267,7 @@ end
 function sprite.draw(sprite) -- DRAW SPRITE --
 
 	assert(sprite, "sprite.draw() | not a valid sprite")
-	assert(sprite.name, "sprite.draw() | not a valid sprite")
+	assert(sprite.sprite, "sprite.draw() | not a valid sprite")
 	local spritedef = sprites[sprite.name]
 	assert(spritedef, "sprite.draw() | no such sprite \""..sprite.name.."\"")
 	
@@ -321,7 +322,7 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	-- finally drawing itself
 	if spritedef.tiled then -- TILED SPRITE
 		
-		assert(sprite.tiled, "sprite.draw() | no tiled definition in \""..sprite.name.."\"")
+		assert(sprite.tiled, "sprite.draw() | no tiled instance in \""..sprite.name.."\"")
 		local quad = sprite.tiled.quad
 		
 		local qref_width = framedef.width

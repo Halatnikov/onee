@@ -1,4 +1,4 @@
-version = "0.0.2-4"
+version = "0.0.2-5"
 
 function love.load()
 	require("conf")

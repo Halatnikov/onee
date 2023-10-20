@@ -20,6 +20,11 @@ function math.round(arg, decimals)
     return math.floor(arg * mul + 0.5) / mul;
 end
 
+function math.distance(x1, y1, x2, y2)
+	if not y2 then x2, y2 = y1, y1; y1 = x1 end -- allow one axis
+	return math.sqrt((x2 - x1)^2 + (y2 - y1)^2)
+end
+
 function table.find(arg, result)
     for k,v in pairs(arg) do
         if v == result then return k end
