@@ -118,7 +118,7 @@ function nuklear.window.debug()
 		function ()
 			ui:layoutRow('dynamic', 16, 1)
 			ui:label("Input mode: "..input.mode)
-			ui:label("Mouse "..love.mouse.getX().." "..love.mouse.getY().." "..input.mouse_wheel)
+			ui:label("Mouse "..mousex.." "..mousey.." "..input.mouse_wheel)
 			for key in pairs(config.input.keyboard) do 
 				ui:label(key.."   "..math.boolint(input[key]).." "..input.time[key])
 			end

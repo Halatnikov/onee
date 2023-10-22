@@ -118,7 +118,7 @@ function input.update() -- MAIN LOOP --
 						if math.sign(x) == -1 then x = windowwidth + x end
 						if math.sign(y) == -1 then y = windowheight + y end
 						
-						if collision.point_rect(touchx,touchy, x,y,x+width,y+height) then
+						if collision.point_rect(touchx,touchy, x,y,width,height) then
 							input.mode = "touch"
 							input[key] = true
 						end
