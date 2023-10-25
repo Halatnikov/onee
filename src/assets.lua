@@ -33,17 +33,14 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	local sprite = require("sprites/"..path) -- init
 	assets[name] = {}
 	
-	-- first pass, determine image types
+	-- first pass
 	for anim in pairs(sprite.animations) do
 		local animdef = sprite.animations[anim]
 		
+		-- determine image types
 		if sprite.gif then animdef.gif = true end
-	end
-	
-	-- second pass, load unique images
-	for anim in pairs(sprite.animations) do
-		local animdef = sprite.animations[anim]
 		
+		-- load only unique images
 		if not animdef.images then
 			assets[name][anim] = {} -- new anim entry
 			local filename = animdef.filename or anim
@@ -65,7 +62,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 		end
 	end
 	
-	-- third pass
+	-- second pass
 	for anim in pairs(sprite.animations) do
 		local animdef = sprite.animations[anim]
 		
@@ -342,6 +339,7 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		
 	elseif spritedef.nineslice then -- NINE-SLICE SPRITE
 	
+		assert(sprite.nineslice, "sprite.draw() | no nine-slice instance in \""..sprite.name.."\"")
 		local nwidth = sprite.nineslice.width or framedef.width
 		local nheight = sprite.nineslice.height or framedef.height
 		

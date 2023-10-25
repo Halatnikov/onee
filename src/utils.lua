@@ -10,7 +10,11 @@ function math.flipsign(arg)
 	return (arg > 0) and -arg or math.abs(arg)
 end
 
-function math.clamp(arg, min, max)
+function math.between(min, arg, max)
+	return arg >= min and arg <= max
+end
+
+function math.clamp(min, arg, max)
     if min > max then min, max = max, min end -- swap if wrong way around
     return math.max(min, math.min(max, arg))
 end
