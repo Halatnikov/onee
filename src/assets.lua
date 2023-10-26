@@ -173,22 +173,20 @@ function sprite.init(sprite, name) -- INITIALIZE A NEW SPRITE --
 	}
 	
 	if sprites[name].tiled then
-		
-		t.tiled = {}
-		t.tiled.quad = love.graphics.newQuad(0,0,0,0,0,0)
-		
+		t.tiled = {
+			quad = love.graphics.newQuad(0,0,0,0,0,0),
+		}
+	
 	elseif sprites[name].nineslice then
-		
-		t.nineslice = {}
-		
-		t.nineslice.qleft = love.graphics.newQuad(0,0,0,0,0,0)
-		t.nineslice.qright = love.graphics.newQuad(0,0,0,0,0,0)
-		t.nineslice.qtop = love.graphics.newQuad(0,0,0,0,0,0)
-		t.nineslice.qbottom = love.graphics.newQuad(0,0,0,0,0,0)
-		t.nineslice.qbody = love.graphics.newQuad(0,0,0,0,0,0)
-		
-		t.nineslice.canvas = love.graphics.newCanvas(1,1)
-		
+		t.nineslice = {
+			qleft = love.graphics.newQuad(0,0,0,0,0,0),
+			qright = love.graphics.newQuad(0,0,0,0,0,0),
+			qtop = love.graphics.newQuad(0,0,0,0,0,0),
+			qbottom = love.graphics.newQuad(0,0,0,0,0,0),
+			qbody = love.graphics.newQuad(0,0,0,0,0,0),
+			
+			canvas = love.graphics.newCanvas(1,1),
+		}
 	end
 	
 	return table.append(sprite, t)

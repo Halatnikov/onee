@@ -3,7 +3,7 @@ gif = {}
 ----------------------------------------------------------------
 
 function gif.add(path, animdef, export)
-	local file = love.filesystem.newFile(path)
+	local file = love.filesystem.newFile(path, "r")
 	assert(file, "gif.add() | incorrect gif path \""..path.."\"")
 	
 	local gifload = gifload()
@@ -85,9 +85,8 @@ function gif.add(path, animdef, export)
 				love.graphics.draw(image, x, y)
 			end
 		end)
-		image = canvas:newImageData()
 		
-		export[i] = love.graphics.newImage(image) -- new frame entry
+		export[i] = love.graphics.newImage(canvas:newImageData()) -- new frame entry
 	end
 	
 	canvas = nil -- clear from memory
