@@ -1,7 +1,8 @@
 require("src/libs/errorhandler")
-loveframes = require("src/libs/loveframes")
 require("src/libs/tserial")
+loveframes = require("src/libs/loveframes")
 gifload = require("src/libs/gifload")
+gltf = require("src/libs/gltf")
 
 require("src/utils")
 require("src/gui")
@@ -76,7 +77,7 @@ function debug.draw()
 	end
 	
 	
-	print(collision.line_circ(mousex, mousey, mousex+48, mousey+128, windowwidth/2, windowheight/2, 48))
+	--print(collision.line_circ(mousex, mousey, mousex+48, mousey+128, windowwidth/2, windowheight/2, 48))
 	love.graphics.circle("line", windowwidth/2, windowheight/2, 48)
 	love.graphics.line(mousex, mousey, mousex+48, mousey+128)
 	

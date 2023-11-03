@@ -130,6 +130,7 @@ function nuklear.window.debug()
 		
 		nuklear.table(assets, "Assets: "..table.length(assets), true)
 		nuklear.table(sprites, "Sprites: "..table.length(sprites), true)
+		nuklear.table(models, "Models: "..table.length(models), true)
 		
 	end)
 end

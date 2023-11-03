@@ -1,3 +1,6 @@
+
+---------------------------------------------------------------- MATH
+
 function math.boolint(arg)
 	return arg and 1 or 0
 end
@@ -15,8 +18,11 @@ function math.between(min, arg, max)
 end
 
 function math.clamp(min, arg, max)
-    if min > max then min, max = max, min end -- swap if wrong way around
     return math.max(min, math.min(max, arg))
+end
+
+function math.wrap(min, arg, max)
+    return arg > max and min or arg < min and max or arg
 end
 
 function math.round(arg, decimals)
@@ -28,6 +34,8 @@ function math.distance(x1, y1, x2, y2)
 	if not y2 then x2, y2 = y1, y1; y1 = x1 end -- allow one axis
 	return math.sqrt((x2 - x1)^2 + (y2 - y1)^2)
 end
+
+---------------------------------------------------------------- TABLES
 
 function table.find(arg, result)
     for k,v in pairs(arg) do
@@ -71,6 +79,8 @@ function table.mostcommon(arg)
 	return common
 end
 
+---------------------------------------------------------------- STRINGS
+
 function string.random(length)
 	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 	local t = {}
@@ -94,9 +104,18 @@ function string.tokenize(arg, separator, index)
 	return t
 end
 
-function string.replace(arg,find,replace) -- that's right
+function string.replace(arg,find,replace)
 	return string.gsub(arg,find,replace)
 end
+
+---------------------------------------------------------------- FILES
+file = {}
+
+function file.exists(path)
+	return love.filesystem.getInfo(path)
+end
+
+---------------------------------------------------------------- DEBUG
 
 function debug.table(arg,drop,indent)
 	print(tserial.pack(arg,drop or true,indent or true))

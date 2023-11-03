@@ -6,6 +6,11 @@ function love.load()
 	
 	print(love.version.." | onee "..version)
 	scenes.set("init")
+	
+end
+
+function love.quit()
+	
 end
 
 -- main loop

@@ -64,7 +64,7 @@ function object.new(path, data) -- CREATE NEW OBJECT --
 	local object = {} -- init
 	object.instances = 0
 	
-	if love.filesystem.getInfo("objects/"..path..".lua") then 
+	if file.exists("objects/"..path..".lua") then 
 		object.data = require("objects/"..path) -- add code to object, if it exists
 	end
 	

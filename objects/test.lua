@@ -25,6 +25,10 @@ function object.init(self)
 	self.sprite4.nineslice.height = 64
 	self.sprite4.frame = love.math.random(1,2)
 	
+	self.model = model.init(self.model, "ayleen", {scale = 10})
+	self.model.scale = 8
+	self.model.yoffset = -19
+	
 end
 
 function object.update(self)
@@ -37,6 +41,8 @@ function object.update(self)
 	sprite.update(self.sprite3)
 	sprite.update(self.sprite4)
 	
+	model.update(self.model)
+	
 end
 
 function object.draw(self)
@@ -45,6 +51,8 @@ function object.draw(self)
 	sprite.draw(self.sprite2)
 	sprite.draw(self.sprite3)
 	sprite.draw(self.sprite4)
+	
+	model.draw(self.model)
 	
 end
 

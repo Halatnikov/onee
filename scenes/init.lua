@@ -8,9 +8,11 @@ function scene.init()
 	asset.sprite("greyguy")
 	asset.sprite("example_9slice")
 	
+	asset.model("ayleen")
+	
 	object.new("test",{a=1,{3}})
 	instance.new("test",{b=4})
-	instance.new("test",{b=5})
+	--instance.new("test",{b=5})
 	
 	object.new("yorb")
 	for i=1,6 do instance.new("yorb",{sprite={x=32*i,y=32}}) end

@@ -1,8 +1,10 @@
 asset = {} -- functions
 sprite = {}
+model = {}
 
 assets = {} -- actual containers
 sprites = {}
+models = {}
 
 -- constants
 TILE = {
@@ -125,6 +127,20 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	
 end
 
+function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
+	
+	local name = string.tokenize(path,"/",#string.tokenize(path,"/"))
+	if assets[name] then print("asset.model() | asset \""..name.."\" already loaded!") return end
+	
+	local modeldef = {} -- init
+	
+	assets[name] = gltf.newAsset("models/"..path.."/"..name..".gltf")
+	assets[name]:continueLoading(5)
+	
+	models[name] = modeldef -- done
+	
+end
+
 function asset.delete(name) -- UNLOAD ASSET
 	assets[name] = nil
 	if sprites[name] then sprites[name] = nil end
@@ -157,7 +173,7 @@ end
 
 ---------------------------------------------------------------- SPRITES
 
-function sprite.init(sprite, name) -- INITIALIZE A NEW SPRITE --
+function sprite.init(sprite, name) -- INIT A NEW SPRITE INSTANCE --
 	assert(sprites[name], "sprite.init() | \""..name.."\" is not a valid sprite!")
 	
 	local t = {
@@ -201,7 +217,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	local framedef = animdef.frames[sprite.frame]
 	assert(framedef, "sprite.update() | no such frame "..sprite.frame.." of animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	
-	-- update nine-slice canvas
+	-- update nine-slice canvas size
 	if sprite.nineslice then
 		local nwidth = sprite.nineslice.width or framedef.width
 		local nheight = sprite.nineslice.height or framedef.height
@@ -356,4 +372,86 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	
 	-- reset graphics state
 	love.graphics.setColor(1,1,1,1)
+end
+
+---------------------------------------------------------------- 3D MODELS
+
+local vec3 = require "src/libs/gltf/cpml.modules.vec3"
+local mat4 = require "src/libs/gltf/cpml.modules.mat4"
+
+function model.init(model, name) -- INIT A NEW 3D MODEL INSTANCE --
+	assert(models[name], "model.init() | \""..name.."\" is not a valid 3d model!")
+	
+	local t = {
+		model = true,
+		name = name,
+		animations = {1},
+		current = {1},
+		playing = {},
+		
+		instance = assets[name]:newInstance(1),
+		projection = gltf.newRenderer(),
+		canvas = {
+			main = love.graphics.newCanvas(windowwidth, windowheight),
+			depth = love.graphics.newCanvas(windowwidth, windowheight, {format = "depth32f"}),
+		},
+		viewport = {
+			pos = vec3.new(0, 0, -1),
+			transform = mat4.new(),
+		},
+	}
+	
+	t.projection:setCanvases(t.canvas.main, t.canvas.main)
+	
+	t.instance:playAnimation(t.animations[1])
+	
+	return table.append(model, t)
+end
+yx = 0
+function model.update(model) -- UPDATE 3D MODEL --
+	assert(model, "model.update() | not a valid 3d model")
+	assert(model.model, "model.update() | not a valid 3d model")	
+	
+	local width = model.width or model.canvas.main:getWidth()
+	local height = model.height or model.canvas.main:getHeight()
+	local fov = model.fov or 45
+	local scale = model.scale or 1
+	
+	-- update the canvas size
+	if model.canvas.main:getWidth() ~= width or model.canvas.main:getHeight() ~= height then
+		model.canvas.main = love.graphics.newCanvas(width, height)
+		model.canvas.depth = love.graphics.newCanvas(width, height, {format = "depth32f"})
+	end
+	
+	-- update animations
+	--model.instance:updateAllAnimations(dt)
+	
+	-- viewport/"camera" position, Z is basically model's scale, front of a model is north
+	-- models are centered by 0,0 so you need to use offsets to actually center it
+	model.viewport.pos.x = model.xoffset or 0
+	model.viewport.pos.y = model.yoffset or 0
+	model.viewport.pos.z = model.z or (fov * 16) / scale
+	
+	-- set projection matrix (fov, aspect ratio, clip distance min, max)
+	model.projection:setProjectionMatrix(mat4.from_perspective(fov, (width / height), 0.1, 1000))
+	
+	-- set view matrix
+	local transform = model.viewport.transform
+	local center_y = vec3.new(0, 1, 0)		-- direction that represents up
+	local center_z = vec3.new(0, 0, 1)		-- "eye" position of the viewport
+	transform:look_at(transform, model.viewport.pos, model.viewport.pos + center_z, center_y)
+	transform:translate(transform, model.viewport.pos)
+	
+	model.projection:setViewMatrix(transform)
+	
+end
+
+function model.draw(model) -- DRAW 3D MODEL --
+	assert(model, "model.draw() | not a valid 3d model")
+	assert(model.model, "model.draw() | not a valid 3d model")
+	
+	model.projection:addToDrawList(model.instance)
+	model.projection:draw()
+	
+	love.graphics.draw(model.canvas.main)
 end
