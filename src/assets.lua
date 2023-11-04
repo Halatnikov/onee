@@ -29,7 +29,7 @@ local nineslice = require("src/assets/nineslice")
 
 function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	
-	local name = string.tokenize(path,"/",#string.tokenize(path,"/"))
+	local name = string.tokenize(path, "/", -1)
 	if assets[name] then print("asset.sprite() | asset \""..name.."\" already loaded!") return end
 	
 	local sprite = require("sprites/"..path) -- init
@@ -129,12 +129,38 @@ end
 
 function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	
-	local name = string.tokenize(path,"/",#string.tokenize(path,"/"))
+	local name = string.tokenize(path, "/", -1)
 	if assets[name] then print("asset.model() | asset \""..name.."\" already loaded!") return end
 	
-	local modeldef = {} -- init
+	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
+	local modeldef = {}
+	if files.exists("models/"..path..".lua") then modeldef = require("models/"..path) end
 	
-	assets[name] = gltf.newAsset("models/"..path.."/"..name..".gltf")
+	-- overwrite materials
+	if modeldef.materials then
+		for mat in pairs(modeldef.materials) do
+			if modeldef.materials[mat].alphaMode then
+				model.materials[mat].alphaMode = modeldef.materials[mat].alphaMode
+			end
+			if modeldef.materials[mat].doubleSided then
+				model.materials[mat].doubleSided = modeldef.materials[mat].doubleSided
+			end
+		end
+	end
+	
+	-- apply external texture images
+	for i=1, #model.images do
+		if string.find(model.images[i].uri, "file://") then
+			local imagename = string.tokenize(model.images[i].uri, "/", -1)
+				  imagename = string.tokenize(imagename, "%?", 1)
+			
+			local image = love.filesystem.read("models/"..path.."/"..imagename)
+			
+			model.images[i].uri = "data:image/png;base64,"..love.data.encode("string", "base64", image)
+		end
+	end
+	
+	assets[name] = gltf.newAsset(model)
 	assets[name]:continueLoading(5)
 	
 	models[name] = modeldef -- done
@@ -424,7 +450,7 @@ function model.update(model) -- UPDATE 3D MODEL --
 	end
 	
 	-- update animations
-	--model.instance:updateAllAnimations(dt)
+	model.instance:updateAllAnimations(dt)
 	
 	-- viewport/"camera" position, Z is basically model's scale, front of a model is north
 	-- models are centered by 0,0 so you need to use offsets to actually center it
@@ -450,8 +476,28 @@ function model.draw(model) -- DRAW 3D MODEL --
 	assert(model, "model.draw() | not a valid 3d model")
 	assert(model.model, "model.draw() | not a valid 3d model")
 	
+	-- the model itself
 	model.projection:addToDrawList(model.instance)
 	model.projection:draw()
 	
-	love.graphics.draw(model.canvas.main)
+	-- handle the canvas
+	local x = model.x or 0; x = math.round(x)
+	local y = model.y or 0; y = math.round(y)
+	local angle = model.angle or 0; angle = math.rad(angle)
+	local scalex = model.scalex or 1
+	local scaley = model.scaley or 1
+	local xoffset = model.xoffset or 0
+	local yoffset = model.yoffset or 0
+	local skewx = model.skewx or 0
+	local skewy = model.skewy or 0
+	
+	-- opacity and tinting
+	local rgb = model.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
+	local opacity = model.opacity or 100; opacity = opacity/100
+	love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+	
+	love.graphics.draw(model.canvas.main, x, y, angle, scalex, scaley, xoffset, yoffset, skewx, skewy)
+	
+	-- reset graphics state
+	love.graphics.setColor(1,1,1,1)
 end

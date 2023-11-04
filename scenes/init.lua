@@ -9,6 +9,7 @@ function scene.init()
 	asset.sprite("example_9slice")
 	
 	asset.model("ayleen")
+	asset.model("pso_teleporter")
 	
 	object.new("test",{a=1,{3}})
 	instance.new("test",{b=4})

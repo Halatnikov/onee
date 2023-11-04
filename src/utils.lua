@@ -1,5 +1,6 @@
 
 ---------------------------------------------------------------- MATH
+-- TODO: lerp, smoothstep, decay, map from one min-max range to another, ^2, construct 2, vector 2?
 
 function math.boolint(arg)
 	return arg and 1 or 0
@@ -80,6 +81,7 @@ function table.mostcommon(arg)
 end
 
 ---------------------------------------------------------------- STRINGS
+-- TODO: construct 2 (left, right, etc)
 
 function string.random(length)
 	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
@@ -92,8 +94,11 @@ function string.random(length)
 end
 
 -- % is the escape character for separator, because this uses patterns (not regex)
+-- todo: automatically replace ( with %( and |+ with %|%+ and etc 
 function string.tokenize(arg, separator, index)
-	-- todo: automatically replace ( with %( and |+ with %|%+ and etc 
+	-- get last index
+	if index == -1 then index = #string.tokenize(arg, separator) end
+	
 	local t = {}
 	for i in string.gmatch(arg..separator, "([^"..separator.."]*)"..separator) do
 		table.insert (t, i)
@@ -108,10 +113,24 @@ function string.replace(arg,find,replace)
 	return string.gsub(arg,find,replace)
 end
 
----------------------------------------------------------------- FILES
-file = {}
+function string.version(arg)
+	local ver = arg or version
+	local pre
+	
+	if string.find(ver,"-") then
+		ver = string.tokenize(arg,"%-",1)
+		pre = tonumber(string.tokenize(arg,"%-",2))
+	end
+	
+	ver = tonumber(table.concat(string.tokenize(ver,"%.")))
+	
+	return ver, pre
+end
 
-function file.exists(path)
+---------------------------------------------------------------- FILES
+files = {}
+
+function files.exists(path)
 	return love.filesystem.getInfo(path)
 end
 

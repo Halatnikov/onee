@@ -25,9 +25,9 @@ function object.init(self)
 	self.sprite4.nineslice.height = 64
 	self.sprite4.frame = love.math.random(1,2)
 	
-	self.model = model.init(self.model, "ayleen", {scale = 10})
-	self.model.scale = 8
-	self.model.yoffset = -19
+	self.model = model.init(self.model, "pso_teleporter", {scale = 10})
+	self.model.scale = 16
+	self.model.yoffset = -12
 	
 end
 

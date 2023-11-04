@@ -1,5 +1,6 @@
 require("src/libs/errorhandler")
 require("src/libs/tserial")
+require("src/libs/json")
 loveframes = require("src/libs/loveframes")
 gifload = require("src/libs/gifload")
 gltf = require("src/libs/gltf")

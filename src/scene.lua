@@ -58,13 +58,13 @@ end
 
 function object.new(path, data) -- CREATE NEW OBJECT --
 	
-	local name = string.tokenize(path,"/",#string.tokenize(path,"/"))
+	local name = string.tokenize(path, "/", -1)
 	if objects[name] then print("object.new() | object \""..name.."\" already exists!") return end
 	
 	local object = {} -- init
 	object.instances = 0
 	
-	if file.exists("objects/"..path..".lua") then 
+	if files.exists("objects/"..path..".lua") then 
 		object.data = require("objects/"..path) -- add code to object, if it exists
 	end
 	

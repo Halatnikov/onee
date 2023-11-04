@@ -9,9 +9,9 @@ local vec3 = require 'src/libs/gltf/cpml.modules.vec3'
 
 -- prefer cjson if available
 local ok, json = pcall(require, "cjson")
-if not ok then
-	json = require(base..'dkjson')
-end
+-- if not ok then
+	-- json = require(base..'dkjson')
+-- end
 
 -- @class Asset
 -- @desc Each asset represents one .gltf/.glb file. This can, in turn, hold any
@@ -45,18 +45,23 @@ function Asset.new(filename)
 	self.cachedWeights = {}
 	self.animationChannels = {}
 	self.maxTimeForAnimation = {}
-	self.filename = filename
 
-	local file = assert(love.filesystem.newFile(filename, 'r'))
-	local magic = file:read(4)
-	assert(magic)
-	if magic == "glTF" then
-		self:loadGLB(file)
+	if type(filename) ~= "table" then
+		self.filename = filename
+		local file = assert(love.filesystem.newFile(filename, 'r'))
+		local magic = file:read(4)
+		assert(magic)
+		if magic == "glTF" then
+			self:loadGLB(file)
+		else
+			file:seek(0)
+			local s = file:read()
+			assert(s)
+			self:loadGLTF(s)
+		end
 	else
-		file:seek(0)
-		local s = file:read()
-		assert(s)
-		self:loadGLTF(s)
+		self.filename = 0
+		self:loadGLTF(filename)
 	end
 
 	return self
@@ -107,8 +112,12 @@ function Asset:isReady()
 	return self.ready
 end
 
-function Asset:loadGLTF(jsonStr)
-	self.json = json.decode(jsonStr)
+function Asset:loadGLTF(jsonStr, is_decoded)
+	if type(jsonStr) ~= "table" then
+		self.json = json.decode(jsonStr)
+	else
+		self.json = jsonStr
+	end
 	assert(self.json, "failed to parse json")
 	if self.json.asset == nil or self.json.asset.version ~= "2.0" then
 		error("not a glTF 2.0 file")
