@@ -1,6 +1,8 @@
 asset = {} -- functions
 sprite = {}
-model = {}
+model = {
+	anim = {}
+}
 
 assets = {} -- actual containers
 sprites = {}
@@ -136,6 +138,32 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	local modeldef = {}
 	if files.exists("models/"..path..".lua") then modeldef = require("models/"..path) end
 	
+	-- overwrite texture images
+	if model.images then
+		for i=1, #model.images do
+			if files.exists("models/"..path.."/"..model.textures[i].name) then
+				local image = love.filesystem.read("models/"..path.."/"..model.textures[i].name)
+				
+				model.images[i].uri = "data:image/png;base64,"..love.data.encode("string", "base64", image)
+			end
+		end
+	end
+	
+	-- animation definitions
+	if model.animations then
+		if not modeldef.animations then modeldef.animations = {} end
+		modeldef.animationsref = {}
+		
+		for i=1, #model.animations do
+			if not modeldef.animations[model.animations[i].name] then
+				modeldef.animations[model.animations[i].name] = {
+					loop = true,
+				}
+			end
+			modeldef.animationsref[i] = model.animations[i].name
+		end
+	end
+	
 	-- overwrite materials
 	if modeldef.materials then
 		for mat in pairs(modeldef.materials) do
@@ -145,18 +173,6 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 			if modeldef.materials[mat].doubleSided then
 				model.materials[mat].doubleSided = modeldef.materials[mat].doubleSided
 			end
-		end
-	end
-	
-	-- apply external texture images
-	for i=1, #model.images do
-		if string.find(model.images[i].uri, "file://") then
-			local imagename = string.tokenize(model.images[i].uri, "/", -1)
-				  imagename = string.tokenize(imagename, "%?", 1)
-			
-			local image = love.filesystem.read("models/"..path.."/"..imagename)
-			
-			model.images[i].uri = "data:image/png;base64,"..love.data.encode("string", "base64", image)
 		end
 	end
 	
@@ -254,7 +270,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	end
 	
 	-- update animations
-	sprite.timer = sprite.timer + dt
+	sprite.timer = sprite.timer + tick
 	
 	-- animation was changed from outside
 	if sprite.animation ~= sprite.current then
@@ -411,9 +427,6 @@ function model.init(model, name) -- INIT A NEW 3D MODEL INSTANCE --
 	local t = {
 		model = true,
 		name = name,
-		animations = {1},
-		current = {1},
-		playing = {},
 		
 		instance = assets[name]:newInstance(1),
 		projection = gltf.newRenderer(),
@@ -422,24 +435,26 @@ function model.init(model, name) -- INIT A NEW 3D MODEL INSTANCE --
 			depth = love.graphics.newCanvas(windowwidth, windowheight, {format = "depth32f"}),
 		},
 		viewport = {
-			pos = vec3.new(0, 0, -1),
+			pos = vec3.new(0, 0, 1),
 			transform = mat4.new(),
 		},
 	}
 	
-	t.projection:setCanvases(t.canvas.main, t.canvas.main)
+	t.projection:setCanvases(t.canvas.main, t.canvas.depth)
 	
-	t.instance:playAnimation(t.animations[1])
+	t.instance:playAnimation(1)
 	
 	return table.append(model, t)
 end
-yx = 0
+
 function model.update(model) -- UPDATE 3D MODEL --
 	assert(model, "model.update() | not a valid 3d model")
-	assert(model.model, "model.update() | not a valid 3d model")	
+	assert(model.model, "model.update() | not a valid 3d model")
 	
-	local width = model.width or model.canvas.main:getWidth()
-	local height = model.height or model.canvas.main:getHeight()
+	local modeldef = models[model.name]
+	
+	local width = model.canvas.width or windowwidth
+	local height = model.canvas.height or windowheight
 	local fov = model.fov or 45
 	local scale = model.scale or 1
 	
@@ -447,16 +462,36 @@ function model.update(model) -- UPDATE 3D MODEL --
 	if model.canvas.main:getWidth() ~= width or model.canvas.main:getHeight() ~= height then
 		model.canvas.main = love.graphics.newCanvas(width, height)
 		model.canvas.depth = love.graphics.newCanvas(width, height, {format = "depth32f"})
+		
+		model.projection:setCanvases(model.canvas.main, model.canvas.depth)
 	end
 	
 	-- update animations
-	model.instance:updateAllAnimations(dt)
+	-- TODO: loop count, seek to time (progress 0 to 1?, pause
+	-- TODO: add animation, remove animation, stop all, set animation (string or a table)
+	-- model.anim.state(model, {idle = {seek = 0.5, pause = true}})
+	--debug.table(model.instance.activePlayHeads)
+	local playing = model.instance.activePlayHeads
+	for i in pairs(playing) do
+		local animdef = modeldef.animations[modeldef.animationsref[i]]
+		
+		local speed = 1
+		
+		-- loop
+		if animdef.loop then
+			if playing[i].time >= (playing[i].maxTime - tick) then
+				playing[i].time = 0
+			end
+		end
+		
+		model.instance:updateAnimation(i, tick * speed)
+	end
 	
 	-- viewport/"camera" position, Z is basically model's scale, front of a model is north
 	-- models are centered by 0,0 so you need to use offsets to actually center it
 	model.viewport.pos.x = model.xoffset or 0
 	model.viewport.pos.y = model.yoffset or 0
-	model.viewport.pos.z = model.z or (fov * 16) / scale
+	model.viewport.pos.z = model.z or (fov * (math.average(width, height) / fov)) / scale
 	
 	-- set projection matrix (fov, aspect ratio, clip distance min, max)
 	model.projection:setProjectionMatrix(mat4.from_perspective(fov, (width / height), 0.1, 1000))
@@ -481,15 +516,15 @@ function model.draw(model) -- DRAW 3D MODEL --
 	model.projection:draw()
 	
 	-- handle the canvas
-	local x = model.x or 0; x = math.round(x)
-	local y = model.y or 0; y = math.round(y)
-	local angle = model.angle or 0; angle = math.rad(angle)
-	local scalex = model.scalex or 1
-	local scaley = model.scaley or 1
-	local xoffset = model.xoffset or 0
-	local yoffset = model.yoffset or 0
-	local skewx = model.skewx or 0
-	local skewy = model.skewy or 0
+	local x = model.x or model.canvas.x or 0; x = math.round(x)
+	local y = model.y or model.canvas.y or 0; y = math.round(y)
+	local angle = model.angle or model.canvas.angle or 0; angle = math.rad(angle)
+	local scalex = model.canvas.scalex or 1
+	local scaley = model.canvas.scaley or 1
+	local xoffset = model.canvas.xoffset or 0
+	local yoffset = model.canvas.yoffset or 0
+	local skewx = model.skewx or model.canvas.skewx or 0
+	local skewy = model.skewy or model.canvas.skewy or 0
 	
 	-- opacity and tinting
 	local rgb = model.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}

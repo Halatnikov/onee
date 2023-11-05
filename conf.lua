@@ -12,6 +12,7 @@ function love.conf(t)
 end
 
 debug_mode = true
+log_level = "info"
 
 config = {
 	input = {

@@ -2,6 +2,15 @@
 ---------------------------------------------------------------- MATH
 -- TODO: lerp, smoothstep, decay, map from one min-max range to another, ^2, construct 2, vector 2?
 
+function math.random(...) -- alias
+	return love.math.random(...)
+end
+
+function math.choose(...)
+	local arg = {...}
+	return arg[math.random(#arg)]
+end
+
 function math.boolint(arg)
 	return arg and 1 or 0
 end
@@ -29,6 +38,16 @@ end
 function math.round(arg, decimals)
 	local mul = math.pow(10, decimals or 0)
     return math.floor(arg * mul + 0.5) / mul;
+end
+
+function math.average(...)
+	local arg = {...}
+	local sum = 0
+	for i=1, #arg do
+		sum = sum + arg[i]
+	end
+	
+	return sum / #arg
 end
 
 function math.distance(x1, y1, x2, y2)
@@ -83,11 +102,15 @@ end
 ---------------------------------------------------------------- STRINGS
 -- TODO: construct 2 (left, right, etc)
 
+function string.replace(arg,find,replace) -- alias
+	return string.gsub(arg,find,replace)
+end
+
 function string.random(length)
 	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 	local t = {}
 	for i=1, length do
-		local r = love.math.random(1, #charset)
+		local r = math.random(1, #charset)
 		table.insert(t, string.sub(charset, r, r))
 	end
 	return table.concat(t)
@@ -109,10 +132,6 @@ function string.tokenize(arg, separator, index)
 	return t
 end
 
-function string.replace(arg,find,replace)
-	return string.gsub(arg,find,replace)
-end
-
 function string.version(arg)
 	local ver = arg or version
 	local pre
@@ -130,12 +149,12 @@ end
 ---------------------------------------------------------------- FILES
 files = {}
 
-function files.exists(path)
+function files.exists(path) -- alias
 	return love.filesystem.getInfo(path)
 end
 
 ---------------------------------------------------------------- DEBUG
 
-function debug.table(arg,drop,indent)
+function debug.table(arg,drop,indent) -- alias
 	print(tserial.pack(arg,drop or true,indent or true))
 end

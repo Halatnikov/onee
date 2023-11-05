@@ -15,6 +15,7 @@ end
 
 -- main loop
 function love.update(dt)
+	tick = 0.016
 	before_update = before_update + (1/60)
 	
 	misc.update()
