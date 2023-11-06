@@ -11,6 +11,7 @@ function scene.init()
 	asset.model("ayleen")
 	asset.model("pso_teleporter")
 	asset.model("test")
+	asset.model("scruffy")
 	
 	object.new("test",{a=1,{3}})
 	instance.new("test",{b=4})

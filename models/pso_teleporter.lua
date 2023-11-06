@@ -6,8 +6,4 @@ model.materials = {
 	},
 }
 
-model.animations = {
-	
-}
-
 return model

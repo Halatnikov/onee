@@ -141,8 +141,10 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	-- overwrite texture images
 	if model.images then
 		for i=1, #model.images do
-			if files.exists("models/"..path.."/"..model.textures[i].name) then
-				local image = love.filesystem.read("models/"..path.."/"..model.textures[i].name)
+			local texture = model.textures[i].name or model.images[i].name.."png"
+			
+			if files.exists("models/"..path.."/"..texture) then
+				local image = love.filesystem.read("models/"..path.."/"..texture)
 				
 				model.images[i].uri = "data:image/png;base64,"..love.data.encode("string", "base64", image)
 			end
@@ -151,8 +153,9 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	
 	-- animation definitions
 	if model.animations then
-		if not modeldef.animations then modeldef.animations = {} end
 		modeldef.animationsref = {}
+		
+		if not modeldef.animations then modeldef.animations = {} end
 		
 		for i=1, #model.animations do
 			if not modeldef.animations[model.animations[i].name] then
@@ -435,14 +438,14 @@ function model.init(model, name) -- INIT A NEW 3D MODEL INSTANCE --
 			depth = love.graphics.newCanvas(windowwidth, windowheight, {format = "depth32f"}),
 		},
 		viewport = {
-			pos = vec3.new(0, 0, 1),
+			pos = vec3.new(0, 0, -1),
 			transform = mat4.new(),
 		},
 	}
 	
 	t.projection:setCanvases(t.canvas.main, t.canvas.depth)
 	
-	t.instance:playAnimation(1)
+	t.instance:playAnimation(1) --temp
 	
 	return table.append(model, t)
 end
@@ -457,6 +460,9 @@ function model.update(model) -- UPDATE 3D MODEL --
 	local height = model.canvas.height or windowheight
 	local fov = model.fov or 45
 	local scale = model.scale or 1
+	local anglex = model.angle and model.angle.x or 0; anglex = math.rad(anglex)
+	local angley = model.angle and model.angle.y or 0; angley = math.rad(angley)
+	local anglez = model.angle and model.angle.z or 0; anglez = math.rad(anglez)
 	
 	-- update the canvas size
 	if model.canvas.main:getWidth() ~= width or model.canvas.main:getHeight() ~= height then
@@ -473,6 +479,7 @@ function model.update(model) -- UPDATE 3D MODEL --
 	--debug.table(model.instance.activePlayHeads)
 	local playing = model.instance.activePlayHeads
 	for i in pairs(playing) do
+		if not modeldef.animations then break end -- no animations
 		local animdef = modeldef.animations[modeldef.animationsref[i]]
 		
 		local speed = 1
@@ -487,11 +494,12 @@ function model.update(model) -- UPDATE 3D MODEL --
 		model.instance:updateAnimation(i, tick * speed)
 	end
 	
-	-- viewport/"camera" position, Z is basically model's scale, front of a model is north
+	-- viewport/"camera" position
+	-- Z is basically model's scale, front of a model is north, so Z = -1
 	-- models are centered by 0,0 so you need to use offsets to actually center it
 	model.viewport.pos.x = model.xoffset or 0
 	model.viewport.pos.y = model.yoffset or 0
-	model.viewport.pos.z = model.z or (fov * (math.average(width, height) / fov)) / scale
+	model.viewport.pos.z = model.z or -(fov * (math.average(width, height) / fov)) / scale
 	
 	-- set projection matrix (fov, aspect ratio, clip distance min, max)
 	model.projection:setProjectionMatrix(mat4.from_perspective(fov, (width / height), 0.1, 1000))
@@ -501,7 +509,12 @@ function model.update(model) -- UPDATE 3D MODEL --
 	local center_y = vec3.new(0, 1, 0)		-- direction that represents up
 	local center_z = vec3.new(0, 0, 1)		-- "eye" position of the viewport
 	transform:look_at(transform, model.viewport.pos, model.viewport.pos + center_z, center_y)
-	transform:translate(transform, model.viewport.pos)
+	transform:translate(transform, -model.viewport.pos)
+	
+	-- model angles
+	transform:rotate(transform, anglex, vec3.new(1, 0, 0)) -- x
+	transform:rotate(transform, angley, vec3.new(0, 1, 0)) -- y
+	transform:rotate(transform, anglez, vec3.new(0, 0, 1)) -- z
 	
 	model.projection:setViewMatrix(transform)
 	
@@ -518,7 +531,7 @@ function model.draw(model) -- DRAW 3D MODEL --
 	-- handle the canvas
 	local x = model.x or model.canvas.x or 0; x = math.round(x)
 	local y = model.y or model.canvas.y or 0; y = math.round(y)
-	local angle = model.angle or model.canvas.angle or 0; angle = math.rad(angle)
+	local angle = model.canvas.angle or 0; angle = math.rad(angle)
 	local scalex = model.canvas.scalex or 1
 	local scaley = model.canvas.scaley or 1
 	local xoffset = model.canvas.xoffset or 0

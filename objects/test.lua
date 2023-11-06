@@ -26,10 +26,11 @@ function object.init(self)
 	self.sprite4.frame = math.random(1,2)
 	
 	self.model = model.init(self.model, "pso_teleporter", {scale = 10})
-	self.model.scale = 24
-	self.model.yoffset = -11
+	self.model.scale = 16
+	self.model.yoffset = 11
 	--self.model.canvas.width = 256
 	--self.model.canvas.height = 256
+	--self.model.angle = {y = 180}
 	
 end
 
