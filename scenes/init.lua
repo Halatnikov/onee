@@ -2,17 +2,6 @@ local scene = {}
 
 function scene.init()
 	
-	--asset.sprite("earless")
-	--asset.sprite("example_tiled")
-	--asset.sprite("greyguy")
-	--asset.sprite("example_9slice")
-	--asset.sprite("cinge")
-	
-	--asset.model("ayleen")
-	--asset.model("pso_teleporter")
-	--asset.model("test")
-	--asset.model("scruffy")
-	
 	--object.new("test",{a=1,{3}})
 	--instance.new("test",{b=4})
 	--instance.new("test",{b=5})

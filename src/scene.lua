@@ -45,6 +45,7 @@ function scenes.update() -- SCENE UPDATE LOOP --
 end
 
 function scenes.draw() -- SCENE DRAW LOOP --
+	scenes.drawlist = {}
 	
 	if scene.draw then scene.draw() end -- scene
 	
@@ -52,6 +53,7 @@ function scenes.draw() -- SCENE DRAW LOOP --
 		if instances[id].draw then instances[id].draw(instances[id]) end
 	end
 	
+	queue.execute(scenes.drawlist)
 end
 
 ---------------------------------------------------------------- OBJECTS

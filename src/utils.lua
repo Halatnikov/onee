@@ -99,6 +99,31 @@ function table.mostcommon(arg)
 	return common
 end
 
+---------------------------------------------------------------- QUEUEING
+queue = {}
+
+function queue.add(arg, i, add)
+	if not arg.queue then
+		table.append(arg, {queue = {}, first = 1, last = 1})
+	end
+
+	if i < arg.first then arg.first = i end
+	if i > arg.last then arg.last = i end
+	
+	if not arg.queue[i] then arg.queue[i] = {} end
+	table.insert(arg.queue[i], add)
+end
+
+function queue.execute(arg)
+	for i = arg.first, arg.last do
+		if arg.queue[i] then
+			for k,v in pairs(arg.queue[i]) do v() end
+		end
+	end
+	
+	arg.queue = nil
+end
+
 ---------------------------------------------------------------- STRINGS
 -- TODO: construct 2 (left right (trim?), etc)
 

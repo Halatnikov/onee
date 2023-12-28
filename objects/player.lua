@@ -5,6 +5,7 @@ function object.init(self)
 	local skin = "1u_scruffy"
 	asset.sprite(skin)
 	self.sprite = sprite.init(self.sprite, skin)
+	self.sprite.z = 1
 	
 	self.player = {
 		x = 0,

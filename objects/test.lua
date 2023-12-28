@@ -2,6 +2,17 @@ local object = {}
 
 function object.init(self)
 	
+	asset.sprite("earless")
+	asset.sprite("example_tiled")
+	asset.sprite("greyguy")
+	asset.sprite("example_9slice")
+	asset.sprite("cinge")
+	
+	asset.model("ayleen")
+	asset.model("pso_teleporter")
+	asset.model("test")
+	asset.model("scruffy")
+	
 	self.sprite = sprite.init(self.sprite, "earless")
 	self.sprite.x = math.random(100,400)
 	self.sprite.y = 100

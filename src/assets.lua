@@ -35,8 +35,8 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	local name = string.tokenize(path, "/", -1)
 	--if assets[name] then print("asset.sprite() | asset \""..name.."\" already loaded!") return end
 	if assets[name] then return end
-	print("start "..love.timer.getTime())
 	
+	local time_start = love.timer.getTime()
 	local sprite = require("sprites/"..path) -- init
 	assets[name] = {}
 	
@@ -152,7 +152,9 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	end
 	
 	sprites[name] = sprite -- done
-	print("finish "..love.timer.getTime())
+	
+	local time_finish = love.timer.getTime()
+	print("took "..math.round(time_finish - time_start, 4))
 	
 end
 
@@ -363,6 +365,9 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	local skewx = sprite.skewx or 0
 	local skewy = sprite.skewy or 0
 	
+	-- z order
+	local z = sprite.z or 0
+	
 	-- opacity and tinting
 	local rgb = sprite.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
 	local opacity = sprite.opacity or 100; opacity = opacity/100
@@ -421,7 +426,9 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		framey = qheight * (framedef.y / framedef.height) or 0
 		
 		quad:setViewport(qx, qy, qwidth, qheight, qref_width, qref_height)
-		love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+		queue.add(scenes.drawlist, z, function()
+			love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+		end)
 		
 	elseif spritedef.nineslice then -- NINE-SLICE SPRITE
 	
@@ -433,12 +440,16 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		framex = nwidth * (framedef.x / framedef.width) or 0
 		framey = nheight * (framedef.y / framedef.height) or 0
 		
-		love.graphics.draw( nineslice.draw(sprite, anim, frame, animdef, framedef),
-		x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+		queue.add(scenes.drawlist, z, function()
+			love.graphics.draw( nineslice.draw(sprite, anim, frame, animdef, framedef),
+			x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+		end)
 		
 	else -- REGULAR SPRITE
 		
-		love.graphics.draw(image, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+		queue.add(scenes.drawlist, z, function()
+			love.graphics.draw(image, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+		end)
 		
 	end
 	
@@ -566,13 +577,16 @@ function model.draw(model) -- DRAW 3D MODEL --
 	local yoffset = model.canvas.yoffset or 0
 	local skewx = model.skewx or model.canvas.skewx or 0
 	local skewy = model.skewy or model.canvas.skewy or 0
+	local z = model.canvas.z or 0
 	
 	-- opacity and tinting
 	local rgb = model.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
 	local opacity = model.opacity or 100; opacity = opacity/100
 	love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 	
-	love.graphics.draw(model.canvas.main, x, y, angle, scalex, scaley, xoffset, yoffset, skewx, skewy)
+	queue.add(scenes.drawlist, z, function()
+		love.graphics.draw(model.canvas.main, x, y, angle, scalex, scaley, xoffset, yoffset, skewx, skewy)
+	end)
 	
 	-- reset graphics state
 	love.graphics.setColor(1,1,1,1)
