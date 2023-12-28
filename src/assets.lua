@@ -33,7 +33,9 @@ local nineslice = require("src/assets/nineslice")
 function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	
 	local name = string.tokenize(path, "/", -1)
-	if assets[name] then print("asset.sprite() | asset \""..name.."\" already loaded!") return end
+	--if assets[name] then print("asset.sprite() | asset \""..name.."\" already loaded!") return end
+	if assets[name] then return end
+	print("start "..love.timer.getTime())
 	
 	local sprite = require("sprites/"..path) -- init
 	assets[name] = {}
@@ -150,6 +152,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	end
 	
 	sprites[name] = sprite -- done
+	print("finish "..love.timer.getTime())
 	
 end
 
@@ -282,18 +285,6 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	assert(sprite.sprite, "sprite.update() | not a valid sprite")
 	local animdef = sprites[sprite.name].animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
-	local framedef = animdef.frames[sprite.frame]
-	assert(framedef, "sprite.update() | no such frame "..sprite.frame.." of animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
-	
-	-- update nine-slice canvas size
-	if sprite.nineslice then
-		local nwidth = sprite.nineslice.width or framedef.width
-		local nheight = sprite.nineslice.height or framedef.height
-		
-		if sprite.nineslice.canvas:getWidth() ~= nwidth or sprite.nineslice.canvas:getHeight() ~= nheight then
-			sprite.nineslice.canvas = love.graphics.newCanvas(nwidth, nheight)
-		end
-	end
 	
 	-- update animations
 	sprite.timer = sprite.timer + tick
@@ -318,6 +309,9 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	
 	local speed = sprite.speed or animdef.speed or 0 -- overwrite speed
 	
+	local framedef = animdef.frames[sprite.frame]
+	assert(framedef, "sprite.update() | no such frame "..sprite.frame.." of animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
+	
 	-- advance frame
 	if sprite.timer > 1 / (speed / framedef.length) then
 		sprite.timer = 0
@@ -339,6 +333,16 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 		
 		sprite.frame = animdef[sprite.seq][sprite.seq_index]
 		
+	end
+	
+	-- update nine-slice canvas size
+	if sprite.nineslice then
+		local nwidth = sprite.nineslice.width or framedef.width
+		local nheight = sprite.nineslice.height or framedef.height
+		
+		if sprite.nineslice.canvas:getWidth() ~= nwidth or sprite.nineslice.canvas:getHeight() ~= nheight then
+			sprite.nineslice.canvas = love.graphics.newCanvas(nwidth, nheight)
+		end
 	end
 	
 end

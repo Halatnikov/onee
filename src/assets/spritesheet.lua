@@ -21,7 +21,7 @@ end
 
 function spritesheet.strip(path, animdef, export)
 	local stripdef = animdef.strip
-	assert(stripdef.frames, "asset.sprite() | no frame count specified in spritestrip of animation \""..anim.."\" in \""..name.."\"")
+	assert(stripdef.frames, "spritesheet.strip() | no frame count specified in spritestrip for \""..path.."\"")
 	
 	local image = love.graphics.newImage(path)
 	
@@ -43,7 +43,7 @@ function spritesheet.strip(path, animdef, export)
 			height = stripdef.height,
 		}
 		
-		spritesheet.add(path, i, animdef, framedef, export])
+		spritesheet.add(path, i, animdef, framedef, export)
 	end
 	
 end

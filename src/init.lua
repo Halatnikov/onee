@@ -79,7 +79,7 @@ function debug.draw()
 	
 	
 	--print(collision.line_circ(mousex, mousey, mousex+48, mousey+128, windowwidth/2, windowheight/2, 48))
-	love.graphics.circle("line", windowwidth/2, windowheight/2, 48)
-	love.graphics.line(mousex, mousey, mousex+48, mousey+128)
+	--love.graphics.circle("line", windowwidth/2, windowheight/2, 48)
+	--love.graphics.line(mousex, mousey, mousex+48, mousey+128)
 	
 end

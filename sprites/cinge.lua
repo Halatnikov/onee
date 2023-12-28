@@ -10,8 +10,8 @@ sprite.animations = {
 		y = 160/2,
 		sheet = {y = 0, width = 160},
 		frames = {
-			[1] = {sheet = {x = 0}},
-			[2] = {sheet = {x = 160}},
+			[1] = {sheet = {x = 160*0}},
+			[2] = {sheet = {x = 160*1}},
 			[3] = {sheet = {x = 160*2}},
 			[4] = {sheet = {x = 160*3}},
 			[5] = {sheet = {x = 160*4}},
@@ -25,11 +25,8 @@ sprite.animations = {
 		speed = 10,
 		x = 160/2,
 		y = 160/2,
-		strip = {frames = 8, width = 160},
-		-- frames = {
-			-- -- strip appends frame tables!!
-		-- },
-	}
+		strip = {frames = 8},
+	},
 	
 }
 

@@ -53,9 +53,9 @@ function gui.open.debug()
 	window:SetScreenLocked(true)
 	window:SetResizable(true)
 	window:ShowCloseButton(false)
-	window:CenterWithinArea(0, 0, 800, 600)
 	window:SetName("v"..version)
 	window:SetSize(220,220); window:SetMinSize(window.width,58)
+	window:CenterWithinArea(0, 0, 800, 600+600/2)
 
 	-- main container
 	local container = loveframes.Create("list", window)
