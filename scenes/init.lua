@@ -7,6 +7,7 @@ function scene.init()
 	asset.sprite("yorb")
 	asset.sprite("greyguy")
 	asset.sprite("example_9slice")
+	asset.sprite("cinge")
 	
 	asset.model("ayleen")
 	asset.model("pso_teleporter")

@@ -25,6 +25,7 @@ DISPOSE = {
 }
 
 local gif = require("src/assets/gif")
+local spritesheet = require("src/assets/spritesheet")
 local nineslice = require("src/assets/nineslice")
 
 ---------------------------------------------------------------- ASSETS
@@ -47,20 +48,37 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 		-- load only unique images
 		if not animdef.images then
 			assets[name][anim] = {} -- new anim entry
-			local filename = animdef.filename or anim
+			local filename = sprite.filename or animdef.filename or anim
 
+			-- look in animdef
 			-- gif
 			if animdef.gif then
 				gif.add("sprites/"..path.."/"..filename..".gif", animdef, assets[name][anim])
+			
+			-- spritestrip (extension of spritesheet)
+			elseif animdef.strip then
+				spritesheet.strip("sprites/"..path.."/"..filename..".png", animdef, assets[name][anim])
 				
-			-- one image file per frame (default)
 			else
+				-- look in framedef
 				for frame in pairs(animdef.frames) do
-					local image = love.graphics.newImage("sprites/"..path.."/"..filename.."_"..(frame-1)..".png")
+					local framedef = animdef.frames[frame]
 					
-					assets[name][anim][frame] = image -- new frame entry
+					-- spritesheet
+					if framedef.sheet then
+						spritesheet.add("sprites/"..path.."/"..filename..".png", frame, animdef, framedef, assets[name][anim])
+						
+					-- one image file per frame (default)
+					else
+						local imagepath = path.."/"..filename.."_"..(frame-1)
+						if framedef.filename then imagepath = path.."/"..framedef.filename end
+						
+						local image = love.graphics.newImage("sprites/"..imagepath..".png")
+						
+						assets[name][anim][frame] = image -- new frame entry
+					end
+					
 				end
-				
 			end
 			
 		end
@@ -75,6 +93,10 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 		-- allow only one at a time
 		if sprite.tiled then sprite.nineslice = nil end
 		if sprite.nineslice then sprite.tiled = nil end
+		
+		-- clean up no longer needed things
+		animdef.strip = nil
+		animdef.sheet = nil
 		
 		for frame in pairs(animdef.frames) do
 			local framedef = animdef.frames[frame]
@@ -101,7 +123,9 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 			if type(sprite.tiled) == "table" then image:setWrap(sprite.tiled[1], sprite.tiled[2]) end
 			
 			-- nine-slices (9patches)
-			if sprite.nineslice then nineslice.add(name, anim, frame, image, animdef, framedef) end
+			if sprite.nineslice then
+				nineslice.add(name, anim, frame, image, animdef, framedef)
+			end
 			
 			-- add missing frame variables
 			if not framedef.length then framedef.length = 1 end
@@ -141,7 +165,7 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	-- overwrite texture images
 	if model.images then
 		for i=1, #model.images do
-			local texture = model.textures[i].name or model.images[i].name.."png"
+			local texture = model.textures[i].name or model.images[i].name..".png"
 			
 			if files.exists("models/"..path.."/"..texture) then
 				local image = love.filesystem.read("models/"..path.."/"..texture)
@@ -170,12 +194,8 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	-- overwrite materials
 	if modeldef.materials then
 		for mat in pairs(modeldef.materials) do
-			if modeldef.materials[mat].alphaMode then
-				model.materials[mat].alphaMode = modeldef.materials[mat].alphaMode
-			end
-			if modeldef.materials[mat].doubleSided then
-				model.materials[mat].doubleSided = modeldef.materials[mat].doubleSided
-			end
+			model.materials[mat].alphaMode = modeldef.materials[mat].alphaMode or nil
+			model.materials[mat].doubleSided = modeldef.materials[mat].doubleSided or nil
 		end
 	end
 	
@@ -188,7 +208,10 @@ end
 
 function asset.delete(name) -- UNLOAD ASSET
 	assets[name] = nil
-	if sprites[name] then sprites[name] = nil end
+	
+	sprites[name] = nil
+	models[name] = nil
+	
 	collectgarbage()
 end
 
@@ -495,8 +518,9 @@ function model.update(model) -- UPDATE 3D MODEL --
 	end
 	
 	-- viewport/"camera" position
-	-- Z is basically model's scale, front of a model is north, so Z = -1
+	-- Z is basically model's "scale", front of a model is north, so Z = -1
 	-- models are centered by 0,0 so you need to use offsets to actually center it
+	-- TODO: maybe actual scaling?
 	model.viewport.pos.x = model.xoffset or 0
 	model.viewport.pos.y = model.yoffset or 0
 	model.viewport.pos.z = model.z or -(fov * (math.average(width, height) / fov)) / scale

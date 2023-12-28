@@ -3,12 +3,11 @@ gif = {}
 ----------------------------------------------------------------
 
 function gif.add(path, animdef, export)
-	local file = love.filesystem.newFile(path, "r")
+	local file = love.filesystem.read(path)
 	assert(file, "gif.add() | incorrect gif path \""..path.."\"")
 	
 	local gifload = gifload()
-	gifload:update(file:read()) -- read the gif file
-	file:close()
+	gifload:update(file) -- read the gif file
 	local gif = gifload:done()
 	assert(gif.nimages > 0, "gif.add() | invalid gif \""..path.."\"")
 	

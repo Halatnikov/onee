@@ -100,7 +100,7 @@ function table.mostcommon(arg)
 end
 
 ---------------------------------------------------------------- STRINGS
--- TODO: construct 2 (left, right, etc)
+-- TODO: construct 2 (left right (trim?), etc)
 
 function string.replace(arg,find,replace) -- alias
 	return string.gsub(arg,find,replace)
