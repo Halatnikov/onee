@@ -1,4 +1,4 @@
-spritesheet = {}
+local spritesheet = {}
 
 ----------------------------------------------------------------
 function spritesheet.add(path, frame, animdef, framedef, export)
@@ -17,6 +17,7 @@ function spritesheet.add(path, frame, animdef, framedef, export)
 	end)
 	
 	export[frame] = love.graphics.newImage(canvas:newImageData())
+	canvas = nil
 end
 
 function spritesheet.strip(path, animdef, export)

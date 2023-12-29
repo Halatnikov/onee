@@ -36,8 +36,7 @@ sprite.animations = {
 	
 	fall = {
 		filename = "spr_player_air_scruffy",
-		seq_start = {1,2},
-		seq = {3},
+		seq_start = {1,2,3},
 		speed = 10,
 		x = 24,
 		y = 32,

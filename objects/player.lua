@@ -3,8 +3,6 @@ local object = {}
 function object.init(self)
 	
 	self.player = {
-		x = 0,
-		y = 0,
 		x_speed = 0,
 		y_speed = 0,
 		
@@ -30,8 +28,10 @@ function object.init(self)
 		animation = "idle",
 	}
 	
-	self.player.x = math.random(100,400)
-	self.player.y = 200
+	local player = self.player
+	
+	player.x = math.random(100,400)
+	player.y = 200
 	
 	local skin = "1u_scruffy"
 	asset.sprite(skin)
@@ -41,6 +41,9 @@ function object.init(self)
 	self.hitbox = collision.init(self.hitbox, "hitbox",
 		{rect = {width = 16, height = 32}}
 	)
+	
+	self.collider = {}
+	self.collider.down = collision.init(self.collider.down, "collider_down", {line = {}})
 
 end
 
@@ -49,7 +52,7 @@ function object.update(self)
 	
 	-- acceleration
 	if input.left ~= input.right then
-		player.facing = math.boolint(input.right) - math.boolint(input.left)
+		player.facing = bool.int(input.right) - bool.int(input.left)
 		
 		if player.ground then
 			player.x_speed = player.x_speed + (player.acc * player.facing)
@@ -96,10 +99,6 @@ function object.update(self)
 		player.jumping = false
 	end
 	
-	--temp
-	player.ground = player.y > 300 and true or false
-	if love.keyboard.isDown("lshift") then player.x = mousex; player.y = mousey end
-	
 	-- limit speed
 	player.x_speed = math.clamp(-player.x_max, player.x_speed, player.x_max)
 	player.y_speed = math.clamp(-player.y_max, player.y_speed, player.y_max)
@@ -137,6 +136,15 @@ function object.update(self)
 	-- update collision
 	self.hitbox.x = player.x-8
 	self.hitbox.y = player.y-12
+	
+	self.collider.down.x = player.x-8
+	self.collider.down.y = player.y+32
+	self.collider.down.line.x = player.x+8
+	self.collider.down.line.y = player.y+32
+	
+	--temp
+	player.ground = collision.check(self.collider.down, "solid", "collision") and true or false
+	if love.keyboard.isDown("lshift") then player.x = mousex; player.y = mousey end
 	
 end
 

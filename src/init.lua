@@ -1,12 +1,12 @@
 require("src/libs/errorhandler")
 require("src/libs/tserial")
 require("src/libs/json")
-loveframes = require("src/libs/loveframes")
+--loveframes = require("src/libs/loveframes")
 gifload = require("src/libs/gifload")
 gltf = require("src/libs/gltf")
 
 require("src/utils")
-require("src/gui")
+--require("src/gui")
 require("src/nuklear")
 
 require("src/input")
@@ -51,7 +51,9 @@ end
 if debug_mode then
 	love.setDeprecationOutput(true)
 	
-	gui.open.debug()
+	debug_draw_collisions = false
+	
+	--gui.open.debug()
 	if ui then nuklear.open.debug = true end
 	
 	function debug.keypressed(k)
@@ -76,10 +78,5 @@ function debug.draw()
 			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
 		end
 	end
-	
-	
-	--print(collision.line_circ(mousex, mousey, mousex+48, mousey+128, windowwidth/2, windowheight/2, 48))
-	--love.graphics.circle("line", windowwidth/2, windowheight/2, 48)
-	--love.graphics.line(mousex, mousey, mousex+48, mousey+128)
 	
 end

@@ -72,6 +72,7 @@ function gui.open.debug()
 	local grid_reset = loveframes.Create("grid")
     local reset = loveframes.Create("button")
     local reset_scene = loveframes.Create("button")
+    local draw_collisions = loveframes.Create("checkbox")
     
     local tree_input = loveframes.Create("collapsiblecategory")
 	local container_input = loveframes.Create("list")
@@ -125,6 +126,15 @@ function gui.open.debug()
 		scenes.set("init")
     end
     ---- end grid
+	
+	-- checkbox: debug draw collisions
+	draw_collisions:SetText("Draw collisions")
+	draw_collisions.OnChanged = function()
+		debug_draw_collisions = not debug_draw_collisions
+    end
+	draw_collisions.Update = function()
+		draw_collisions.x = draw_collisions.x - draw_collisions.internals[1].width - 8
+	end
     
     -- category button: input
     tree_input.padding = 0
@@ -171,6 +181,7 @@ function gui.open.debug()
     container:AddItem(grid_reset)
     grid_reset:AddItem(reset, 1, 1, "left")
     grid_reset:AddItem(reset_scene, 1, 2, "right")
+	container:AddItem(draw_collisions)
     
 	container:AddItem(tree_input)
     tree_input:SetObject(container_input)

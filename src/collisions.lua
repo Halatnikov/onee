@@ -1,6 +1,6 @@
 collision = {} -- functions
 
-----------------------------------------------------------------
+---------------------------------------------------------------- INSTANCES
 
 function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE --
 	assert(data, "collision.init() | no collision data passed!")
@@ -13,13 +13,13 @@ function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE 
 	}
 	table.append(t, data)
 	
-	-- POINT --
+	-- POINT (and everything else) --
 	if not t.y then t.y = t.x end
 	-- LINE --
 	if t.line then 
 		t.rect = nil; t.circ = nil
 		
-		if not t.line.y then t.point.y = t.point.x end
+		if not t.line.y then t.line.y = t.line.x end
 	-- RECTANGLE --
 	elseif t.rect then
 		t.line = nil; t.circ = nil
@@ -40,131 +40,155 @@ function collision.draw(collision) -- DEBUG DRAW COLLISION --
 		collision.colors = {math.random(0,255), math.random(0,255), math.random(0,255)}
 	end
 	
-	if collision.rect then
-		love.graphics.setColor(collision.colors[1]/255, collision.colors[2]/255, collision.colors[3]/255, 0.5)
+	love.graphics.setColor(collision.colors[1]/255, collision.colors[2]/255, collision.colors[3]/255, 0.5)
+	-- LINE --
+	if collision.line then
+		love.graphics.line(collision.x, collision.y, collision.line.x, collision.line.y)
+	-- RECT --
+	elseif collision.rect then
 		love.graphics.rectangle("line", collision.x, collision.y, collision.rect.width, collision.rect.height)
-		love.graphics.setColor(1,1,1,1)
+	-- CIRCLE --
+	elseif collision.circ then
+		love.graphics.circle("line", collision.x, collision.y, collision.circ.radius)
+	-- POINT --
+	else
+		love.graphics.line(collision.x-4, collision.y, collision.x+4, collision.y)
+		love.graphics.line(collision.x, collision.y-4, collision.x, collision.y+4)
+		love.graphics.circle("line", collision.x, collision.y, 6)
 	end
+	love.graphics.setColor(1,1,1,1)
+	
 end
 
 function collision.check(self, objectname, collisionname) -- FIND COLLISION BETWEEN INSTANCES --
-
 	if not self then return end
 	if not self.active then return end
-	local other
+	
+	local candidates = {}
 	
 	for id in pairs(instances) do
 		if instances[id].object == objectname then
 			for fields in pairs(instances[id]) do
-				if type(instances[id][fields]) == "table" and instances[id][fields].collision then
-					if instances[id][fields].name == collisionname then
-						other = instances[id][fields]
-					end
+				local field = instances[id][fields]
+				
+				if type(field) == "table" and 
+				field.collision and field.name == collisionname then
+					table.insert(candidates, field)
 				end
 			end
 		end
 	end
 	
-	if not other then return end
-	if not other.active then return end
+	if not candidates[1] then return end
 	
-	-- LINE --
-	if self.line then
-		if other.line then -- LINE WITH LINE --
-			return collision.line_line(
-				self.x, self.y, self.line.x, self.line.y,
-				other.x, other.y, other.line.x, other.line.y
-			)
-		elseif other.rect then -- LINE WITH RECT --
-			return collision.line_rect(
-				self.x, self.y, self.line.x, self.line.y,
-				other.x, other.y, other.rect.width, other.rect.height
-			)
-		elseif other.circ then -- LINE WITH CIRCLE --
-			return collision.line_circ(
-				self.x, self.y, self.line.x, self.line.y,
-				other.x, other.y, other.circ.radius
-			)
-		else -- LINE WITH POINT --
-			return collision.line_point(
-				self.x, self.y, self.line.x, self.line.y,
-				other.x, other.y
-			)
+	for i=1, #candidates do
+		local other = candidates[i]
+		local result
+		
+		if not other.active then break end
+		
+		-- LINE --
+		if self.line then
+			if other.line then -- LINE WITH LINE --
+				result = collision.line_line(
+					self.x, self.y, self.line.x, self.line.y,
+					other.x, other.y, other.line.x, other.line.y
+				)
+			elseif other.rect then -- LINE WITH RECT --
+				result = collision.line_rect(
+					self.x, self.y, self.line.x, self.line.y,
+					other.x, other.y, other.rect.width, other.rect.height
+				)
+			elseif other.circ then -- LINE WITH CIRCLE --
+				result = collision.line_circ(
+					self.x, self.y, self.line.x, self.line.y,
+					other.x, other.y, other.circ.radius
+				)
+			else -- LINE WITH POINT --
+				result = collision.line_point(
+					self.x, self.y, self.line.x, self.line.y,
+					other.x, other.y
+				)
+			end
+		-- RECT --
+		elseif self.rect then
+			if other.line then -- RECT WITH LINE --
+				result = collision.rect_line(
+					self.x, self.y, self.rect.width, self.rect.height,
+					other.x, other.y, other.line.x, other.line.y
+				)
+			elseif other.rect then -- RECT WITH RECT --
+				result = collision.rect_rect(
+					self.x, self.y, self.rect.width, self.rect.height,
+					other.x, other.y, other.rect.width, other.rect.height
+				)
+			elseif other.circ then -- RECT WITH CIRCLE --
+				result = collision.rect_circ(
+					self.x, self.y, self.rect.width, self.rect.height,
+					other.x, other.y, other.circ.radius
+				)
+			else -- RECT WITH POINT --
+				result = collision.rect_point(
+					self.x, self.y, self.rect.width, self.rect.height,
+					other.x, other.y
+				)
+			end
+		-- CIRCLE --
+		elseif self.circ then
+			if other.line then -- CIRCLE WITH LINE --
+				result = collision.circ_line(
+					self.x, self.y, self.circ.radius,
+					other.x, other.y, other.line.x, other.line.y
+				)
+			elseif other.rect then -- CIRCLE WITH RECT --
+				result = collision.circ_rect(
+					self.x, self.y, self.circ.radius,
+					other.x, other.y, other.rect.width, other.rect.height
+				)
+			elseif other.circ then -- CIRCLE WITH CIRCLE --
+				result = collision.circ_circ(
+					self.x, self.y, self.circ.radius,
+					other.x, other.y, other.circ.radius
+				)
+			else -- CIRCLE WITH POINT --
+				result = collision.circ_point(
+					self.x, self.y, self.circ.radius,
+					other.x, other.y
+				)
+			end
+		-- POINT --
+		else
+			if other.line then -- POINT WITH LINE --
+				result = collision.point_line(
+					self.x, self.y,
+					other.x, other.y, other.line.x, other.line.y
+				)
+			elseif other.rect then -- POINT WITH RECT --
+				result = collision.point_rect(
+					self.x, self.y,
+					other.x, other.y, other.rect.width, other.rect.height
+				)
+			elseif other.circ then -- POINT WITH CIRCLE --
+				result = collision.point_circ(
+					self.x, self.y,
+					other.x, other.y, other.circ.radius
+				)
+			else -- POINT WITH POINT --
+				result = collision.point_point(
+					self.x, self.y,
+					other.x, other.y
+				)
+			end	
 		end
-	-- RECT --
-	elseif self.rect then
-		if other.line then -- RECT WITH LINE --
-			return collision.rect_line(
-				self.x, self.y, self.rect.width, self.rect.height,
-				other.x, other.y, other.line.x, other.line.y
-			)
-		elseif other.rect then -- RECT WITH RECT --
-			return collision.rect_rect(
-				self.x, self.y, self.rect.width, self.rect.height,
-				other.x, other.y, other.rect.width, other.rect.height
-			)
-		elseif other.circ then -- RECT WITH CIRCLE --
-			return collision.rect_circ(
-				self.x, self.y, self.rect.width, self.rect.height,
-				other.x, other.y, other.circ.radius
-			)
-		else -- RECT WITH POINT --
-			return collision.rect_point(
-				self.x, self.y, self.rect.width, self.rect.height,
-				other.x, other.y
-			)
-		end
-	-- CIRCLE --
-	elseif self.circ then
-		if other.line then -- CIRCLE WITH LINE --
-			return collision.circ_line(
-				self.x, self.y, self.circ.radius,
-				other.x, other.y, other.line.x, other.line.y
-			)
-		elseif other.rect then -- CIRCLE WITH RECT --
-			return collision.circ_rect(
-				self.x, self.y, self.circ.radius,
-				other.x, other.y, other.rect.width, other.rect.height
-			)
-		elseif other.circ then -- CIRCLE WITH CIRCLE --
-			return collision.circ_circ(
-				self.x, self.y, self.circ.radius,
-				other.x, other.y, other.circ.radius
-			)
-		else -- CIRCLE WITH POINT --
-			return collision.circ_point(
-				self.x, self.y, self.circ.radius,
-				other.x, other.y
-			)
-		end
-	-- POINT --
-	else
-		if other.line then -- POINT WITH LINE --
-			return collision.point_line(
-				self.x, self.y,
-				other.x, other.y, other.line.x, other.line.y
-			)
-		elseif other.rect then -- POINT WITH RECT --
-			return collision.point_rect(
-				self.x, self.y,
-				other.x, other.y, other.rect.width, other.rect.height
-			)
-		elseif other.circ then -- POINT WITH CIRCLE --
-			return collision.point_circ(
-				self.x, self.y,
-				other.x, other.y, other.circ.radius
-			)
-		else -- POINT WITH POINT --
-			return collision.point_point(
-				self.x, self.y,
-				other.x, other.y
-			)
-		end	
+		
+		-- return only when a collision is found, otherwise continue
+		if result then return true end
+		
 	end
 	
 end
 
-----------------------------------------------------------------
+---------------------------------------------------------------- CALCULATIONS
 -- add intersections? (maybe for raycasts?)
 
 ---- points

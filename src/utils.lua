@@ -1,4 +1,11 @@
 
+---------------------------------------------------------------- BOOLS
+bool = {}
+
+function bool.int(arg)
+	return arg and 1 or 0
+end
+
 ---------------------------------------------------------------- MATH
 -- TODO: lerp, smoothstep, decay, map from one min-max range to another, ^2, construct 2, vector 2?
 
@@ -9,10 +16,6 @@ end
 function math.choose(...)
 	local arg = {...}
 	return arg[math.random(#arg)]
-end
-
-function math.boolint(arg)
-	return arg and 1 or 0
 end
 
 function math.sign(arg)
@@ -142,7 +145,7 @@ function string.random(length)
 end
 
 -- % is the escape character for separator, because this uses patterns (not regex)
--- todo: automatically replace ( with %( and |+ with %|%+ and etc 
+-- TODO: automatically replace ( with %( and |+ with %|%+ and etc 
 function string.tokenize(arg, separator, index)
 	-- get last index
 	if index == -1 then index = #string.tokenize(arg, separator) end

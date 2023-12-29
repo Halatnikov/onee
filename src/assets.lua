@@ -33,8 +33,7 @@ local nineslice = require("src/assets/nineslice")
 function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	
 	local name = string.tokenize(path, "/", -1)
-	--if assets[name] then print("asset.sprite() | asset \""..name.."\" already loaded!") return end
-	if assets[name] then return end
+	if assets[name] then return end -- already loaded
 	
 	local time_start = love.timer.getTime()
 	local sprite = require("sprites/"..path) -- init
@@ -161,7 +160,7 @@ end
 function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	
 	local name = string.tokenize(path, "/", -1)
-	if assets[name] then print("asset.model() | asset \""..name.."\" already loaded!") return end
+	if assets[name] then return end -- already loaded
 	
 	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
 	local modeldef = {}
@@ -235,7 +234,7 @@ end
 
 function asset.negative_frames(animdef) -- handle negative frame declarations
 	for frame in pairs(animdef.frames) do
-		if frame < 0 then -- if your frame is -1, that means the last frame and so on
+		if frame < 0 then -- if your frame is -1, that means the last frame, -2 second to last and so on
 			local i = (#animdef.frames+1) + frame
 			animdef.frames[i] = table.append(animdef.frames[i], animdef.frames[frame])
 		
@@ -246,7 +245,7 @@ end
 
 ---------------------------------------------------------------- SPRITES
 
-function sprite.init(sprite, name) -- INIT A NEW SPRITE INSTANCE --
+function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 	assert(sprites[name], "sprite.init() | \""..name.."\" is not a valid sprite!")
 	
 	local t = {
@@ -277,6 +276,8 @@ function sprite.init(sprite, name) -- INIT A NEW SPRITE INSTANCE --
 			canvas = love.graphics.newCanvas(1,1),
 		}
 	end
+	
+	table.append(t, data) -- additional data
 	
 	return table.append(sprite, t)
 end
@@ -322,6 +323,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 		if sprite.seq_index > #animdef[sprite.seq] then -- animation reached end
 			-- callback
 			if sprite.anim_end then sprite.anim_end() end
+			
 			-- loop
 			if not (animdef.loops == false) or (animdef.loops and sprite.loops < animdef.loops) then
 				sprite.loops = sprite.loops + 1
@@ -329,6 +331,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 				sprite.seq = "seq"
 				sprite.seq_index = 1
 			end
+			
 			-- stop
 			if (animdef.loops == false) or (animdef.loops and sprite.loops > animdef.loops) then
 				sprite.seq_index = #animdef[sprite.seq]
@@ -464,7 +467,7 @@ end
 local vec3 = require "src/libs/gltf/cpml.modules.vec3"
 local mat4 = require "src/libs/gltf/cpml.modules.mat4"
 
-function model.init(model, name) -- INIT A NEW 3D MODEL INSTANCE --
+function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	assert(models[name], "model.init() | \""..name.."\" is not a valid 3d model!")
 	
 	local t = {
@@ -482,6 +485,8 @@ function model.init(model, name) -- INIT A NEW 3D MODEL INSTANCE --
 			transform = mat4.new(),
 		},
 	}
+	
+	table.append(t, data) -- additional data
 	
 	t.projection:setCanvases(t.canvas.main, t.canvas.depth)
 	
@@ -516,7 +521,6 @@ function model.update(model) -- UPDATE 3D MODEL --
 	-- TODO: loop count, seek to time (progress 0 to 1?, pause
 	-- TODO: add animation, remove animation, stop all, set animation (string or a table)
 	-- model.anim.state(model, {idle = {seek = 0.5, pause = true}})
-	--debug.table(model.instance.activePlayHeads)
 	local playing = model.instance.activePlayHeads
 	for i in pairs(playing) do
 		if not modeldef.animations then break end -- no animations

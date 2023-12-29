@@ -12,6 +12,10 @@ function scene.init()
 	object.new("player")
 	instance.new("player")
 	
+	object.new("solid")
+	instance.new("solid", {y = 350, width = 800})
+	instance.new("solid", {x = 400, y = 290, width = 64, height = 64})
+	
 	scene.a = 2
 	--debug.table(object.instances("test"))
 	

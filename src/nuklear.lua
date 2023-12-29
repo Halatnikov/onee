@@ -76,13 +76,14 @@ end
 function nuklear.table_label(k,v)
 	if type(v) ~= "userdata" then ui:label(tostring(k)..": "..tostring(v)) end
 	if type(v) == "userdata" then
-		if v:type() == "Image" then
+		if v.type and v:type() == "Image" then
 			ui:layoutRow('dynamic', 32, 6)
 			ui:image(v)
 		end
 	end
 end
 
+local draw_collisions = {value = true}
 
 function nuklear.window.debug()
 	ui:window("v"..version,
@@ -90,16 +91,26 @@ function nuklear.window.debug()
 		'border', 'title', 'movable', 'scalable', 'minimizable', 'scrollbar', 'scroll auto hide',
 	function ()
 		
-		ui:layoutRow('dynamic', 16, 1)
-		
+		ui:layoutRow('dynamic', 12, 1)
 		ui:label("FPS "..love.timer.getFPS().." "
 				..math.round(fps,2).." "
 				..math.round(1000*love.timer.getAverageDelta(),2).."ms")
 		
-		nuklear.table(_G, "Global variables", false)
+		ui:label(windowwidth.."x"..windowheight)
 		
-		ui:tree("tab","Performance",
-		function ()
+		ui:layoutRow('dynamic', 18, 2)
+		local reload = ui:button("Reload")
+		if reload then love.event.quit("restart") end
+		
+		local reset_scene = ui:button("Reset scene")
+		if reset_scene then scenes.set("init") end
+		
+		ui:checkbox("Draw collisions", draw_collisions)
+		debug_draw_collisions = draw_collisions.value
+		
+		nuklear.table(_G, "Global variables", true)
+		
+		ui:tree("tab","Performance", function ()
 			local stats = love.graphics.getStats()
 			local renderer = {}; renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 			
@@ -114,13 +125,12 @@ function nuklear.window.debug()
 			nuklear.table(love.graphics.getSystemLimits(),"love.graphics.getSystemLimits()")
 		end)
 		
-		ui:tree("tab","Input",
-		function ()
+		ui:tree("tab","Input: "..input.mode, function ()
 			ui:layoutRow('dynamic', 16, 1)
 			ui:label("Input mode: "..input.mode)
 			ui:label("Mouse "..mousex.." "..mousey.." "..input.mouse_wheel)
 			for key in pairs(config.input.keyboard) do 
-				ui:label(key.."   "..math.boolint(input[key]).." "..input.time[key])
+				ui:label(key.."   "..bool.int(input[key]).." "..input.time[key])
 			end
 		end)
 		

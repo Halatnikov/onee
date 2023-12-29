@@ -55,9 +55,11 @@ function scenes.draw() -- SCENE DRAW LOOP --
 		
 		if debug_draw_collisions then
 			for fields in pairs(instances[id]) do
-				if type(instances[id][fields]) == "table" and instances[id][fields].collision then
+				local field = instances[id][fields]
+				
+				if type(field) == "table" and field.collision then
 					queue.add(scenes.drawlist, 1000, function()
-						collision.draw(instances[id][fields])
+						collision.draw(field)
 					end)
 				end
 			end
@@ -70,9 +72,9 @@ end
 
 ---------------------------------------------------------------- OBJECTS
 
-function object.new(path, data) -- CREATE NEW OBJECT --
+function object.new(path, data, name) -- CREATE NEW OBJECT --
 	
-	local name = string.tokenize(path, "/", -1)
+	if not name then name = string.tokenize(path, "/", -1) end
 	if objects[name] then print("object.new() | object \""..name.."\" already exists!") return end
 	
 	local t = {} -- init
