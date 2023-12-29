@@ -320,6 +320,8 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 		
 		sprite.seq_index = sprite.seq_index + 1
 		if sprite.seq_index > #animdef[sprite.seq] then -- animation reached end
+			-- callback
+			if sprite.anim_end then sprite.anim_end() end
 			-- loop
 			if not (animdef.loops == false) or (animdef.loops and sprite.loops < animdef.loops) then
 				sprite.loops = sprite.loops + 1

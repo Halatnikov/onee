@@ -2,11 +2,6 @@ local object = {}
 
 function object.init(self)
 	
-	local skin = "1u_scruffy"
-	asset.sprite(skin)
-	self.sprite = sprite.init(self.sprite, skin)
-	self.sprite.z = 1
-	
 	self.player = {
 		x = 0,
 		y = 0,
@@ -37,6 +32,15 @@ function object.init(self)
 	
 	self.player.x = math.random(100,400)
 	self.player.y = 200
+	
+	local skin = "1u_scruffy"
+	asset.sprite(skin)
+	self.sprite = sprite.init(self.sprite, skin)
+	self.sprite.z = 1
+	
+	self.hitbox = collision.init(self.hitbox, "hitbox",
+		{rect = {width = 16, height = 32}}
+	)
 
 end
 
@@ -129,6 +133,10 @@ function object.update(self)
 	self.sprite.y = player.y
 	self.sprite.animation = player.animation
 	sprite.update(self.sprite)
+	
+	-- update collision
+	self.hitbox.x = player.x-8
+	self.hitbox.y = player.y-12
 	
 end
 

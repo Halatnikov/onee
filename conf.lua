@@ -12,6 +12,8 @@ function love.conf(t)
 end
 
 debug_mode = true
+debug_draw_collisions = true
+
 log_level = "info"
 
 config = {

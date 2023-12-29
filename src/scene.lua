@@ -24,6 +24,7 @@ function scenes.set(name, data) -- SWITCH CURRENT SCENE --
 	-- load new scene
 	scene = require("scenes/"..name)
 	
+	scene.scene = true
 	scene.name = name
 	
 	if data then table.append(scene, data) end -- pass additional stuff to scene through this table
@@ -51,6 +52,17 @@ function scenes.draw() -- SCENE DRAW LOOP --
 	
 	for id in pairs(instances) do -- instances
 		if instances[id].draw then instances[id].draw(instances[id]) end
+		
+		if debug_draw_collisions then
+			for fields in pairs(instances[id]) do
+				if type(instances[id][fields]) == "table" and instances[id][fields].collision then
+					queue.add(scenes.drawlist, 1000, function()
+						collision.draw(instances[id][fields])
+					end)
+				end
+			end
+		end
+		
 	end
 	
 	queue.execute(scenes.drawlist)
@@ -63,19 +75,20 @@ function object.new(path, data) -- CREATE NEW OBJECT --
 	local name = string.tokenize(path, "/", -1)
 	if objects[name] then print("object.new() | object \""..name.."\" already exists!") return end
 	
-	local object = {} -- init
-	object.instances = 0
+	local t = {} -- init
+	t.object = true
+	t.instances = 0
 	
 	if files.exists("objects/"..path..".lua") then 
-		object.data = require("objects/"..path) -- add code to object, if it exists
+		t.data = require("objects/"..path) -- add code to object, if it exists
 	end
 	
 	if data then -- pass additional stuff to object through this table
-		if not object.data then object.data = {} end
-		table.append(object.data, data)
+		if not t.data then t.data = {} end
+		table.append(t.data, data)
 	end
 	
-	objects[name] = object -- done
+	objects[name] = t -- done
 	
 	return name
 	
@@ -107,18 +120,24 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 	local id = name.."_"..string.random(6)
 	local object = objects[name]
 	
-	local instance = {} -- init
-	instance.object = name
-	instance.active = true
+	local t = {} -- init
+	t.instance = true
+	t.object = name
+	t.id = id
+	t.active = true
 	
-	if object.data then table.append(instance, object.data) end
-	if data then table.append(instance, data) end -- pass additional stuff to instance through this table
+	if object.data then table.append(t, object.data) end
+	if data then table.append(t, data) end -- pass additional stuff to instance through this table
 	
-	instances[id] = instance -- done
+	function t.delete()
+		instance.delete(t.id)
+	end
+	
+	instances[id] = t -- done
 	
 	object.instances = object.instances + 1
 	
-	if instance.init then instances[id].init(instances[id]) end
+	if t.init then instances[id].init(instances[id]) end
 	
 	return id
 	
