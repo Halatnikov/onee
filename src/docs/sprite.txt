@@ -9,6 +9,8 @@ nineslice
 gif
 [forces gif mode to all animations (default: false)]
 
+filename
+
 animations
 [an array of all available animations]
 
@@ -47,6 +49,21 @@ animations
 		y
 		[defines y origin point for all frames, but frame's y still takes priority]
 		
+		sheet
+		
+			x
+			y
+			width
+			height
+			
+		strip
+			
+			frames
+			x
+			y
+			width
+			height
+			
 		nineslice
 		
 			x1
@@ -61,9 +78,10 @@ animations
 			body
 			
 			sides
+			TILE.TILE, TILE.MIRROR, TILE.ONCE, TILE.EDGES, TILE.STRETCH
 		
 		frames
-		[an array of all available frames in that animation]
+		[an array of all available frames in that animation, -1 for reverse order]
 		
 			*frame*
 			[single frame, negative numbers mean it counts from the last frame]
@@ -90,6 +108,16 @@ animations
 				
 				image
 				[requires anim.images, specify a reused frame number out of order]
+				
+				filename
+				
+				sheet
+				
+					x
+					y
+					width
+					height
+					
 				
 				any other metadata
 				[...]
@@ -130,6 +158,11 @@ seq_index
 
 loops
 [increases by 1 every time the animation loops (default: 0)]
+
+====
+	
+anim_end()
+	
 ====
 
 speed
@@ -140,6 +173,8 @@ x
 
 y
 [y position (default: 0)]
+
+z
 
 angle
 [angle in degrees (default: 0)]

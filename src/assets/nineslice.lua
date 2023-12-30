@@ -37,7 +37,7 @@ function nineslice.add(name, anim, frame, image, animdef, framedef)
 	
 	-- split into 9 images
 	for i = 1, 9 do
-		local x, y, widht, height
+		local x, y, width, height
 		
 		-- top left | top | top right
 		if i == 1 then

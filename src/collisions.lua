@@ -56,7 +56,7 @@ function collision.draw(collision) -- DEBUG DRAW COLLISION --
 		love.graphics.line(collision.x, collision.y-4, collision.x, collision.y+4)
 		love.graphics.circle("line", collision.x, collision.y, 6)
 	end
-	love.graphics.setColor(1,1,1,1)
+	love.graphics.reset()
 	
 end
 
@@ -79,6 +79,7 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 		end
 	end
 	
+	-- nothing found
 	if not candidates[1] then return end
 	
 	for i=1, #candidates do
@@ -214,6 +215,10 @@ end
 function collision.point_circ(Ax, Ay, Bx, By, Bradius)
 	return math.distance(Ax, Ay, Bx, By) <= Bradius
 end
+-- POINT WITH POLY COLLISION (alias) --
+function collision.point_poly(Ax, Ay, B)
+	collision.poly_point(B, Ax, Ay)
+end
 
 ---- lines
 -- LINE WITH POINT COLLISION (alias) --
@@ -307,4 +312,31 @@ end
 -- CIRCLE WITH CIRCLE COLLISION --
 function collision.circ_circ(Ax, Ay, Aradius, Bx, By, Bradius)
 	return math.distance(Ax, Ay, Bx, By) <= Aradius + Bradius
+end
+
+---- polygons
+-- POLY WITH POINT COLLISION --
+function collision.poly_point(A, Bx, By)
+	local wn = 0 -- winding number algorithm
+	
+	local current
+	local next = A[#A]
+	
+	for i=1, #A do
+		current = next
+		next = A[i]
+		
+		if current[2] > By then
+			if (next[2] <= By) and (current[1] - Bx) * (next[2] - By) < (next[1] - Bx) * (current[2] - By) then
+				wn = wn + 1
+			end
+		else
+			if (next[2] > By) and (current[1] - Bx) * (next[2] - By) > (next[1] - Bx) * (current[2] - By) then
+				wn = wn - 1
+			end
+		end
+		
+	end
+	
+	return wn % 2 ~= 0 -- collision if odd
 end

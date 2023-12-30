@@ -189,8 +189,7 @@ function input.draw() -- DRAW LOOP --
 					end
 				end
 				
-				-- reset graphics state
-				love.graphics.setColor(1,1,1,1)
+				love.graphics.reset()
 				
 			end
 		end

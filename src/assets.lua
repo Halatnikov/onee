@@ -95,10 +95,6 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 		if sprite.tiled then sprite.nineslice = nil end
 		if sprite.nineslice then sprite.tiled = nil end
 		
-		-- clean up no longer needed things
-		animdef.strip = nil
-		animdef.sheet = nil
-		
 		for frame in pairs(animdef.frames) do
 			local framedef = animdef.frames[frame]
 			
@@ -458,8 +454,7 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		
 	end
 	
-	-- reset graphics state
-	love.graphics.setColor(1,1,1,1)
+	love.graphics.reset()
 end
 
 ---------------------------------------------------------------- 3D MODELS
@@ -594,6 +589,5 @@ function model.draw(model) -- DRAW 3D MODEL --
 		love.graphics.draw(model.canvas.main, x, y, angle, scalex, scaley, xoffset, yoffset, skewx, skewy)
 	end)
 	
-	-- reset graphics state
-	love.graphics.setColor(1,1,1,1)
+	love.graphics.reset()
 end

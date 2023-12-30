@@ -24,6 +24,7 @@ if love._os == "Android" or love._os == "iOS" then
 end
 
 love.graphics.setDefaultFilter("nearest","nearest",0)
+love.graphics.setLineStyle("rough")
 love.graphics.setBackgroundColor(8/255,8/255,8/255)
 
 before_update = 0
@@ -67,7 +68,7 @@ end
 function debug.update()
 	
 end
-
+a = {{0,0}, {100,10}, {50,100}, {60,30}}
 function debug.draw()
 	if mobile then
 		love.graphics.print(love.timer.getFPS(), windowwidth-18, 4)
@@ -78,5 +79,21 @@ function debug.draw()
 			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
 		end
 	end
+	
+	for i=1, #a do
+		a[i][1] = a[i][1] + 0.5
+	end
+	
+	b = {}
+	for i=1, #a do
+		b[#b+1] = a[i][1]
+		b[#b+1] = a[i][2]
+	end
+	
+	love.graphics.polygon("line", b)
+	love.graphics.line(mousex-8,mousey, mousex+8,mousey)
+	love.graphics.line(mousex,mousey-8, mousex,mousey+8)
+	
+	print(collision.poly_point(a, mousex, mousey))
 	
 end
