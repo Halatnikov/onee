@@ -80,6 +80,67 @@ function imgui.textinput(text)
 	gui.love.TextInput(text)
 end
 
+---------------------------------------------------------------- "simple" table browser
+function imgui.table(arg, name, level)
+	local level = level or 0
+	
+	if level == 0 then
+		if gui.CollapsingHeader_BoolPtr(name) then
+			if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "ResizeY")) then
+				imgui.table_types(arg, name, 1)
+				
+				gui.EndChild()
+			end
+		end
+	elseif level == 1 then
+		if gui.CollapsingHeader_BoolPtr(name) then
+			if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "AutoResizeY")) then
+				imgui.table_types(arg, name, 2)
+				
+				gui.EndChild()
+			end
+		end
+	elseif level == 2 then
+		if gui.TreeNodeEx_Str(name, gui.love.TreeNodeFlags("SpanAvailWidth")) then
+			imgui.table_types(arg, name, 2)
+			gui.Separator()
+			
+			gui.TreePop()
+		end
+	end
+	
+end
+
+function imgui.table_types(arg, name, level)
+	if table.length(arg) == 0 then gui.Text("- empty -") return end
+	
+	for k,v in kpairs(arg) do
+		if type(k) == "table" then imgui.table(k, tostring(k), level) end
+		if type(k) ~= "table" then
+			if not v then imgui.table_entry(k, nil, name) end
+			if v then
+				if type(v) == "table" then imgui.table(v, tostring(k), level) end
+				if type(v) ~= "table" then imgui.table_entry(k, v, name) end
+			end
+		end
+	end
+end
+
+function imgui.table_entry(k, v)
+	if not v then gui.Text(tostring(k)) end
+	if v then 
+		if type(v) ~= "userdata" then gui.Text(tostring(k)..": "..tostring(v)) end
+		if type(v) == "userdata" then
+			-- attempt to make sure we're in assets
+			if type(k) == "number" and v:type() == "Image" then
+				gui.Image(v, gui.ImVec2_Float(v:getDimensions()))
+			else
+				gui.Text(tostring(k)..": "..tostring(v))
+			end
+		end
+	end
+end
+
 ---------------------------------------------------------------- MENU BAR
 local debugmode = _bool(true)
 
@@ -190,7 +251,7 @@ function imgui.window.main()
 		if gui.CollapsingHeader_BoolPtr("Performance") then
 			
 			-- raw fps and dt table
-			if gui.BeginTable("performance_fps",2) then
+			if gui.BeginTable("performance_fps", 2) then
 				gui.TableSetupColumn("raw FPS")
 				gui.TableSetupColumn("raw dt")
 				gui.TableHeadersRow()
@@ -205,7 +266,7 @@ function imgui.window.main()
 			end
 			
 			-- timers table
-			if gui.BeginTable("performance_time",3) then
+			if gui.BeginTable("performance_time", 3) then
 				gui.TableSetupColumn("seconds")
 				gui.TableSetupColumn("frames")
 				gui.TableSetupColumn("elapsed")
@@ -223,7 +284,7 @@ function imgui.window.main()
 			end
 			
 			-- ram and garbage collector table
-			if gui.BeginTable("performance_ram",2) then
+			if gui.BeginTable("performance_ram", 2) then
 				local stats = love.graphics.getStats()
 				
 				gui.TableSetupColumn("texture RAM")
@@ -310,7 +371,7 @@ function imgui.window.main()
 		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode) then
 			
 			-- mouse table
-			if gui.BeginTable("input_mouse",3) then
+			if gui.BeginTable("input_mouse", 3) then
 				gui.TableSetupColumn("mouse x")
 				gui.TableSetupColumn("mouse y")
 				gui.TableSetupColumn("wheel")
@@ -352,6 +413,9 @@ function imgui.window.main()
 			end
 			
 		end
+		
+		------------------------------------------------ GLOBAL VARIABLES
+		imgui.table(_G, "Global variables")
 		
 		gui.End()
 	end

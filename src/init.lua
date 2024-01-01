@@ -12,7 +12,7 @@ require("src/assets")
 require("src/scene")
 
 --require("src/gui")
-require("src/nuklear")
+--require("src/nuklear")
 require("src/imgui")
 
 ---------------------------------------------------------------- 
@@ -56,15 +56,18 @@ if debug_mode then
 	
 	debug_draw_collisions = true
 	
+	-- todo: init imgui here
+	-- todo: on debug_mode disable, close all the ui
+	-- todo: shortcut ` or f1 to open/close the debug window
+	-- todo: something quick and dirty on loveframes for android
 	--gui.open.debug()
-	if ui then nuklear.open.debug = true end
+	
 end
 
 function debug.keypressed(k)
 	if not debug_mode then return end
 	
 	if k == "f2" then love.event.quit("restart") end
-	--if k == "`" or k == "f1" then nuklear.open.debug = not nuklear.open.debug end
 	
 	if k == "q" or k == "f3" then scenes.set("init") end
 end
@@ -103,4 +106,3 @@ function debug.draw()
 	--print(collision.poly_line(a, mousex-16,mousey, mousex+24,mousey+32))
 	
 end
-
