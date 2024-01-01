@@ -101,6 +101,22 @@ function table.mostcommon(arg)
 	
 	return common
 end
+	
+function kpairs(arg)
+	local keys = {}
+	for k in pairs(arg) do table.insert(keys, k) end
+	table.sort(keys)
+	local i = 0
+	local function iterate()
+		i = i + 1
+		if keys[i] == nil then
+			return nil
+		else 
+			return keys[i], arg[keys[i]]
+		end
+	end
+	return iterate
+end
 
 ---------------------------------------------------------------- QUEUEING
 queue = {}

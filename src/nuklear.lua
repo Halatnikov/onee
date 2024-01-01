@@ -106,7 +106,7 @@ function nuklear.window.debug()
 		if reset_scene then scenes.set("init") end
 		
 		ui:checkbox("Draw collisions", draw_collisions)
-		debug_draw_collisions = draw_collisions.value
+		--debug_draw_collisions = draw_collisions.value
 		
 		nuklear.table(_G, "Global variables", true)
 		

@@ -6,13 +6,14 @@ gifload = require("src/libs/gifload")
 gltf = require("src/libs/gltf")
 
 require("src/utils")
---require("src/gui")
-require("src/nuklear")
-
 require("src/input")
 require("src/collisions")
 require("src/assets")
 require("src/scene")
+
+--require("src/gui")
+require("src/nuklear")
+require("src/imgui")
 
 ---------------------------------------------------------------- 
 
@@ -28,6 +29,7 @@ love.graphics.setLineStyle("rough")
 love.graphics.setBackgroundColor(8/255,8/255,8/255)
 
 before_update = 0
+allow_update = true
 ms = 0 
 frames = 0
 
@@ -52,24 +54,28 @@ end
 if debug_mode then
 	love.setDeprecationOutput(true)
 	
-	debug_draw_collisions = false
+	debug_draw_collisions = true
 	
 	--gui.open.debug()
 	if ui then nuklear.open.debug = true end
+end
+
+function debug.keypressed(k)
+	if not debug_mode then return end
 	
-	function debug.keypressed(k)
-		if k == "f2" then love.event.quit("restart") end
-		--if k == "`" or k == "f1" then nuklear.open.debug = not nuklear.open.debug end
-		
-		if k == "q" or k == "f3" then scenes.set("init") end
-	end
+	if k == "f2" then love.event.quit("restart") end
+	--if k == "`" or k == "f1" then nuklear.open.debug = not nuklear.open.debug end
+	
+	if k == "q" or k == "f3" then scenes.set("init") end
 end
 
 function debug.update()
-	
+	if not debug_mode then return end
 end
-a = {{0,0}, {100,10}, {50,100}, {60,30}}
+			a = {{0,0}, {100,10}, {50,100}, {60,30}}
 function debug.draw()
+	if not debug_mode then return end
+	
 	if mobile then
 		love.graphics.print(love.timer.getFPS(), windowwidth-18, 4)
 		
@@ -81,7 +87,8 @@ function debug.draw()
 	end
 	
 	for i=1, #a do
-		a[i][1] = a[i][1] + 0.5
+		a[i][1] = a[i][1] + 0.3
+		a[i][2] = a[i][2] + 0.3
 	end
 	
 	b = {}
@@ -91,9 +98,9 @@ function debug.draw()
 	end
 	
 	love.graphics.polygon("line", b)
-	love.graphics.line(mousex-8,mousey, mousex+8,mousey)
-	love.graphics.line(mousex,mousey-8, mousex,mousey+8)
+	love.graphics.line(mousex-16,mousey, mousex+24,mousey+32)
 	
-	print(collision.poly_point(a, mousex, mousey))
+	--print(collision.poly_line(a, mousex-16,mousey, mousex+24,mousey+32))
 	
 end
+

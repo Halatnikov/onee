@@ -183,7 +183,9 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 		end
 		
 		-- return only when a collision is found, otherwise continue
-		if result then return true end
+		if result then
+			return true
+		end
 		
 	end
 	
@@ -217,7 +219,7 @@ function collision.point_circ(Ax, Ay, Bx, By, Bradius)
 end
 -- POINT WITH POLY COLLISION (alias) --
 function collision.point_poly(Ax, Ay, B)
-	collision.poly_point(B, Ax, Ay)
+	return collision.poly_point(B, Ax, Ay)
 end
 
 ---- lines
@@ -250,9 +252,10 @@ function collision.line_rect(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 end
 -- LINE WITH CIRCLE COLLISION --
 function collision.line_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
+	local result = false
+	
 	local colA1 = collision.point_circ(Ax1, Ay1, Bx, By, Bradius)
 	local colA2 = collision.point_circ(Ax2, Ay2, Bx, By, Bradius)
-	local collision = false
 	
 	local length = math.distance(Ax1, Ay1, Ax2, Ay2)
 	local centerx = Bx - Ax1
@@ -263,12 +266,16 @@ function collision.line_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
 		angle = angle/length
 		
 		if angle < length then
-			collision =  math.sqrt((centerx^2) + (centery^2) - (angle^2)) <= Bradius
+			result =  math.sqrt((centerx^2) + (centery^2) - (angle^2)) <= Bradius
 		end
 	end
 	
 	return colA1 or colA2 
-		or collision
+		or result
+end
+-- LINE WITH POLY COLLISION (alias) --
+function collision.line_poly(Ax1, Ay1, Ax2, Ay2, B)
+	return collision.poly_line(B, Ax1, Ay1, Ax2, Ay2)
 end
 
 ---- rectangles
@@ -321,7 +328,6 @@ function collision.poly_point(A, Bx, By)
 	
 	local current
 	local next = A[#A]
-	
 	for i=1, #A do
 		current = next
 		next = A[i]
@@ -339,4 +345,25 @@ function collision.poly_point(A, Bx, By)
 	end
 	
 	return wn % 2 ~= 0 -- collision if odd
+end
+-- POLY WITH LINE COLLISION --
+function collision.poly_line(A, Bx1, By1, Bx2, By2)
+	local result = false
+	
+	local colB1 = collision.point_poly(Bx1, By1, A)
+	local colB2 = collision.point_poly(Bx2, By2, A)
+	
+	local current
+	local next = A[#A]
+	for i=1, #A do
+		current = next
+		next = A[i]
+		
+		if collision.line_line(Bx1, By1, Bx2, By2, current[1], current[2], next[1], next[2]) then
+			result = true
+		end
+	end
+	
+	return colB1 or colB2
+		or result
 end
