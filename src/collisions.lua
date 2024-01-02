@@ -36,11 +36,11 @@ end
 function collision.draw(collision) -- DEBUG DRAW COLLISION --
 	if not collision.active then return end 
 	
-	if not collision.colors then
-		collision.colors = {math.random(0,255), math.random(0,255), math.random(0,255)}
+	if not collision.rgb then
+		collision.rgb = {math.random(0,255), math.random(0,255), math.random(0,255)}
 	end
 	
-	love.graphics.setColor(collision.colors[1]/255, collision.colors[2]/255, collision.colors[3]/255, 0.5)
+	love.graphics.setColor(collision.rgb[1]/255, collision.rgb[2]/255, collision.rgb[3]/255, 0.5)
 	-- LINE --
 	if collision.line then
 		love.graphics.line(collision.x, collision.y, collision.line.x, collision.line.y)

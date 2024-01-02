@@ -42,8 +42,7 @@ function object.init(self)
 		{rect = {width = 16, height = 32}}
 	)
 	
-	self.collider = {}
-	self.collider.down = collision.init(self.collider.down, "collider_down", {line = {}})
+	self.collider_down = collision.init(self.collider_down, "collider_down", {line = {}})
 
 end
 
@@ -137,13 +136,13 @@ function object.update(self)
 	self.hitbox.x = player.x-8
 	self.hitbox.y = player.y-12
 	
-	self.collider.down.x = player.x-8
-	self.collider.down.y = player.y+32
-	self.collider.down.line.x = player.x+8
-	self.collider.down.line.y = player.y+32
+	self.collider_down.x = player.x-8
+	self.collider_down.y = player.y+32
+	self.collider_down.line.x = player.x+8
+	self.collider_down.line.y = player.y+32
 	
 	--temp
-	player.ground = collision.check(self.collider.down, "solid", "collision") and true or false
+	player.ground = collision.check(self.collider_down, "solid", "collision") and true or false
 	if love.keyboard.isDown("lshift") then player.x = mousex; player.y = mousey end
 	
 end

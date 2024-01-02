@@ -1,4 +1,4 @@
-version = "0.0.2-8"
+version = "0.0.2-9"
 
 function love.load()
 	require("conf")
@@ -25,7 +25,6 @@ function love.update(dt)
 	end
 	
 	--gui.update()
-	--nuklear.update()
 	imgui.update(dt)
 	
 	debug.update()
@@ -36,7 +35,6 @@ function love.draw()
 	input.draw()
 	
 	--gui.draw()
-	--nuklear.draw()
 	imgui.draw()
 	
 	debug.draw()
@@ -51,41 +49,34 @@ function love.keypressed(key, scancode, isrepeat)
 	debug.keypressed(key, scancode, isrepeat)
 	
 	--gui.keypressed(key, scancode, isrepeat)
-	--nuklear.keypressed(key, scancode, isrepeat)
 	imgui.keypressed(key, scancode, isrepeat)
 end
 function love.keyreleased(key, scancode)
 	--gui.keyreleased(key, scancode)
-	--nuklear.keyreleased(key, scancode)
 	imgui.keyreleased(key, scancode)
 end
 function love.mousepressed(x, y, button, istouch, presses)
 	input.mousepressed(x, y, button, istouch, presses)
 	
 	--gui.mousepressed(x, y, button, istouch, presses)
-	--nuklear.mousepressed(x, y, button, istouch, presses)
 	imgui.mousepressed(x, y, button, istouch, presses)
 end
 function love.mousereleased(x, y, button, istouch)
 	input.mousereleased(x, y, button, istouch)
 	
 	--gui.mousereleased(x, y, button, istouch)
-	--nuklear.mousereleased(x, y, button, istouch)
 	imgui.mousereleased(x, y, button, istouch)
 end
 function love.mousemoved(x, y, dx, dy, istouch)
-	--nuklear.mousemoved(x, y, dx, dy, istouch)
 	imgui.mousemoved(x, y, dx, dy, istouch)
 end
 function love.wheelmoved(x, y)
 	input.wheelmoved(x, y)
 	
 	--gui.wheelmoved(x, y)
-	--nuklear.wheelmoved(x, y)
 	imgui.wheelmoved(x, y)
 end
 function love.textinput(text)
 	--gui.textinput(text)
-	--nuklear.textinput(text)
 	imgui.textinput(text)
 end

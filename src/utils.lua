@@ -105,7 +105,11 @@ end
 function kpairs(arg)
 	local keys = {}
 	for k in pairs(arg) do table.insert(keys, k) end
-	table.sort(keys)
+	table.sort(keys, 
+		function(a, b)
+			if type(a) ~= type(b) then return tostring(a) < tostring(b) end
+			return a < b
+		end)
 	local i = 0
 	local function iterate()
 		i = i + 1

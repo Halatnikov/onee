@@ -282,6 +282,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	
 	assert(sprite, "sprite.update() | not a valid sprite")
 	assert(sprite.sprite, "sprite.update() | not a valid sprite")
+	assert(sprites[sprite.name], "sprite.update() | not a valid sprite")
 	local animdef = sprites[sprite.name].animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	

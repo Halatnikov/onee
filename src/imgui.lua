@@ -77,18 +77,26 @@ end
 -- data types conversion
 local ffi = require("ffi")
 
-local function _convert(arg, default, type)
-	local var = ffi.new(type.."[1]")
-	var[0] = arg or default
+local function _convert(arg, default, ctype)
+	if type(arg) ~= "table" then arg = {arg} end
+	if type(default) ~= "table" then default = {default} end
+
+	local var = ffi.new(ctype.."["..#arg.."]")
+	for i=1, #arg do
+		var[i-1] = arg[i] or default[i]
+	end
 	return var
 end
+
 local function _bool(arg, default) -- bool* pointer
 	if not arg then return _convert(0, default, "bool") end -- nil workaround
 	return _convert(arg, default, "bool")
 end
+
 local function _float(arg, default) -- float* pointer
 	return _convert(arg, default, "float")
 end
+
 local function _char(arg, default) -- char* pointer
 	if #arg == 0 then arg = "." end -- empty string workaround
 	local var = ffi.new("char[?]", #arg+1)
@@ -96,29 +104,36 @@ local function _char(arg, default) -- char* pointer
 	return var
 end
 
----------------------------------------------------------------- "simple" table browser
-function imgui.table(arg, name, level)
+---------------------------------------------------------------- table browser
+function imgui.table(arg, name, level, fancy, nowindow)
 	local level = level or 0
+	local fancy = fancy or false
+	local nowindow = nowindow or false
 	
 	if level == 0 then
-		if gui.CollapsingHeader_BoolPtr(name) then
-			if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "ResizeY")) then
-				imgui.table_types(arg, name, 1)
-				
-				gui.EndChild()
+		if not nowindow then
+			if gui.CollapsingHeader_BoolPtr(name) then
+				if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "ResizeY")) then
+					imgui.table_types(arg, name, 1, fancy)
+					
+					gui.EndChild()
+				end
 			end
 		end
+		if nowindow then imgui.table_types(arg, name, 1, fancy) end
+		
 	elseif level == 1 then
 		if gui.CollapsingHeader_BoolPtr(name) then
 			if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "AutoResizeY")) then
-				imgui.table_types(arg, name, 2)
+				imgui.table_types(arg, name, 2, fancy)
 				
 				gui.EndChild()
 			end
 		end
+		
 	elseif level == 2 then
 		if gui.TreeNodeEx_Str(name, gui.love.TreeNodeFlags("SpanAvailWidth")) then
-			imgui.table_types(arg, name, 2)
+			imgui.table_types(arg, name, 2, fancy)
 			gui.Separator()
 			
 			gui.TreePop()
@@ -127,34 +142,143 @@ function imgui.table(arg, name, level)
 	
 end
 
-function imgui.table_types(arg, name, level)
+function imgui.table_types(arg, name, level, fancy)
+	local level = level or 0
+	local fancy = fancy or false
+	
 	if table.length(arg) == 0 then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- empty :) -") return end
 	
-	for k,v in kpairs(arg) do
-		if type(k) == "table" then imgui.table(k, tostring(k), level) end
-		if type(k) ~= "table" then
-			if not v then imgui.table_entry(k, nil, name) end
-			if v then
-				if type(v) == "table" then imgui.table(v, tostring(k), level) end
-				if type(v) ~= "table" then imgui.table_entry(k, v, name) end
+	if not fancy then
+		for k,v in kpairs(arg) do
+			if type(k) == "table" then imgui.table(k, tostring(k), level, fancy) end
+			if type(k) ~= "table" then
+				if not v then imgui.table_entry(arg, k, v, fancy) end
+				if v then
+					if type(v) == "table" then imgui.table(v, tostring(k), level, fancy) end
+					if type(v) ~= "table" then imgui.table_entry(arg, k, v, fancy) end
+				end
 			end
 		end
 	end
+	
+	if fancy then 
+		for k,v in kpairs(arg) do
+			if imgui.table_fancy_block(arg, k, v) then
+				if type(k) == "table" then imgui.table(k, tostring(k), level, fancy) end
+				if type(k) ~= "table" then
+					if not v then imgui.table_entry(arg, k, v, fancy) end
+					if v then
+						if type(v) == "table" then imgui.table(v, tostring(k), level, fancy) end
+						if type(v) ~= "table" then imgui.table_entry(arg, k, v, fancy) end
+					end
+				end
+			end
+		end
+		imgui.table_fancy_allow(arg)
+	end
+	
 end
 
-function imgui.table_entry(k, v)
-	if not v then gui.Text(tostring(k)) end
-	if v then 
-		if type(v) ~= "userdata" then gui.Text(tostring(k)..": "..tostring(v)) end
-		if type(v) == "userdata" then
+function imgui.table_entry(arg, k, v, fancy)
+	local fancy = fancy or false
+	
+	if not fancy then
+		gui.Text(tostring(k)..": "..tostring(v))
+	end
+	
+	if fancy then
+		if type(v) == "boolean" then
+			local _v = _bool(v)
+			gui.Checkbox(tostring(k), _v)
+			arg[k] = _v[0]
+			
+		elseif type(v) == "number" then
+			local _v = _float(v)
+			gui.DragFloat(tostring(k), _v)
+			arg[k] = _v[0]
+			
+		elseif type(v) == "string" then
+			local _v = _char(v)
+			gui.InputText(tostring(k), _v, _v[0])
+			if gui.IsItemDeactivatedAfterEdit() then arg[k] = ffi.string(_v) end
+			
+		elseif type(v) == "userdata" then
+			
 			-- attempt to make sure we're in assets
 			if type(k) == "number" and v:type() == "Image" then
 				gui.Image(v, gui.ImVec2_Float(v:getDimensions()))
+				gui.SameLine()
+				gui.Text(tostring(k))
+				
 			else
-				gui.Text(tostring(k)..": "..tostring(v))
+				if gui.BeginTable(tostring(k), 2, gui.love.TableFlags("BordersInnerV")) then
+					gui.TableSetupColumn("1")
+					gui.TableSetupColumn("2")
+					
+					gui.TableNextRow()
+					gui.TableSetColumnIndex(0); gui.Text(tostring(k))
+					gui.TableSetColumnIndex(1); gui.Text(tostring(v))
+					
+					gui.EndTable()
+				end
 			end
+			
+		else
+			if gui.BeginTable(tostring(k), 2, gui.love.TableFlags("BordersInnerV")) then
+				gui.TableSetupColumn("1")
+				gui.TableSetupColumn("2")
+				
+				gui.TableNextRow()
+				gui.TableSetColumnIndex(0); gui.Text(tostring(k))
+				gui.TableSetColumnIndex(1); gui.Text(tostring(v))
+				
+				gui.EndTable()
+			end
+			
 		end
 	end
+	
+end
+
+function imgui.table_fancy_block(arg, k, v)
+	if (k == "x" and arg.y) then return end
+	if (k == "y" and arg.x) then return end
+	
+	if (k == "width" and arg.height) then return end
+	if (k == "height" and arg.width) then return end
+	
+	if k == "rgb" then return end
+	
+	return true
+end
+
+function imgui.table_fancy_allow(arg)
+	
+	if arg.x and arg.y then
+		local _v = _float({arg.x, arg.y})
+		gui.DragFloat2("x & y", _v)
+		
+		arg.x = _v[0]
+		arg.y = _v[1]
+	end
+		
+	if arg.width and arg.height then
+		local _v = _float({arg.width, arg.height})
+		gui.DragFloat2("width & height", _v)
+		
+		arg.width = _v[0]
+		arg.height = _v[1]
+	end
+	
+	if arg.rgb then
+		local _v = _float({arg.rgb[1]/255,arg.rgb[2]/255,arg.rgb[3]/255})
+		gui.ColorEdit3("rgb", _v)
+		
+		arg.rgb[1] = _v[0]*255
+		arg.rgb[2] = _v[1]*255
+		arg.rgb[3] = _v[2]*255
+	end
+	
 end
 
 ---------------------------------------------------------------- MENU BAR
@@ -480,7 +604,7 @@ function imgui.window.main()
 		end
 		
 		------------------------------------------------ GLOBAL VARIABLES
-		imgui.table(_G, "Global variables")
+		imgui.table(_G, "Global variables", nil)
 		
 		gui.End()
 	end
@@ -491,7 +615,10 @@ end
 ---------------------------------------------------------------- INSPECTOR
 
 local instance_selected
+local object_selected
 local asset_selected
+local sprite_selected
+local model_selected
 
 function imgui.window.inspector()
 	local open = _bool(imgui.open.inspector)
@@ -500,56 +627,13 @@ function imgui.window.inspector()
 		
 		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton")) then
 			
+			------------------------------------------------ INSTANCES
 			if gui.BeginTabItem("Instances") then
-				
 				if gui.BeginChild_Str("selector", nil, gui.love.ChildFlags("Border", "ResizeX")) then
 					for k,v in kpairs(instances) do
-						
-						local children
-						for ck,cv in pairs(instances[k]) do
-							children = children or {}
-							if type(cv) == "table"  then
-								children[ck] = cv
-							end
-						end
-						
-						local flags
-						if instance_selected == k then
-							if children then
-								flags = gui.love.TreeNodeFlags("SpanAvailWidth", "OpenOnArrow", "OpenOnDoubleClick", "Selected")
-							else
-								flags = gui.love.TreeNodeFlags("SpanAvailWidth", "OpenOnArrow", "OpenOnDoubleClick",  "Leaf", "Selected")
-							end
-						else
-							if children then
-								flags = gui.love.TreeNodeFlags("SpanAvailWidth", "OpenOnArrow", "OpenOnDoubleClick")
-							else
-								flags = gui.love.TreeNodeFlags("SpanAvailWidth", "OpenOnArrow", "OpenOnDoubleClick", "Leaf")
-							end
-						end
-						
-						if gui.TreeNodeEx_Str(tostring(k), flags) then
-							
-							if children and gui.IsItemClicked() then
-								instance_selected = k
-							end
-							
-							for ck,cv in kpairs(instances[k]) do
-								if type(cv) == "table" then
-									if gui.TreeNodeEx_Str(tostring(ck), gui.love.TreeNodeFlags("SpanAvailWidth", "Leaf")) then
-										
-										gui.TreePop()
-									end
-								end
-							end
-							
-							gui.TreePop()
-						end
-						
-						if gui.IsItemClicked() then
+						if gui.Selectable_Bool(tostring(k), instance_selected == k) then
 							instance_selected = k
 						end
-						
 					end
 					
 					gui.EndChild()
@@ -559,51 +643,16 @@ function imgui.window.inspector()
 				if gui.BeginChild_Str("selected") then
 					local current = instances[instance_selected] or {}
 					
-					gui.SeparatorText(tostring(instance_selected or "empty :)"))
+					gui.SeparatorText(tostring(instance_selected or ""))
 					
 					if gui.Button("Delete") and current.instance then
+						instance.delete(instance_selected)
 						instance_selected = nil
-						instance.delete(current.id)
 					end
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						for k,v in kpairs(current) do
-							if type(v) == "table" then
-								imgui.table(v, tostring(k), 1)
-								
-							elseif type(v) == "boolean" then
-								local _v = _bool(v)
-								gui.Checkbox(tostring(k), _v)
-								current[k] = _v[0]
-								
-							elseif type(v) == "number" then
-								local _v = _float(v)
-								gui.DragFloat(tostring(k), _v)
-								current[k] = _v[0]
-								
-							elseif type(v) == "string" then
-								local _v = _char(v)
-								gui.InputText(tostring(k), _v, _v[0])
-								current[k] = ffi.string(_v)
-								
-							elseif type(v) == "userdata" then
-								
-								-- attempt to make sure we're in assets
-								if type(k) == "number" and v:type() == "Image" then
-									gui.Image(v, gui.ImVec2_Float(v:getDimensions()))
-									gui.SameLine()
-									gui.Text(tostring(k))
-									
-								else
-									gui.Text(tostring(k)..": "..tostring(v))
-								end
-								
-							else
-								gui.Text(tostring(k)..": "..tostring(v))
-								
-							end
-						end
+						imgui.table(current, "current", 0, true, true)
 						
 						gui.EndChild()
 					end
@@ -614,47 +663,149 @@ function imgui.window.inspector()
 				gui.EndTabItem()
 			end
 			
-			if gui.BeginTabItem("Assets") then
-				
+			------------------------------------------------ OBJECTS
+			if gui.BeginTabItem("Objects") then
 				if gui.BeginChild_Str("selector", nil, gui.love.ChildFlags("Border", "ResizeX")) then
-					for k,v in kpairs(assets) do
-						local flags
-						if asset_selected == k then
-							flags = gui.love.TreeNodeFlags("SpanAvailWidth", "OpenOnArrow", "OpenOnDoubleClick", "Selected")
-						else
-							flags = gui.love.TreeNodeFlags("SpanAvailWidth", "OpenOnArrow", "OpenOnDoubleClick")
+					for k,v in kpairs(objects) do
+						if gui.Selectable_Bool(tostring(k), object_selected == k) then
+							object_selected = k
 						end
-						
-						if gui.TreeNodeEx_Str(tostring(k), flags) then
-							for ck,cv in kpairs(assets[k]) do
-								if gui.IsItemClicked() then
-									asset_selected = k
-								end
-								
-								if type(cv) == "table" then
-									if gui.TreeNodeEx_Str(tostring(ck), gui.love.TreeNodeFlags("SpanAvailWidth", "Leaf")) then
-										
-										gui.TreePop()
-									end
-								end
-							end
-							
-							gui.TreePop()
-						end
-						
-						if gui.IsItemClicked() then
-							asset_selected = k
-						end
-						
 					end
 					
 					gui.EndChild()
 				end
 					
+				gui.SameLine()
+				if gui.BeginChild_Str("selected") then
+					local current = objects[object_selected] or {}
+					
+					gui.SeparatorText(tostring(object_selected or ""))
+					
+					if gui.Button("Delete") and current.object then
+						object.delete(object_selected)
+						object_selected = nil
+					end
+					
+					gui.Separator()
+					if gui.BeginChild_Str("properties") then
+						imgui.table(current, "current", 0, true, true)
+						
+						gui.EndChild()
+					end
+					
 					gui.EndChild()
 				end
 				
 				gui.EndTabItem()
+			end
+			
+			------------------------------------------------ ASSETS
+			if gui.BeginTabItem("Assets") then
+				if gui.BeginChild_Str("selector", nil, gui.love.ChildFlags("Border", "ResizeX")) then
+					for k,v in kpairs(assets) do
+						if gui.Selectable_Bool(tostring(k), asset_selected == k) then
+							asset_selected = k
+						end
+					end
+					
+					gui.EndChild()
+				end
+					
+				gui.SameLine()
+				if gui.BeginChild_Str("selected") then
+					local current = assets[asset_selected] or {}
+					
+					gui.SeparatorText(tostring(asset_selected or ""))
+					
+					if gui.Button("Delete") and assets[asset_selected] then
+						asset.delete(asset_selected)
+						asset_selected = nil
+					end
+					
+					gui.Separator()
+					if gui.BeginChild_Str("properties") then
+						imgui.table(current, "current", 0, true, true)
+						
+						gui.EndChild()
+					end
+					
+					gui.EndChild()
+				end
+				
+				gui.EndTabItem()
+			end
+			
+			------------------------------------------------ SPRITES
+			if gui.BeginTabItem("Sprites") then
+				if gui.BeginChild_Str("selector", nil, gui.love.ChildFlags("Border", "ResizeX")) then
+					for k,v in kpairs(sprites) do
+						if gui.Selectable_Bool(tostring(k), sprite_selected == k) then
+							sprite_selected = k
+						end
+					end
+					
+					gui.EndChild()
+				end
+					
+				gui.SameLine()
+				if gui.BeginChild_Str("selected") then
+					local current = sprites[sprite_selected] or {}
+					
+					gui.SeparatorText(tostring(sprite_selected or ""))
+					
+					if gui.Button("Delete") and sprites[sprite_selected] then
+						asset.delete(sprite_selected)
+						sprite_selected = nil
+					end
+					
+					gui.Separator()
+					if gui.BeginChild_Str("properties") then
+						imgui.table(current, "current", 0, true, true)
+						
+						gui.EndChild()
+					end
+					
+					gui.EndChild()
+				end
+				
+				gui.EndTabItem()
+			end
+			
+			------------------------------------------------ MODELS
+			if gui.BeginTabItem("3D models") then
+				if gui.BeginChild_Str("selector", nil, gui.love.ChildFlags("Border", "ResizeX")) then
+					for k,v in kpairs(models) do
+						if gui.Selectable_Bool(tostring(k), model_selected == k) then
+							model_selected = k
+						end
+					end
+					
+					gui.EndChild()
+				end
+					
+				gui.SameLine()
+				if gui.BeginChild_Str("selected") then
+					local current = models[model_selected] or {}
+					
+					gui.SeparatorText(tostring(model_selected or ""))
+					
+					if gui.Button("Delete") and models[model_selected] then
+						asset.delete(model_selected)
+						model_selected = nil
+					end
+					
+					gui.Separator()
+					if gui.BeginChild_Str("properties") then
+						imgui.table(current, "current", 0, true, true)
+						
+						gui.EndChild()
+					end
+					
+					gui.EndChild()
+				end
+				
+				gui.EndTabItem()
+			end
 			
 			gui.EndTabBar()
 		end
