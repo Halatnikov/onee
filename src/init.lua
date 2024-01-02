@@ -75,7 +75,7 @@ end
 function debug.update()
 	if not debug_mode then return end
 end
-			a = {{0,0}, {100,10}, {50,100}, {60,30}}
+			local a = {{0,0}, {100,10}, {50,100}, {60,30}}
 function debug.draw()
 	if not debug_mode then return end
 	
@@ -94,14 +94,14 @@ function debug.draw()
 		a[i][2] = a[i][2] + 0.3
 	end
 	
-	b = {}
+	local b = {}
 	for i=1, #a do
-		b[#b+1] = a[i][1]
-		b[#b+1] = a[i][2]
+		table.insert(b, a[i][1])
+		table.insert(b, a[i][2])
 	end
 	
-	love.graphics.polygon("line", b)
-	love.graphics.line(mousex-16,mousey, mousex+24,mousey+32)
+	--love.graphics.polygon("line", b)
+	--love.graphics.line(mousex-16,mousey, mousex+24,mousey+32)
 	
 	--print(collision.poly_line(a, mousex-16,mousey, mousex+24,mousey+32))
 	

@@ -134,6 +134,7 @@ function queue.add(arg, i, add)
 end
 
 function queue.execute(arg)
+	if not arg.queue then return end
 	for i = arg.first, arg.last do
 		if arg.queue[i] then
 			for k,v in pairs(arg.queue[i]) do v() end
@@ -148,6 +149,14 @@ end
 
 function string.replace(arg,find,replace) -- alias
 	return string.gsub(arg,find,replace)
+end
+
+function string.split(arg)
+	local t = {}
+	for i = 1, #arg do
+		table.insert(t, string.sub(arg, i, i))
+	end
+	return t
 end
 
 function string.random(length)
