@@ -53,8 +53,10 @@ function love.errorhandler(msg)
 	sanitizedmsg = table.concat(sanitizedmsg)
 
 	local err = {}
+	
+	local titles = {"Error", "It's going to be okay", "the"}
 
-	table.insert(err, "Error\n")
+	table.insert(err, titles[love.math.random(#titles)].."\n")
 	table.insert(err, sanitizedmsg)
 
 	if #sanitizedmsg ~= #msg then
@@ -74,6 +76,11 @@ function love.errorhandler(msg)
 
 	p = p:gsub("\t", "")
 	p = p:gsub("%[string \"(.-)\"%]", "%1")
+	
+	p = p.."\n"
+	p = p.."\nPress Ctrl+C to copy to clipboard"
+	p = p.."\nPress Esc to quit or Space to restart"
+	p = p.."\n"
 
 	local function draw()
 		if not love.graphics.isActive() then return end
@@ -98,6 +105,8 @@ function love.errorhandler(msg)
 				return 1
 			elseif e == "keypressed" and a == "escape" then
 				return 1
+			elseif e == "keypressed" and a == "space" then
+				return "restart"
 			elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
 				copyToClipboard()
 			elseif e == "touchpressed" then
@@ -115,9 +124,9 @@ function love.errorhandler(msg)
 				end
 			end
 		end
-
+		
 		draw()
-
+		
 		if love.timer then
 			love.timer.sleep(0.1)
 		end

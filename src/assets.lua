@@ -246,6 +246,8 @@ function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 	
 	local t = {
 		sprite = true,
+		active = true,
+		visible = true,
 		name = name,
 		animation = "idle",
 		current = "idle",
@@ -282,6 +284,8 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	
 	assert(sprite, "sprite.update() | not a valid sprite")
 	assert(sprite.sprite, "sprite.update() | not a valid sprite")
+	if not sprite.active then return end
+	
 	assert(sprites[sprite.name], "sprite.update() | not a valid sprite")
 	local animdef = sprites[sprite.name].animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
@@ -295,6 +299,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 		sprite.timer = 0
 		sprite.seq = "seq_start"
 		sprite.seq_index = 1
+		sprite.loops = 0
 	
 		sprite.current = sprite.animation
 		sprite.frame = animdef[sprite.seq][sprite.seq_index]
@@ -355,6 +360,8 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 
 	assert(sprite, "sprite.draw() | not a valid sprite")
 	assert(sprite.sprite, "sprite.draw() | not a valid sprite")
+	if not sprite.visible then return end
+	
 	local spritedef = sprites[sprite.name]
 	assert(spritedef, "sprite.draw() | no such sprite \""..sprite.name.."\"")
 	
@@ -469,6 +476,8 @@ function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	local t = {
 		model = true,
 		name = name,
+		active = true,
+		visible = true,
 		
 		instance = assets[name]:newInstance(1),
 		projection = gltf.newRenderer(),
@@ -494,6 +503,8 @@ end
 function model.update(model) -- UPDATE 3D MODEL --
 	assert(model, "model.update() | not a valid 3d model")
 	assert(model.model, "model.update() | not a valid 3d model")
+	if not model.active then return end
+	assert(models[model.name], "model.update() | not a valid 3d model")
 	
 	local modeldef = models[model.name]
 	
@@ -564,6 +575,7 @@ end
 function model.draw(model) -- DRAW 3D MODEL --
 	assert(model, "model.draw() | not a valid 3d model")
 	assert(model.model, "model.draw() | not a valid 3d model")
+	if not model.visible then return end
 	
 	-- the model itself
 	model.projection:addToDrawList(model.instance)

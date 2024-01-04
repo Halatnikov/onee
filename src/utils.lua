@@ -173,6 +173,10 @@ function string.random(length)
 	return table.concat(t)
 end
 
+function string.md5(arg) -- alias
+	return love.data.hash("md5", tostring(arg))
+end
+
 -- % is the escape character for separator, because this uses patterns (not regex)
 -- TODO: automatically replace ( with %( and |+ with %|%+ and etc 
 function string.tokenize(arg, separator, index)

@@ -33,28 +33,36 @@ function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE 
 	return table.append(collision, t)
 end
 
-function collision.draw(collision) -- DEBUG DRAW COLLISION --
+function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
 	if not collision.active then return end 
 	
 	if not collision.rgb then
 		collision.rgb = {math.random(0,255), math.random(0,255), math.random(0,255)}
+		collision.highlighted = false
 	end
+	
+	local mode = collision.highlighted and "fill" or "line"
 	
 	love.graphics.setColor(collision.rgb[1]/255, collision.rgb[2]/255, collision.rgb[3]/255, 0.5)
 	-- LINE --
 	if collision.line then
 		love.graphics.line(collision.x, collision.y, collision.line.x, collision.line.y)
+		if collision.highlighted and frames % 5 == 0 then
+			love.graphics.setColor(1, 1, 1, 1)
+			love.graphics.setLineWidth(3)
+			love.graphics.line(collision.x, collision.y, collision.line.x, collision.line.y)
+		end
 	-- RECT --
 	elseif collision.rect then
-		love.graphics.rectangle("line", collision.x, collision.y, collision.rect.width, collision.rect.height)
+		love.graphics.rectangle(mode, collision.x, collision.y, collision.rect.width, collision.rect.height)
 	-- CIRCLE --
 	elseif collision.circ then
-		love.graphics.circle("line", collision.x, collision.y, collision.circ.radius)
+		love.graphics.circle(mode, collision.x, collision.y, collision.circ.radius)
 	-- POINT --
 	else
 		love.graphics.line(collision.x-4, collision.y, collision.x+4, collision.y)
 		love.graphics.line(collision.x, collision.y-4, collision.x, collision.y+4)
-		love.graphics.circle("line", collision.x, collision.y, 6)
+		love.graphics.circle(mode, collision.x, collision.y, 6)
 	end
 	love.graphics.reset()
 	
@@ -66,16 +74,22 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 	
 	local candidates = {}
 	
-	for id in pairs(instances) do
-		if instances[id].object == objectname then
-			for fields in pairs(instances[id]) do
-				local field = instances[id][fields]
-				
-				if type(field) == "table" and 
-				field.collision and field.name == collisionname then
-					table.insert(candidates, field)
+	local function check_recursively(arg, id)
+		for k, v in pairs(arg) do
+			if type(v) == "table" then
+				if arg[k].collision and arg[k].name == collisionname then
+					arg[k].instance = tostring(id)
+					table.insert(candidates, arg[k])
+				else
+					check_recursively(arg[k])
 				end
 			end
+		end
+	end
+	
+	for id in pairs(instances) do
+		if instances[id].object == objectname then
+			check_recursively(instances[id], id)
 		end
 	end
 	
@@ -85,8 +99,6 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 	for i=1, #candidates do
 		local other = candidates[i]
 		local result
-		
-		if not other.active then break end
 		
 		-- LINE --
 		if self.line then
@@ -183,8 +195,8 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 		end
 		
 		-- return only when a collision is found, otherwise continue
-		if result then
-			return true
+		if result and other.active then
+			return true, other
 		end
 		
 	end

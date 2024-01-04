@@ -2,7 +2,7 @@
 
 tiled
 [enables the sprite to be tiled, can be a boolean, a string, or a table] 
-[valid values: true (same as "repeat"), "repeat", "mirroredrepeat", "clamp", "clampzero" (default: false)]
+[valid values: true (same as TILE.TILE), TILE.TILE, TILE.MIRROR, TILE.ONCE, TILE.EDGES (default: false)]
 
 nineslice
 

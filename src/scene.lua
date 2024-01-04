@@ -51,18 +51,22 @@ function scenes.draw() -- SCENE DRAW LOOP --
 	if scene.draw then scene.draw() end -- scene
 	
 	for id in pairs(instances) do -- instances
-		if instances[id].draw then instances[id].draw(instances[id]) end
+		if instances[id].draw and instances[id].visible then instances[id].draw(instances[id]) end
 		
 		if debug_draw_collisions then
-			for fields in pairs(instances[id]) do
-				local field = instances[id][fields]
-				
-				if type(field) == "table" and field.collision then
-					queue.add(scenes.drawlist, 1000, function()
-						collision.draw(field)
-					end)
+			local function debug_draw_collisions(arg)
+				for k, v in pairs(arg) do
+					if type(v) == "table" and arg[k].collision then
+						queue.add(scenes.drawlist, 1000, function()
+							collision.debug_draw(arg[k])
+						end)
+					elseif type(v) == "table" then
+						debug_draw_collisions(arg[k])
+					end
 				end
 			end
+			
+			debug_draw_collisions(instances[id])
 		end
 		
 	end
@@ -127,6 +131,7 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 	t.object = name
 	t.id = id
 	t.active = true
+	t.visible = true
 	
 	if object.data then table.append(t, object.data) end
 	if data then table.append(t, data) end -- pass additional stuff to instance through this table

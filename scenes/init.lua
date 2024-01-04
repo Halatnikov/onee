@@ -2,8 +2,8 @@ local scene = {}
 
 function scene.init()
 	
-	object.new("test",{a=1,{3}})
-	instance.new("test",{b=4})
+	--object.new("test",{a=1,{3}})
+	--instance.new("test",{b=4})
 	--instance.new("test",{b=5})
 	
 	object.new("yorb")

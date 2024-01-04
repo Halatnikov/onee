@@ -12,7 +12,7 @@ if love._os == "Windows" and debug_mode then
 	
 	imgui.open.menubar = true
 	imgui.open.main = true
-	imgui.open.inspector = true
+	
 end
 
 -- main loop
@@ -30,18 +30,6 @@ function imgui.draw()
     
     gui.Render()
     gui.love.RenderDrawLists()
-end
-
--- control function
-function imgui.main()
-	if imgui.open.menubar then imgui.window.menubar() end
-	
-	if imgui.open.main then imgui.window.main() end
-	
-	if imgui.open.inspector then imgui.window.inspector() end
-	
-	if imgui.open.demo then imgui.window.demo() end
-	
 end
 
 -- event redirection
@@ -100,40 +88,44 @@ end
 local function _char(arg, default) -- char* pointer
 	if #arg == 0 then arg = "." end -- empty string workaround
 	local var = ffi.new("char[?]", #arg+1)
-	ffi.copy(var, arg or "")
+	ffi.copy(var, arg or ".")
 	return var
 end
 
 ---------------------------------------------------------------- table browser
-function imgui.table(arg, name, level, fancy, nowindow)
+function imgui.table(arg, name, settings, level)
 	local level = level or 0
-	local fancy = fancy or false
-	local nowindow = nowindow or false
+	local settings = settings or {
+		fancy = false,
+		nowindow = false,
+		imagescale = 1,
+	}
 	
 	if level == 0 then
-		if not nowindow then
+		if not settings.nowindow then
 			if gui.CollapsingHeader_BoolPtr(name) then
-				if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "ResizeY")) then
-					imgui.table_types(arg, name, 1, fancy)
+				if gui.BeginChild_Str(name.."##"..string.md5(arg), nil, gui.love.ChildFlags("Border", "ResizeY")) then
+					imgui.table_entries(arg, settings, 1)
 					
 					gui.EndChild()
 				end
 			end
+		else
+			imgui.table_entries(arg, settings, 1)
 		end
-		if nowindow then imgui.table_types(arg, name, 1, fancy) end
 		
 	elseif level == 1 then
-		if gui.CollapsingHeader_BoolPtr(name) then
+		if gui.CollapsingHeader_BoolPtr(name.."##"..string.md5(arg)) then
 			if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "AutoResizeY")) then
-				imgui.table_types(arg, name, 2, fancy)
+				imgui.table_entries(arg, settings, 2)
 				
 				gui.EndChild()
 			end
 		end
 		
 	elseif level == 2 then
-		if gui.TreeNodeEx_Str(name, gui.love.TreeNodeFlags("SpanAvailWidth")) then
-			imgui.table_types(arg, name, 2, fancy)
+		if gui.TreeNodeEx_Str(name.."##"..string.md5(arg), gui.love.TreeNodeFlags("SpanAvailWidth")) then
+			imgui.table_entries(arg, settings, 2)
 			gui.Separator()
 			
 			gui.TreePop()
@@ -142,102 +134,90 @@ function imgui.table(arg, name, level, fancy, nowindow)
 	
 end
 
-function imgui.table_types(arg, name, level, fancy)
-	local level = level or 0
-	local fancy = fancy or false
-	
+function imgui.table_entries(arg, settings, level)
 	if table.length(arg) == 0 then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- empty :) -") return end
 	
-	if not fancy then
+	if not settings.fancy then
 		for k,v in kpairs(arg) do
-			if type(k) == "table" then imgui.table(k, tostring(k), level, fancy) end
-			if type(k) ~= "table" then
-				if not v then imgui.table_entry(arg, k, v, fancy) end
-				if v then
-					if type(v) == "table" then imgui.table(v, tostring(k), level, fancy) end
-					if type(v) ~= "table" then imgui.table_entry(arg, k, v, fancy) end
+			if type(k) == "table" then
+				imgui.table(k, tostring(k), settings, level)
+			else
+				if type(v) == "table" then
+					imgui.table(v, tostring(k), settings, level)
+				else
+					gui.Text(tostring(k)..": "..tostring(v))
 				end
 			end
 		end
 	end
 	
-	if fancy then 
+	if settings.fancy then
 		for k,v in kpairs(arg) do
 			if imgui.table_fancy_block(arg, k, v) then
-				if type(k) == "table" then imgui.table(k, tostring(k), level, fancy) end
-				if type(k) ~= "table" then
-					if not v then imgui.table_entry(arg, k, v, fancy) end
-					if v then
-						if type(v) == "table" then imgui.table(v, tostring(k), level, fancy) end
-						if type(v) ~= "table" then imgui.table_entry(arg, k, v, fancy) end
+				if type(k) == "table" then
+					imgui.table_fancy_table(arg, k, v, k, tostring(k), settings, level)
+				else
+					if type(v) == "table" then
+						imgui.table_fancy_table(arg, k, v, v, tostring(k), settings, level)
+					else
+						imgui.table_fancy_entry(arg, k, v, settings)
 					end
 				end
 			end
 		end
+		
 		imgui.table_fancy_allow(arg)
 	end
 	
 end
 
-function imgui.table_entry(arg, k, v, fancy)
-	local fancy = fancy or false
+function imgui.table_fancy_table(arg, k, v, t, name, settings, level)
+	imgui.table(t, tostring(k), settings, level)
 	
-	if not fancy then
-		gui.Text(tostring(k)..": "..tostring(v))
-	end
+	local label = ""
+	if t.collision == true then label = "collision \""..t.name.."\"" end
+	if t.sprite == true then label = "sprite \""..t.name.."\"" end
 	
-	if fancy then
-		if type(v) == "boolean" then
-			local _v = _bool(v)
-			gui.Checkbox(tostring(k), _v)
-			arg[k] = _v[0]
+	gui.SameLine(200)
+	gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), label)
+end
+
+function imgui.table_fancy_entry(arg, k, v, settings)
+	if type(v) == "boolean" then
+		local _v = _bool(v)
+		gui.Checkbox(tostring(k), _v)
+		arg[k] = _v[0]
+		
+	elseif type(v) == "number" then
+		local _v = _float(v)
+		gui.DragFloat(tostring(k), _v)
+		arg[k] = _v[0]
+		
+	elseif type(v) == "string" then
+		local _v = _char(v)
+		gui.InputText(tostring(k), _v, _v[0])
+		if gui.IsItemDeactivatedAfterEdit() then
+			arg[k] = (ffi.string(_v) == ".") and "" or ffi.string(_v)
+		end
+		
+	elseif type(v) == "userdata" and type(k) == "number" and v:type() == "Image" then
+		-- attempt to make sure we're in assets
+		gui.Image(v, gui.ImVec2_Float(v:getWidth()*settings.imagescale, v:getHeight()*settings.imagescale))
+		gui.SameLine()
+		gui.Text(tostring(k))
+		
+	else
+		if gui.BeginTable(tostring(k), 2, gui.love.TableFlags("BordersInnerV")) then
+			gui.TableSetupColumn("1")
+			gui.TableSetupColumn("2")
 			
-		elseif type(v) == "number" then
-			local _v = _float(v)
-			gui.DragFloat(tostring(k), _v)
-			arg[k] = _v[0]
+			gui.TableNextRow()
+			gui.TableSetColumnIndex(0); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), tostring(v))
+			gui.TableSetColumnIndex(1); gui.Text(tostring(k))
 			
-		elseif type(v) == "string" then
-			local _v = _char(v)
-			gui.InputText(tostring(k), _v, _v[0])
-			if gui.IsItemDeactivatedAfterEdit() then arg[k] = ffi.string(_v) end
-			
-		elseif type(v) == "userdata" then
-			
-			-- attempt to make sure we're in assets
-			if type(k) == "number" and v:type() == "Image" then
-				gui.Image(v, gui.ImVec2_Float(v:getDimensions()))
-				gui.SameLine()
-				gui.Text(tostring(k))
-				
-			else
-				if gui.BeginTable(tostring(k), 2, gui.love.TableFlags("BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					gui.TableSetupColumn("2")
-					
-					gui.TableNextRow()
-					gui.TableSetColumnIndex(0); gui.Text(tostring(k))
-					gui.TableSetColumnIndex(1); gui.Text(tostring(v))
-					
-					gui.EndTable()
-				end
-			end
-			
-		else
-			if gui.BeginTable(tostring(k), 2, gui.love.TableFlags("BordersInnerV")) then
-				gui.TableSetupColumn("1")
-				gui.TableSetupColumn("2")
-				
-				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text(tostring(k))
-				gui.TableSetColumnIndex(1); gui.Text(tostring(v))
-				
-				gui.EndTable()
-			end
-			
+			gui.EndTable()
 		end
 	end
-	
 end
 
 function imgui.table_fancy_block(arg, k, v)
@@ -281,36 +261,107 @@ function imgui.table_fancy_allow(arg)
 	
 end
 
+-- control function
+function imgui.main()
+	if imgui.open.menubar then imgui.window.menubar() end
+	
+	if imgui.open.overlay then imgui.window.overlay() end
+	
+	if imgui.open.main then imgui.window.main() end
+	
+	if imgui.open.inspector then imgui.window.inspector() end
+	
+	if imgui.open.demo then imgui.window.demo() end
+	
+end
+
+local freeze = false; local advance_frame = false; local old_frame
+
+local instance_selected, object_selected, asset_selected, sprite_selected, model_selected
+
 ---------------------------------------------------------------- MENU BAR
 
 function imgui.window.menubar()
 	
 	if gui.BeginMainMenuBar() then
 		
+		------------------------------------------------ main menu
+		if gui.BeginMenu("Main") then
+			
+			-- reload shortcut
+			if gui.MenuItem_Bool("Reload", "F2") then
+				love.event.quit("restart")
+			end
+			-- reset scene shortcut
+			if gui.MenuItem_Bool("Reset scene", "`") then
+				scenes.set("init")
+			end
+			-- advance frame controls shortcut
+			if gui.SmallButton(freeze and "|>" or "||") then
+				freeze = not freeze
+				allow_update = not allow_update
+			end
+			if freeze then -- (only show these when frozen)
+				gui.SameLine()
+				if gui.SmallButton(">") then
+					old_frame = frames
+					advance_frame = true
+				end
+				gui.SameLine()
+				gui.Text("FROZEN")
+			end
+			
+			if advance_frame then -- (one frame forward)
+				allow_update = true
+				if frames > old_frame then
+					allow_update = false
+					advance_frame = false
+				end
+			end
+			
+			gui.Separator()
+			-- draw collisions shortcut
+			if gui.MenuItem_Bool("Draw collisions", nil, debug_draw_collisions) then
+				debug_draw_collisions = not debug_draw_collisions
+			end
+			
+			gui.Separator()
+			-- toggle debug mode
+			if gui.MenuItem_Bool("Debug mode", nil, debug_mode) then
+				debug_mode = not debug_mode
+			end
+			-- trigger a crash
+			if gui.MenuItem_Bool("Crash!") then
+				error("you did this to yourself")
+			end
+			-- close the game
+			if gui.MenuItem_Bool("Quit") then
+				love.event.quit()
+			end
+			
+			gui.EndMenu()
+		end
+		
 		------------------------------------------------ windows menu
 		if gui.BeginMenu("Windows") then
 			
 			-- open main window
-			if gui.MenuItem_Bool("Main window") then
-				imgui.open.main = true
+			if gui.MenuItem_Bool("Main window", nil, imgui.open.main) then
+				imgui.open.main = not imgui.open.main
+			end
+			-- open inspect overlay
+			if gui.MenuItem_Bool("Inspect overlay", nil, imgui.open.overlay) then
+				imgui.open.overlay = not imgui.open.overlay
 			end
 			-- open inspector window
-			if gui.MenuItem_Bool("Inspector") then
-				imgui.open.inspector = true
+			if gui.MenuItem_Bool("Inspector", nil, imgui.open.inspector) then
+				imgui.open.inspector = not imgui.open.inspector
 			end
-			-- open imgui demo
-			if gui.MenuItem_Bool("ImGui demo") then
-				imgui.open.demo = true
-			end
-			--
+			
 			gui.Separator()
-			-- toggle debug mode
-			local _v = _bool(debug_mode, true)
-			gui.Checkbox("Debug mode", _v)
-			debug_mode = _v[0]
-			-- close the game
-			if gui.MenuItem_Bool("Quit") then
-				love.event.quit()
+			-- open imgui demo
+			if gui.MenuItem_Bool("ImGui demo", nil, imgui.open.demo) then
+				imgui.open.demo = not imgui.open.demo
 			end
 			
 			gui.EndMenu()
@@ -342,9 +393,87 @@ function imgui.window.menubar()
 	
 end
 
----------------------------------------------------------------- MAIN WINDOW
+---------------------------------------------------------------- INSPECT OVERLAY
+local collision_inspect = {}
+local inspect_popup
 
-local freeze = false; local advance_frame = false; local old_frame
+function imgui.window.overlay()
+	local open = _bool(imgui.open.overlay)
+	
+	gui.SetNextWindowPos(gui.ImVec2_Float(windowwidth-8, 26), nil, gui.ImVec2_Float(1, 0))
+	if gui.Begin("quick overlay", open, gui.love.WindowFlags("NoDecoration", "AlwaysAutoResize", "NoNav")) then
+		
+		if gui.IsWindowHovered(gui.love.HoveredFlags("RectOnly")) then 
+			gui.SetWindowFocus_Nil()
+			if gui.IsMouseClicked(1) then open[0] = false end
+		end
+		
+		gui.Text("Mouse: "..love.mouse.getX()..", "..love.mouse.getY())
+		gui.Text("Instances: "..table.length(instances))
+		
+		gui.End()
+	end
+	
+	local self = {collision = true, active = true, x = love.mouse.getX(), y = love.mouse.getY()}
+	local check, col
+	
+	local function check_recursively(arg, id, object)
+		for k, v in pairs(arg) do
+			if type(v) == "table" then
+				if arg[k].collision then
+					check, col = collision.check(self, object, arg[k].name)
+					if check == true then collision_inspect[col.instance..col.name] = col end
+				else
+					check_recursively(arg[k])
+				end
+			end
+		end
+	end
+	
+	for id in pairs(instances) do
+		check_recursively(instances[id], id, instances[id].object)
+	end
+	
+	if table.length(collision_inspect) ~= 0 and not gui.IsWindowHovered(gui.love.HoveredFlags("AnyWindow")) then
+		if gui.BeginTooltip() then
+			for k,v in pairs(collision_inspect) do
+				gui.Text(collision_inspect[k].instance)
+				gui.SameLine()
+				gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..collision_inspect[k].name..")")
+			end
+			gui.EndTooltip()
+		end
+		
+		if gui.IsMouseClicked(1) then
+			inspect_popup = collision_inspect 
+			gui.OpenPopup_Str("inspect_popup")
+		end
+	end
+	
+	if gui.BeginPopup("inspect_popup") then
+		for k,v in pairs(inspect_popup) do
+			gui.SeparatorText(inspect_popup[k].instance)
+			gui.SameLine()
+			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..inspect_popup[k].name..")")
+			if gui.MenuItem_Bool("Open inspector") then
+				instance_selected = inspect_popup[k].instance
+				imgui.open.inspector = true
+			end
+			if gui.MenuItem_Bool("Delete") then
+				instance.delete(inspect_popup[k].instance)
+			end
+		end
+		gui.EndPopup()
+	end
+	
+	collision_inspect = {}
+	
+	--check sprites like this too by checking nearest xy to cursor within range
+	
+	imgui.open.overlay = open[0]
+end
+
+---------------------------------------------------------------- MAIN WINDOW
 
 function imgui.window.main()
 	local open = _bool(imgui.open.main)
@@ -389,6 +518,10 @@ function imgui.window.main()
 		local _v = _bool(debug_draw_collisions, true)
 		gui.Checkbox("Draw collisions", _v)
 		debug_draw_collisions = _v[0]
+		
+		local _v = _bool(imgui.open.overlay)
+		gui.Checkbox("Show inspect overlay", _v)
+		imgui.open.overlay = _v[0]
 		
 		------------------------------------------------ GENERAL STATS HEADER
 		if gui.CollapsingHeader_BoolPtr("General stats") then
@@ -557,7 +690,7 @@ function imgui.window.main()
 		end
 		
 		------------------------------------------------ INPUT HEADER
-		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode) then
+		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode.."##input") then
 			
 			-- mouse table
 			if gui.BeginTable("input_mouse", 3) then
@@ -604,7 +737,7 @@ function imgui.window.main()
 		end
 		
 		------------------------------------------------ GLOBAL VARIABLES
-		imgui.table(_G, "Global variables", nil)
+		imgui.table(_G, "Global variables")
 		
 		gui.End()
 	end
@@ -614,18 +747,16 @@ end
 
 ---------------------------------------------------------------- INSPECTOR
 
-local instance_selected
-local object_selected
-local asset_selected
-local sprite_selected
-local model_selected
+local simple
+local asset_scale = 1
 
 function imgui.window.inspector()
 	local open = _bool(imgui.open.inspector)
+	local _simple = _bool(simple, false)
 	
 	if gui.Begin("Inspector", open) then
 		
-		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton")) then
+		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton", "FittingPolicyScroll", "Reorderable")) then
 			
 			------------------------------------------------ INSTANCES
 			if gui.BeginTabItem("Instances") then
@@ -652,7 +783,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", 0, true, true)
+						imgui.table(current, "current", {fancy = not simple, nowindow = true})
 						
 						gui.EndChild()
 					end
@@ -688,7 +819,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", 0, true, true)
+						imgui.table(current, "current", {fancy = not simple, nowindow = true})
 						
 						gui.EndChild()
 					end
@@ -722,9 +853,16 @@ function imgui.window.inspector()
 						asset_selected = nil
 					end
 					
+					gui.SameLine()
+					local _v = _float(asset_scale)
+					gui.SetNextItemWidth(140)
+					gui.SliderFloat("", _v, 0.25, 5, "Image scale: "..math.floor((asset_scale*100)).."%%")
+					asset_scale = _v[0]
+					if gui.IsItemClicked(1) then asset_scale = 1 end
+					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", 0, true, true)
+						imgui.table(current, "current", {fancy = not simple, nowindow = true, imagescale = asset_scale})
 						
 						gui.EndChild()
 					end
@@ -760,7 +898,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", 0, true, true)
+						imgui.table(current, "current", {fancy = not simple, nowindow = true})
 						
 						gui.EndChild()
 					end
@@ -796,7 +934,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", 0, true, true)
+						imgui.table(current, "current", {fancy = not simple, nowindow = true})
 						
 						gui.EndChild()
 					end
@@ -809,6 +947,10 @@ function imgui.window.inspector()
 			
 			gui.EndTabBar()
 		end
+		
+		gui.SameLine(gui.GetWindowWidth() - 110)
+		gui.Checkbox("simple view", _simple)
+		simple = _simple[0]
 		
 		gui.End()
 	end
