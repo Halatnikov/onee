@@ -324,6 +324,10 @@ function imgui.window.menubar()
 			if gui.MenuItem_Bool("Draw collisions", nil, debug_draw_collisions) then
 				debug_draw_collisions = not debug_draw_collisions
 			end
+			-- draw sprite bboxes shortcut
+			if gui.MenuItem_Bool("Draw sprite BBoxes", nil, debug_draw_sprites) then
+				debug_draw_sprites = not debug_draw_sprites
+			end
 			
 			gui.Separator()
 			-- toggle debug mode
@@ -400,11 +404,15 @@ local inspect_popup
 function imgui.window.overlay()
 	local open = _bool(imgui.open.overlay)
 	
+	------------------------------------------------ TOP RIGHT PANEL
 	gui.SetNextWindowPos(gui.ImVec2_Float(windowwidth-8, 26), nil, gui.ImVec2_Float(1, 0))
+	
 	if gui.Begin("quick overlay", open, gui.love.WindowFlags("NoDecoration", "AlwaysAutoResize", "NoNav")) then
 		
+		-- make it above every window when hovered, right click to close
 		if gui.IsWindowHovered(gui.love.HoveredFlags("RectOnly")) then 
 			gui.SetWindowFocus_Nil()
+			
 			if gui.IsMouseClicked(1) then open[0] = false end
 		end
 		
@@ -414,27 +422,30 @@ function imgui.window.overlay()
 		gui.End()
 	end
 	
+	------------------------------------------------ TOOLTIPS FOR INSTANCE COLLISIONS
 	local self = {collision = true, active = true, x = love.mouse.getX(), y = love.mouse.getY()}
 	local check, col
 	
-	local function check_recursively(arg, id, object)
+	local function collisions_recursively(arg, id, object)
 		for k, v in pairs(arg) do
 			if type(v) == "table" then
 				if arg[k].collision then
 					check, col = collision.check(self, object, arg[k].name)
 					if check == true then collision_inspect[col.instance..col.name] = col end
 				else
-					check_recursively(arg[k])
+					collisions_recursively(arg[k])
 				end
 			end
 		end
 	end
 	
 	for id in pairs(instances) do
-		check_recursively(instances[id], id, instances[id].object)
+		collisions_recursively(instances[id], id, instances[id].object)
 	end
 	
+	-- the tooltip itself
 	if table.length(collision_inspect) ~= 0 and not gui.IsWindowHovered(gui.love.HoveredFlags("AnyWindow")) then
+		
 		if gui.BeginTooltip() then
 			for k,v in pairs(collision_inspect) do
 				gui.Text(collision_inspect[k].instance)
@@ -450,25 +461,32 @@ function imgui.window.overlay()
 		end
 	end
 	
+	-- pop-up menu on right click
 	if gui.BeginPopup("inspect_popup") then
 		for k,v in pairs(inspect_popup) do
-			gui.SeparatorText(inspect_popup[k].instance)
+			local col = inspect_popup[k]
+			
+			gui.SeparatorText(col.instance)
 			gui.SameLine()
-			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..inspect_popup[k].name..")")
+			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..col.name..")")
+			
+			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "x, y: "..math.floor(col.x)..", "..math.floor(col.y))
+			
 			if gui.MenuItem_Bool("Open inspector") then
-				instance_selected = inspect_popup[k].instance
+				instance_selected = col.instance
 				imgui.open.inspector = true
 			end
 			if gui.MenuItem_Bool("Delete") then
-				instance.delete(inspect_popup[k].instance)
+				instance.delete(col.instance)
 			end
+			
 		end
 		gui.EndPopup()
 	end
 	
 	collision_inspect = {}
 	
-	--check sprites like this too by checking nearest xy to cursor within range
+	--check sprites like this too by checking nearest xy to cursor within range or maybe point in rect check
 	
 	imgui.open.overlay = open[0]
 end
@@ -518,6 +536,10 @@ function imgui.window.main()
 		local _v = _bool(debug_draw_collisions, true)
 		gui.Checkbox("Draw collisions", _v)
 		debug_draw_collisions = _v[0]
+		
+		local _v = _bool(debug_draw_sprites, true)
+		gui.Checkbox("Draw sprite BBoxes", _v)
+		debug_draw_sprites = _v[0]
 		
 		local _v = _bool(imgui.open.overlay)
 		gui.Checkbox("Show inspect overlay", _v)
@@ -756,7 +778,7 @@ function imgui.window.inspector()
 	
 	if gui.Begin("Inspector", open) then
 		
-		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton", "FittingPolicyScroll", "Reorderable")) then
+		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton", "Reorderable")) then
 			
 			------------------------------------------------ INSTANCES
 			if gui.BeginTabItem("Instances") then

@@ -54,7 +54,20 @@ function love.errorhandler(msg)
 
 	local err = {}
 	
-	local titles = {"Error", "It's going to be okay", "the"}
+	local titles = {
+		"Error",
+		"It's going to be okay",
+		"the",
+		"Guys, I just saw a dog!",
+		"That'll be four bucks baby you want fries with that?",
+		"Funfetti code injection exploit",
+		"Death",
+		"The New Technology",
+		"Arbitrary freak execution",
+		"H",
+		"Well, I heard you CAN lose a lot of weight on it",
+		"But you can't keep it off, gotta eat less and exercise more",
+	}
 
 	table.insert(err, titles[love.math.random(#titles)].."\n")
 	table.insert(err, sanitizedmsg)

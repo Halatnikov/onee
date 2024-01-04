@@ -465,6 +465,38 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	love.graphics.reset()
 end
 
+function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
+	if not sprite.active then return end 
+	if sprite.tiled or sprite.nineslice then return end -- temp
+	
+	local spritedef = sprites[sprite.name]
+	local animdef = spritedef.animations[sprite.animation]
+	local framedef = animdef.frames[sprite.frame]
+	
+	if not sprite.debug then
+		sprite.debug = {}
+		sprite.debug.rgb = {math.random(0,255), math.random(0,255), math.random(0,255)}
+		sprite.debug.highlighted = false
+	end
+	
+	local mode = sprite.debug.highlighted and "fill" or "line"
+	
+	local x = sprite.x-framedef.x
+	local y = sprite.y-framedef.y
+	local width = sprite.scalex or 1; width = math.abs(width)*framedef.width
+	local height = sprite.scaley or 1; height = math.abs(height)*framedef.height
+	
+	love.graphics.setColor(sprite.debug.rgb[1]/255, sprite.debug.rgb[2]/255, sprite.debug.rgb[3]/255, 0.5)
+	love.graphics.setLineWidth(3)
+	-- bbox
+	love.graphics.rectangle(mode, x, y, width, height)
+	
+	-- origin
+	love.graphics.line(sprite.x-4, sprite.y, sprite.x+4, sprite.y)
+	love.graphics.line(sprite.x, sprite.y-4, sprite.x, sprite.y+4)
+	love.graphics.reset()
+end
+
 ---------------------------------------------------------------- 3D MODELS
 
 local vec3 = require "src/libs/gltf/cpml.modules.vec3"

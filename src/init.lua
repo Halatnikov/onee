@@ -54,6 +54,7 @@ if debug_mode then
 	love.setDeprecationOutput(true)
 	
 	debug_draw_collisions = true
+	debug_draw_sprites = false
 	
 	-- todo: init imgui here
 	-- todo: on debug_mode disable, close all the ui

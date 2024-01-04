@@ -54,19 +54,35 @@ function scenes.draw() -- SCENE DRAW LOOP --
 		if instances[id].draw and instances[id].visible then instances[id].draw(instances[id]) end
 		
 		if debug_draw_collisions then
-			local function debug_draw_collisions(arg)
+			local function draw_recursively(arg)
 				for k, v in pairs(arg) do
 					if type(v) == "table" and arg[k].collision then
 						queue.add(scenes.drawlist, 1000, function()
 							collision.debug_draw(arg[k])
 						end)
 					elseif type(v) == "table" then
-						debug_draw_collisions(arg[k])
+						draw_recursively(arg[k])
 					end
 				end
 			end
 			
-			debug_draw_collisions(instances[id])
+			draw_recursively(instances[id])
+		end
+		
+		if debug_draw_sprites then
+			local function draw_recursively(arg)
+				for k, v in pairs(arg) do
+					if type(v) == "table" and arg[k].sprite then
+						queue.add(scenes.drawlist, 1000, function()
+							sprite.debug_draw(arg[k])
+						end)
+					elseif type(v) == "table" then
+						draw_recursively(arg[k])
+					end
+				end
+			end
+			
+			draw_recursively(instances[id])
 		end
 		
 	end
@@ -101,6 +117,7 @@ function object.new(path, data, name) -- CREATE NEW OBJECT --
 end
 
 function object.delete(name) -- DELETE OBJECT --
+	if not objects[name] then return end
 	instance.clear(name)
 	objects[name] = nil
 end
@@ -151,6 +168,7 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 end
 
 function instance.delete(id) -- DELETE INSTANCE --
+	if not instances[id] then return end
 	local name = instances[id].object
 	objects[name].instances = objects[name].instances - 1
 
