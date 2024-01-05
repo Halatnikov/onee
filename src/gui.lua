@@ -23,6 +23,13 @@ function gui.textinput(text)
     loveframes.textinput(text)
 end
 
+love.mousepressed = gui.mousepressed
+love.mousereleased = gui.mousereleased
+love.wheelmoved = gui.wheelmoved
+love.keypressed = gui.keypressed
+love.keyreleased = gui.keyreleased
+love.textinput = gui.textinput
+
 ---------------------------------------------------------------- 
 
 -- main loop

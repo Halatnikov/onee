@@ -23,6 +23,11 @@ if love._os == "Android" or love._os == "iOS" then
 	mobile = true
 end
 
+time_start = os.time()
+
+tick = 0.016
+framerate = 60
+
 love.graphics.setDefaultFilter("nearest","nearest",0)
 love.graphics.setLineStyle("rough")
 love.graphics.setBackgroundColor(8/255,8/255,8/255)
@@ -71,11 +76,15 @@ function debug.keypressed(k)
 	
 	if k == "q" or k == "f3" then scenes.set("init") end
 end
+love.keypressed = debug.keypressed
 
 function debug.update()
 	if not debug_mode then return end
 end
-			local a = {{0,0}, {100,10}, {50,100}, {60,30}}
+			a = {{0,0}, {100,10}, {50,100}, {60,30}}
+			local ox = 50
+			local oy = 50
+			
 function debug.draw()
 	if not debug_mode then return end
 	
@@ -88,21 +97,13 @@ function debug.draw()
 			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
 		end
 	end
+	angle = (angle or 0) + 0.15
+	--b = collision.poly.move(a, angle, angle, ox, oy)
+	--b = collision.poly.rotate(a, angle, ox, oy)
 	
-	for i=1, #a do
-		a[i][1] = a[i][1] + 0.3
-		a[i][2] = a[i][2] + 0.3
-	end
-	
-	local b = {}
-	for i=1, #a do
-		table.insert(b, a[i][1])
-		table.insert(b, a[i][2])
-	end
-	
-	--love.graphics.polygon("line", b)
+	--love.graphics.polygon("line", collision.poly.unpack(b))
 	--love.graphics.line(mousex-16,mousey, mousex+24,mousey+32)
 	
-	--print(collision.poly_line(a, mousex-16,mousey, mousex+24,mousey+32))
+	--print(collision.poly_line(b, mousex-16,mousey, mousex+24,mousey+32))
 	
 end

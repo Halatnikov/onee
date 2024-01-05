@@ -9,9 +9,7 @@ end
 ---------------------------------------------------------------- MATH
 -- TODO: lerp, smoothstep, decay, map from one min-max range to another, ^2, construct 2, vector 2?
 
-function math.random(...) -- alias
-	return love.math.random(...)
-end
+math.random = love.math.random
 
 function math.choose(...)
 	local arg = {...}
@@ -122,6 +120,22 @@ function kpairs(arg)
 	return iterate
 end
 
+function copy(obj, seen)
+	if type(obj) ~= 'table' then
+		return obj 
+	end
+	if seen and seen[obj] then
+		return seen[obj] 
+	end
+	local seen = seen or {}
+	local res = setmetatable({}, getmetatable(obj))
+	seen[obj] = res
+	for k, v in pairs(obj) do 
+		res[copy(k, seen)] = copy(v, seen) 
+	end
+	return res
+end
+
 ---------------------------------------------------------------- QUEUEING
 queue = {}
 
@@ -151,9 +165,7 @@ end
 ---------------------------------------------------------------- STRINGS
 -- TODO: construct 2 (left right (trim?), etc)
 
-function string.replace(arg,find,replace) -- alias
-	return string.gsub(arg,find,replace)
-end
+string.replace = string.gsub
 
 function string.split(arg)
 	local t = {}
@@ -210,9 +222,7 @@ end
 ---------------------------------------------------------------- FILES
 files = {}
 
-function files.exists(path) -- alias
-	return love.filesystem.getInfo(path)
-end
+files.exists = love.filesystem.getInfo
 
 ---------------------------------------------------------------- DEBUG
 

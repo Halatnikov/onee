@@ -481,19 +481,28 @@ function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
 	
 	local mode = sprite.debug.highlighted and "fill" or "line"
 	
-	local x = sprite.x-framedef.x
-	local y = sprite.y-framedef.y
-	local width = sprite.scalex or 1; width = math.abs(width)*framedef.width
-	local height = sprite.scaley or 1; height = math.abs(height)*framedef.height
-	
 	love.graphics.setColor(sprite.debug.rgb[1]/255, sprite.debug.rgb[2]/255, sprite.debug.rgb[3]/255, 0.5)
 	love.graphics.setLineWidth(3)
+	
+	local x = sprite.x - framedef.x
+	local y = sprite.y - framedef.y
+	local width = sprite.scalex or 1; width = math.abs(width) * framedef.width
+	local height = sprite.scaley or 1; height = math.abs(height) * framedef.height
+	
 	-- bbox
-	love.graphics.rectangle(mode, x, y, width, height)
+	if sprite.angle == 0 or not sprite.angle then
+		love.graphics.rectangle(mode, x, y, width, height)
+	else
+		local poly_old = collision.poly.rect(x, y, width, height)
+		local poly = collision.poly.rotate(poly_old, sprite.angle, framedef.x, framedef.y)
+		
+		love.graphics.polygon(mode, collision.poly.unpack(poly))
+	end
 	
 	-- origin
 	love.graphics.line(sprite.x-4, sprite.y, sprite.x+4, sprite.y)
 	love.graphics.line(sprite.x, sprite.y-4, sprite.x, sprite.y+4)
+	
 	love.graphics.reset()
 end
 

@@ -218,3 +218,7 @@ end
 function input.mousereleased(x,y,button,istouch)
 	input.mouse_istouch[button] = nil
 end
+
+love.mousepressed = input.mousepressed
+love.mousereleased = input.mousereleased
+love.wheelmoved = input.wheelmoved

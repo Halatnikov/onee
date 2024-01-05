@@ -143,8 +143,10 @@ function object.update(self)
 	self.collider.down.line.y = player.y+32
 	
 	--temp
-	player.ground = collision.check(self.collider.down, "solid", "collision") and true or false
 	if love.keyboard.isDown("lshift") then player.x = mousex; player.y = mousey end
+	
+	-- end loop
+	player.ground = false
 	
 end
 

@@ -1,4 +1,4 @@
--- (edited, lines 19 20 may cause problems but idk)
+-- (edited, may cause problems but idk)
 
 --- tserial v1.3, a simple table serializer which turns tables into Lua script
 -- @author Taehl (SelfMadeSpirit@gmail.com)
@@ -21,7 +21,7 @@ function tserial.pack(t, drop, indent)
 		elseif tk == "table" then k = "["..tserial.pack(k, drop, indent and indent+1).."]="
 		elseif type(drop) == "function" then k = "["..string.format("%q",drop(k)).."]="
 		elseif drop then skip = true
-		else error("Attempted to tserial.pack a table with an invalid key: "..tostring(k))
+		else k = tostring(k)
 		end
 		if tv == "boolean" then v = v and "true" or "false"
 		elseif tv == "string" then v = string.format("%q", v)
@@ -29,7 +29,7 @@ function tserial.pack(t, drop, indent)
 		elseif tv == "table" then v = tserial.pack(v, drop, indent and indent+1)
 		elseif type(drop) == "function" then v = "["..string.format("%q",drop(v)).."]"
 		elseif drop then skip = true
-		else error("Attempted to tserial.pack a table with an invalid value: "..tostring(v))
+		else v = tostring(v)
 		end
 		if not skip then s = s..string.rep("\t",indent or 0)..k..v..","..(indent and "\n" or "") end
 	end

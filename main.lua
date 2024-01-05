@@ -1,4 +1,4 @@
-version = "0.0.2-9"
+version = "0.0.2-10"
 
 function love.load()
 	require("conf")
@@ -6,7 +6,6 @@ function love.load()
 	
 	print(love.version.." | onee "..version)
 	scenes.set("init")
-	
 end
 
 function love.quit()
@@ -15,8 +14,7 @@ end
 
 -- main loop
 function love.update(dt)
-	tick = 0.016
-	before_update = before_update + (1/60)
+	before_update = before_update + (1/framerate)
 	
 	if allow_update then
 		misc.update()
@@ -42,41 +40,4 @@ function love.draw()
 	after_draw = love.timer.getTime()
 	if before_update <= after_draw then before_update = after_draw end
 	love.timer.sleep(before_update - after_draw)
-end
-
--- central callbacks
-function love.keypressed(key, scancode, isrepeat)
-	debug.keypressed(key, scancode, isrepeat)
-	
-	--gui.keypressed(key, scancode, isrepeat)
-	imgui.keypressed(key, scancode, isrepeat)
-end
-function love.keyreleased(key, scancode)
-	--gui.keyreleased(key, scancode)
-	imgui.keyreleased(key, scancode)
-end
-function love.mousepressed(x, y, button, istouch, presses)
-	input.mousepressed(x, y, button, istouch, presses)
-	
-	--gui.mousepressed(x, y, button, istouch, presses)
-	imgui.mousepressed(x, y, button, istouch, presses)
-end
-function love.mousereleased(x, y, button, istouch)
-	input.mousereleased(x, y, button, istouch)
-	
-	--gui.mousereleased(x, y, button, istouch)
-	imgui.mousereleased(x, y, button, istouch)
-end
-function love.mousemoved(x, y, dx, dy, istouch)
-	imgui.mousemoved(x, y, dx, dy, istouch)
-end
-function love.wheelmoved(x, y)
-	input.wheelmoved(x, y)
-	
-	--gui.wheelmoved(x, y)
-	imgui.wheelmoved(x, y)
-end
-function love.textinput(text)
-	--gui.textinput(text)
-	imgui.textinput(text)
 end

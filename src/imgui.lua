@@ -62,6 +62,14 @@ function imgui.textinput(text)
 	gui.love.TextInput(text)
 end
 
+love.mousemoved = imgui.mousemoved
+love.mousepressed = imgui.mousepressed
+love.mousereleased = imgui.mousereleased
+love.wheelmoved = imgui.wheelmoved
+love.keypressed = imgui.keypressed
+love.keyreleased = imgui.keyreleased
+love.textinput = imgui.textinput
+
 -- data types conversion
 local ffi = require("ffi")
 
@@ -88,7 +96,7 @@ end
 local function _char(arg, default) -- char* pointer
 	if #arg == 0 then arg = "." end -- empty string workaround
 	local var = ffi.new("char[?]", #arg+1)
-	ffi.copy(var, arg or ".")
+	ffi.copy(var, arg or default or ".")
 	return var
 end
 
@@ -174,6 +182,8 @@ end
 function imgui.table_fancy_table(arg, k, v, t, name, settings, level)
 	imgui.table(t, tostring(k), settings, level)
 	
+	-- todo: resize through getfontsize*#string
+	-- todo: align values in subtables with setnextitemwidth(-100)
 	local label = ""
 	if t.collision == true then label = "collision \""..t.name.."\"" end
 	if t.sprite == true then label = "sprite \""..t.name.."\"" end
@@ -418,6 +428,9 @@ function imgui.window.overlay()
 		
 		gui.Text("Mouse: "..love.mouse.getX()..", "..love.mouse.getY())
 		gui.Text("Instances: "..table.length(instances))
+		-- todo: add as tooltip to elapsed time
+		gui.Text(tostring(os.time()))
+		gui.Text(tostring(os.clock()))
 		
 		gui.End()
 	end
@@ -431,7 +444,7 @@ function imgui.window.overlay()
 			if type(v) == "table" then
 				if arg[k].collision then
 					check, col = collision.check(self, object, arg[k].name)
-					if check == true then collision_inspect[col.instance..col.name] = col end
+					if check then collision_inspect[col.instance..col.name] = col end
 				else
 					collisions_recursively(arg[k])
 				end
@@ -644,6 +657,7 @@ function imgui.window.main()
 				gui.EndTable()
 			end
 			
+			gui.Separator()
 			------------------------ love.graphics.getStats() tree
 			if gui.TreeNodeEx_Str("love.graphics.getStats()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
 				local stats = love.graphics.getStats()
@@ -779,6 +793,12 @@ function imgui.window.inspector()
 	if gui.Begin("Inspector", open) then
 		
 		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton", "Reorderable")) then
+		
+			-- (will still appear at the right side)
+			-- todo: do the same for fancy table labels
+			gui.SameLine(gui.GetWindowWidth() - 110)
+			gui.Checkbox("simple view", _simple)
+			simple = _simple[0]
 			
 			------------------------------------------------ INSTANCES
 			if gui.BeginTabItem("Instances") then
@@ -969,10 +989,6 @@ function imgui.window.inspector()
 			
 			gui.EndTabBar()
 		end
-		
-		gui.SameLine(gui.GetWindowWidth() - 110)
-		gui.Checkbox("simple view", _simple)
-		simple = _simple[0]
 		
 		gui.End()
 	end

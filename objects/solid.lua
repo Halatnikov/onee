@@ -7,7 +7,7 @@ function object.init(self)
 	self.height = self.height or 32
 	
 	self.collision = collision.init(self.collision, "collision",
-		{x = self.x, y = self.y, rect = {width = self.width, height = self.height}}
+		{rect = {}}
 	)
 end
 
@@ -16,6 +16,10 @@ function object.update(self)
 	self.collision.y = self.y
 	self.collision.rect.width = self.width
 	self.collision.rect.height = self.height
+	
+	local player
+	local check, col = collision.check(self.collision, "player", "collider_down")
+	if check then player = instances[col.instance].player; player.ground = true end
 end
 
 function object.draw(self)

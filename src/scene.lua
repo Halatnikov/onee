@@ -147,6 +147,7 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 	t.instance = true
 	t.object = name
 	t.id = id
+	t.id_i = table.length(instances)+1
 	t.active = true
 	t.visible = true
 	
