@@ -115,7 +115,7 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 	
 end
 
-function collision.resolve(self, other) -- CHECK TWO INDIVIDUAL COLLISION INSTANCES --
+function collision.resolve(self, other) -- CHECK TWO INDIVIDUAL COLLISION TYPES --
 	-- LINE --
 	if self.line then
 		if other.line then -- LINE WITH LINE --
@@ -259,23 +259,21 @@ function collision.line_line(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 end
 -- LINE WITH RECTANGLE COLLISION --
 function collision.line_rect(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
-	local colA1 = collision.point_rect(Ax1, Ay1, Bx1, By1, Bx2, By2)
-	local colA2 = collision.point_rect(Ax2, Ay2, Bx1, By1, Bx2, By2)
+	local colA = collision.point_rect(Ax1, Ay1, Bx1, By1, Bx2, By2)
 	
 	local left = collision.line_line(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx1, (By1 + By2))
 	local right = collision.line_line(Ax1, Ay1, Ax2, Ay2, (Bx1 + Bx2), By1, (Bx1 + Bx2), (By1 + By2))
 	local top = collision.line_line(Ax1, Ay1, Ax2, Ay2, Bx1, By1, (Bx1 + Bx2), By1)
 	local bottom = collision.line_line(Ax1, Ay1, Ax2, Ay2, Bx1, (By1 + By2), (Bx1 + Bx2), (By1 + By2))
 	
-	return colA1 or colA2
+	return colA
 		or left or right or top or bottom
 end
 -- LINE WITH CIRCLE COLLISION --
 function collision.line_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
 	local result = false
 	
-	local colA1 = collision.point_circ(Ax1, Ay1, Bx, By, Bradius)
-	local colA2 = collision.point_circ(Ax2, Ay2, Bx, By, Bradius)
+	local colA = collision.point_circ(Ax1, Ay1, Bx, By, Bradius)
 	
 	local length = math.distance(Ax1, Ay1, Ax2, Ay2)
 	local centerx = Bx - Ax1
@@ -290,8 +288,7 @@ function collision.line_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
 		end
 	end
 	
-	return colA1 or colA2 
-		or result
+	return colA or result
 end
 -- LINE WITH POLY COLLISION (alias) --
 function collision.line_poly(Ax1, Ay1, Ax2, Ay2, B)
@@ -370,8 +367,7 @@ end
 function collision.poly_line(A, Bx1, By1, Bx2, By2)
 	local result = false
 	
-	local colB1 = collision.point_poly(Bx1, By1, A)
-	local colB2 = collision.point_poly(Bx2, By2, A)
+	local colB = collision.point_poly(Bx1, By1, A)
 	
 	local current
 	local next = A[#A]
@@ -384,13 +380,12 @@ function collision.poly_line(A, Bx1, By1, Bx2, By2)
 		end
 	end
 	
-	return colB1 or colB2
-		or result
+	return colB or result
 end
 
 ---------------------------------------------------------------- INDIVIDUAL SHAPES
 
--- polygons
+-- POLYGONS
 function collision.poly.unpack(arg)
 	local t = {}
 	for i=1, #arg do

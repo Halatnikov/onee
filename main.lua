@@ -1,10 +1,9 @@
-version = "0.0.2-10"
+version = "0.0.2-11"
 
 function love.load()
 	require("conf")
 	require("src")
 	
-	print(love.version.." | onee "..version)
 	scenes.set("init")
 end
 

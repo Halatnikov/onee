@@ -43,7 +43,9 @@ function object.init(self)
 	)
 	
 	self.collider = {}
-	self.collider.down = collision.init(self.collider.down, "collider_down", {line = {}})
+	self.collider.down = collision.init(self.collider.down, "collider_down",{line = {}})
+	self.collider.left = collision.init(self.collider.left, "collider_left",{line = {}})
+	self.collider.right = collision.init(self.collider.right, "collider_right",{line = {}})
 
 end
 
@@ -87,17 +89,18 @@ function object.update(self)
 		player.ground = false
 	end
 	
+	-- landing
+	if player.ground then
+		player.y_speed = 0
+		player.jumping = false
+	end
+	
 	-- falling
 	if not player.ground then
 		local gravity = input.a and player.gravity or player.gravity * 2
 		player.y_speed = player.y_speed + gravity
 	end
 	
-	-- landing
-	if player.ground then
-		player.y_speed = 0
-		player.jumping = false
-	end
 	
 	-- limit speed
 	player.x_speed = math.clamp(-player.x_max, player.x_speed, player.x_max)
@@ -127,6 +130,9 @@ function object.update(self)
 		if input.left == input.right and math.abs(player.x_speed) < 0.2 then player.animation = "idle" end
 	end
 	
+	--temp
+	if love.keyboard.isDown("lshift") then player.x = mousex; player.y = mousey; player.ground = false end
+	
 	-- update sprite
 	self.sprite.x = player.x
 	self.sprite.y = player.y
@@ -134,16 +140,23 @@ function object.update(self)
 	sprite.update(self.sprite)
 	
 	-- update collision
-	self.hitbox.x = player.x-8
-	self.hitbox.y = player.y-12
+	self.hitbox.x = player.x - 8
+	self.hitbox.y = player.y - 12
 	
-	self.collider.down.x = player.x-8
-	self.collider.down.y = player.y+32
-	self.collider.down.line.x = player.x+8
-	self.collider.down.line.y = player.y+32
+	self.collider.left.x = player.x - 8
+	self.collider.left.y = player.y - 16
+	self.collider.left.line.x = player.x - 8
+	self.collider.left.line.y = player.y + 16
 	
-	--temp
-	if love.keyboard.isDown("lshift") then player.x = mousex; player.y = mousey end
+	self.collider.right.x = player.x + 8
+	self.collider.right.y = player.y - 16
+	self.collider.right.line.x = player.x + 8
+	self.collider.right.line.y = player.y + 16
+	
+	self.collider.down.x = player.x - 8
+	self.collider.down.y = player.y + 32
+	self.collider.down.line.x = player.x + 8
+	self.collider.down.line.y = player.y + 32
 	
 	-- end loop
 	player.ground = false

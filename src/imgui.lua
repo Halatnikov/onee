@@ -13,6 +13,8 @@ if love._os == "Windows" and debug_mode then
 	imgui.open.menubar = true
 	imgui.open.main = true
 	
+	imgui.open.inspector = true
+	
 end
 
 -- main loop
@@ -175,6 +177,7 @@ function imgui.table_entries(arg, settings, level)
 		end
 		
 		imgui.table_fancy_allow(arg)
+		if settings.edit then imgui.table_fancy_edit(arg) end
 	end
 	
 end
@@ -242,6 +245,8 @@ function imgui.table_fancy_block(arg, k, v)
 	return true
 end
 
+local add_type, add_key, add_value
+
 function imgui.table_fancy_allow(arg)
 	
 	if arg.x and arg.y then
@@ -267,6 +272,77 @@ function imgui.table_fancy_allow(arg)
 		arg.rgb[1] = _v[0]*255
 		arg.rgb[2] = _v[1]*255
 		arg.rgb[3] = _v[2]*255
+	end
+	
+end
+
+function imgui.table_fancy_edit(arg)
+	
+	if gui.Button("+") then
+		add_key = "key"
+		add_type = "boolean"
+		add_value = true
+		add_raw = false
+		gui.OpenPopup_Str("table_add")
+	end
+	
+	if gui.BeginPopup("table_add") then
+		gui.SeparatorText("Add field")
+		
+		local _v = _char(add_key)
+		gui.InputText("name", _v, _v[0])
+		if gui.IsItemDeactivatedAfterEdit() then
+			add_key = ffi.string(_v)
+		end
+		
+		if gui.BeginCombo("type", add_type) then
+			if gui.Selectable_Bool("boolean") then add_type = "boolean"; add_value = true end
+			if gui.Selectable_Bool("number") then add_type = "number"; add_value = 0 end
+			if gui.Selectable_Bool("string") then add_type = "string"; add_value = "string" end
+			if gui.Selectable_Bool("table") then add_type = "table"; add_value = {} end
+			if gui.Selectable_Bool("raw") then add_type = "raw"; add_value = "{}" end
+			if gui.Selectable_Bool("nil") then add_type = "nil"; add_value = nil end
+			gui.EndCombo()
+		end
+		
+		if add_type == "boolean" then
+			local _v = _bool(add_value)
+			gui.Checkbox("value", _v)
+			add_value = _v[0]
+		end
+		
+		if add_type == "number" then
+			local _v = _float(add_value)
+			gui.InputFloat("value", _v, 1)
+			add_value = _v[0]
+		end
+		
+		if add_type == "string" then
+			local _v = _char(add_value)
+			gui.InputText("value", _v, _v[0])
+			if gui.IsItemDeactivatedAfterEdit() then
+				add_value = ffi.string(_v)
+			end
+		end
+		
+		if add_type == "raw" then
+			local _v = _char(add_value)
+			gui.InputTextMultiline("", _v, _v[0])
+			if gui.IsItemDeactivatedAfterEdit() then
+				add_value = ffi.string(_v)
+			end
+		end
+		
+		if gui.Button("Add") then
+			if add_type == "raw" then
+				add_value = loadstring("return "..add_value)()
+			end
+			arg[add_key] = add_value
+			
+			gui.CloseCurrentPopup()
+		end
+		
+		gui.EndPopup()
 	end
 	
 end
@@ -428,9 +504,6 @@ function imgui.window.overlay()
 		
 		gui.Text("Mouse: "..love.mouse.getX()..", "..love.mouse.getY())
 		gui.Text("Instances: "..table.length(instances))
-		-- todo: add as tooltip to elapsed time
-		gui.Text(tostring(os.time()))
-		gui.Text(tostring(os.clock()))
 		
 		gui.End()
 	end
@@ -446,7 +519,7 @@ function imgui.window.overlay()
 					check, col = collision.check(self, object, arg[k].name)
 					if check then collision_inspect[col.instance..col.name] = col end
 				else
-					collisions_recursively(arg[k])
+					collisions_recursively(arg[k], id, instances[id].object)
 				end
 			end
 		end
@@ -461,9 +534,14 @@ function imgui.window.overlay()
 		
 		if gui.BeginTooltip() then
 			for k,v in pairs(collision_inspect) do
-				gui.Text(collision_inspect[k].instance)
-				gui.SameLine()
-				gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..collision_inspect[k].name..")")
+				local col = collision_inspect[k]
+				
+				if col.collision then
+					gui.Text(col.instance)
+					gui.SameLine()
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..col.name..")")
+				end
+				
 			end
 			gui.EndTooltip()
 		end
@@ -489,7 +567,7 @@ function imgui.window.overlay()
 				instance_selected = col.instance
 				imgui.open.inspector = true
 			end
-			if gui.MenuItem_Bool("Delete") then
+			if gui.MenuItem_Bool("Delete instance") then
 				instance.delete(col.instance)
 			end
 			
@@ -509,7 +587,7 @@ end
 function imgui.window.main()
 	local open = _bool(imgui.open.main)
 	
-	if gui.Begin(version, open) then
+	if gui.Begin(version.."###main", open) then
 		
 		------------------------------------------------ FIRST ROW
 		-- reload button
@@ -636,6 +714,11 @@ function imgui.window.main()
 				gui.Text(tostring(frames))
 				gui.TableSetColumnIndex(2)
 				gui.Text(tostring(math.round(love.timer.getTime(),2)))
+				if gui.BeginItemTooltip() then
+					gui.Text("unix timestamp: "..os.time())
+					gui.Text("os.clock(): "..os.clock())
+					gui.EndTooltip()
+				end
 				
 				gui.EndTable()
 			end
@@ -726,7 +809,7 @@ function imgui.window.main()
 		end
 		
 		------------------------------------------------ INPUT HEADER
-		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode.."##input") then
+		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode.."###input") then
 			
 			-- mouse table
 			if gui.BeginTable("input_mouse", 3) then
@@ -783,12 +866,14 @@ end
 
 ---------------------------------------------------------------- INSPECTOR
 
-local simple
+local simple, edit
 local asset_scale = 1
+local new_object, new_data
 
 function imgui.window.inspector()
 	local open = _bool(imgui.open.inspector)
 	local _simple = _bool(simple, false)
+	local _edit = _bool(edit, false)
 	
 	if gui.Begin("Inspector", open) then
 		
@@ -796,6 +881,11 @@ function imgui.window.inspector()
 		
 			-- (will still appear at the right side)
 			-- todo: do the same for fancy table labels
+			if not simple then 
+				gui.SameLine(gui.GetWindowWidth() - 170)
+				gui.Checkbox("edit", _edit)
+				edit = _edit[0]
+			end
 			gui.SameLine(gui.GetWindowWidth() - 110)
 			gui.Checkbox("simple view", _simple)
 			simple = _simple[0]
@@ -818,6 +908,33 @@ function imgui.window.inspector()
 					
 					gui.SeparatorText(tostring(instance_selected or ""))
 					
+					if gui.Button("+") then
+						new_object = ""
+						new_data = {}
+						gui.OpenPopup_Str("new_instance")
+					end
+					
+					if gui.BeginPopup("new_instance") then
+						gui.SeparatorText("Create instance")
+						
+						if gui.BeginCombo("object", new_object) then
+							for k,v in kpairs(objects) do
+								if gui.Selectable_Bool(tostring(k)) then new_object = k end
+							end
+							gui.EndCombo()
+						end
+						
+						imgui.table(new_data, "instance data", {fancy = true, edit = true})
+						
+						if gui.Button("Add") and new_object ~= "" then
+							instance.new(new_object, new_data)
+							gui.CloseCurrentPopup()
+						end
+						
+						gui.EndPopup()
+					end
+					
+					gui.SameLine()
 					if gui.Button("Delete") and current.instance then
 						instance.delete(instance_selected)
 						instance_selected = nil
@@ -825,7 +942,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", {fancy = not simple, nowindow = true})
+						imgui.table(current, "current", {fancy = not simple, nowindow = true, edit = edit})
 						
 						gui.EndChild()
 					end
@@ -861,7 +978,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", {fancy = not simple, nowindow = true})
+						imgui.table(current, "current", {fancy = not simple, nowindow = true, edit = edit})
 						
 						gui.EndChild()
 					end
@@ -904,7 +1021,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", {fancy = not simple, nowindow = true, imagescale = asset_scale})
+						imgui.table(current, "current", {fancy = not simple, nowindow = true, imagescale = asset_scale, edit = edit})
 						
 						gui.EndChild()
 					end
@@ -940,7 +1057,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", {fancy = not simple, nowindow = true})
+						imgui.table(current, "current", {fancy = not simple, nowindow = true, edit = edit})
 						
 						gui.EndChild()
 					end
@@ -976,7 +1093,7 @@ function imgui.window.inspector()
 					
 					gui.Separator()
 					if gui.BeginChild_Str("properties") then
-						imgui.table(current, "current", {fancy = not simple, nowindow = true})
+						imgui.table(current, "current", {fancy = not simple, nowindow = true, edit = edit})
 						
 						gui.EndChild()
 					end

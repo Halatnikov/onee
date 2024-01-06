@@ -28,14 +28,16 @@ time_start = os.time()
 tick = 0.016
 framerate = 60
 
-love.graphics.setDefaultFilter("nearest","nearest",0)
-love.graphics.setLineStyle("rough")
-love.graphics.setBackgroundColor(8/255,8/255,8/255)
-
 before_update = 0
 allow_update = true
 ms = 0 
 frames = 0
+
+love.graphics.setDefaultFilter("nearest","nearest",0)
+love.graphics.setLineStyle("rough")
+love.graphics.setBackgroundColor(8/255,8/255,8/255)
+
+print(love.version.." | onee "..version)
 
 ---------------------------------------------------------------- 
 

@@ -4,6 +4,9 @@ function object.init(self)
 	asset.sprite("yorb")
 	self.sprite = sprite.init(self.sprite, "yorb")
 	
+	self.sprite.x = self.sprite.x or 0
+	self.sprite.y = self.sprite.y or 0
+	
 	self.collision = collision.init(self.collision, "collision",
 		{x = self.sprite.x-16, y = self.sprite.y-16, rect = {width = 32}}
 	)
