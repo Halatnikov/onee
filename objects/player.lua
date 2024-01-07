@@ -101,7 +101,6 @@ function object.update(self)
 		player.y_speed = player.y_speed + gravity
 	end
 	
-	
 	-- limit speed
 	player.x_speed = math.clamp(-player.x_max, player.x_speed, player.x_max)
 	player.y_speed = math.clamp(-player.y_max, player.y_speed, player.y_max)

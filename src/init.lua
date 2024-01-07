@@ -99,6 +99,7 @@ function debug.draw()
 			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
 		end
 	end
+	
 	angle = (angle or 0) + 0.15
 	--b = collision.poly.move(a, angle, angle, ox, oy)
 	--b = collision.poly.rotate(a, angle, ox, oy)

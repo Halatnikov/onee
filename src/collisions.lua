@@ -108,7 +108,7 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 		local other = candidates[i]
 		
 		-- return only when a collision is found, otherwise continue
-		if other.active and collision.resolve(self, other) then
+		if self ~= other and other.active and collision.resolve(self, other) then
 			return true, other
 		end
 	end

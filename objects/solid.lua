@@ -34,7 +34,7 @@ function object.update(self)
 	
 	if check_down and not (check_left or check_right) then 
 		local player = instances[col_down.instance].player
-		if not player.ground and player.y_speed > 0 then
+		if player.y_speed > 0 and not player.ground then
 			player.ground = true
 			player.y = self.y - 32
 			--player.y_speed = 0

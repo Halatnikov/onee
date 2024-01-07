@@ -113,7 +113,12 @@ function imgui.table(arg, name, settings, level)
 	
 	if level == 0 then
 		if not settings.nowindow then
-			if gui.CollapsingHeader_BoolPtr(name) then
+			local header = gui.CollapsingHeader_BoolPtr(name.."##"..string.md5(arg)) 
+			
+			gui.SetItemTooltip(tostring(arg))
+			if settings.fancy then imgui.table_fancy_table(arg) end
+			
+			if header then
 				if gui.BeginChild_Str(name.."##"..string.md5(arg), nil, gui.love.ChildFlags("Border", "ResizeY")) then
 					imgui.table_entries(arg, settings, 1)
 					
@@ -125,7 +130,12 @@ function imgui.table(arg, name, settings, level)
 		end
 		
 	elseif level == 1 then
-		if gui.CollapsingHeader_BoolPtr(name.."##"..string.md5(arg)) then
+		local header = gui.CollapsingHeader_BoolPtr(name.."##"..string.md5(arg)) 
+		
+		gui.SetItemTooltip(tostring(arg))
+		if settings.fancy then imgui.table_fancy_table(arg) end
+		
+		if header then
 			if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "AutoResizeY")) then
 				imgui.table_entries(arg, settings, 2)
 				
@@ -134,7 +144,12 @@ function imgui.table(arg, name, settings, level)
 		end
 		
 	elseif level == 2 then
-		if gui.TreeNodeEx_Str(name.."##"..string.md5(arg), gui.love.TreeNodeFlags("SpanAvailWidth")) then
+		local header = gui.TreeNodeEx_Str(name.."##"..string.md5(arg), gui.love.TreeNodeFlags("SpanAvailWidth"))
+		
+		gui.SetItemTooltip(tostring(arg))
+		if settings.fancy then imgui.table_fancy_table(arg) end
+		
+		if header then
 			imgui.table_entries(arg, settings, 2)
 			gui.Separator()
 			
@@ -145,7 +160,7 @@ function imgui.table(arg, name, settings, level)
 end
 
 function imgui.table_entries(arg, settings, level)
-	if table.length(arg) == 0 then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- empty :) -") return end
+	if table.length(arg) == 0 then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- empty :) -") end
 	
 	if not settings.fancy then
 		for k,v in kpairs(arg) do
@@ -165,10 +180,10 @@ function imgui.table_entries(arg, settings, level)
 		for k,v in kpairs(arg) do
 			if imgui.table_fancy_block(arg, k, v) then
 				if type(k) == "table" then
-					imgui.table_fancy_table(arg, k, v, k, tostring(k), settings, level)
+					imgui.table(k, tostring(k), settings, level)
 				else
 					if type(v) == "table" then
-						imgui.table_fancy_table(arg, k, v, v, tostring(k), settings, level)
+						imgui.table(v, tostring(k), settings, level)
 					else
 						imgui.table_fancy_entry(arg, k, v, settings)
 					end
@@ -182,14 +197,14 @@ function imgui.table_entries(arg, settings, level)
 	
 end
 
-function imgui.table_fancy_table(arg, k, v, t, name, settings, level)
-	imgui.table(t, tostring(k), settings, level)
-	
+function imgui.table_fancy_table(arg)
 	-- todo: resize through getfontsize*#string
 	-- todo: align values in subtables with setnextitemwidth(-100)
-	local label = ""
-	if t.collision == true then label = "collision \""..t.name.."\"" end
-	if t.sprite == true then label = "sprite \""..t.name.."\"" end
+	if not arg.collision and not arg.sprite then return end
+	
+	local label
+	if arg.collision == true then label = "collision \""..arg.name.."\"" end
+	if arg.sprite == true then label = "sprite \""..arg.name.."\"" end
 	
 	gui.SameLine(200)
 	gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), label)
@@ -561,7 +576,13 @@ function imgui.window.overlay()
 			gui.SameLine()
 			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..col.name..")")
 			
-			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "x, y: "..math.floor(col.x)..", "..math.floor(col.y))
+			if gui.BeginTable("##"..string.md5(col), 1, gui.love.TableFlags("Borders")) then
+				gui.TableSetupColumn("1")
+				gui.TableNextRow()
+				gui.TableSetColumnIndex(0)
+				gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "x, y: "..math.floor(col.x)..", "..math.floor(col.y))
+				gui.EndTable()
+			end
 			
 			if gui.MenuItem_Bool("Open inspector") then
 				instance_selected = col.instance
@@ -880,7 +901,6 @@ function imgui.window.inspector()
 		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton", "Reorderable")) then
 		
 			-- (will still appear at the right side)
-			-- todo: do the same for fancy table labels
 			if not simple then 
 				gui.SameLine(gui.GetWindowWidth() - 170)
 				gui.Checkbox("edit", _edit)
