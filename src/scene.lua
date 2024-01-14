@@ -51,40 +51,7 @@ function scenes.draw() -- SCENE DRAW LOOP --
 	if scene.draw then scene.draw() end -- scene
 	
 	for id in pairs(instances) do -- instances
-		if instances[id].draw and instances[id].visible then instances[id].draw(instances[id]) end
-		
-		if debug_draw_collisions then
-			local function draw_recursively(arg)
-				for k, v in pairs(arg) do
-					if type(v) == "table" and arg[k].collision then
-						queue.add(scenes.drawlist, 1000, function()
-							collision.debug_draw(arg[k])
-						end)
-					elseif type(v) == "table" then
-						draw_recursively(arg[k])
-					end
-				end
-			end
-			
-			draw_recursively(instances[id])
-		end
-		
-		if debug_draw_sprites then
-			local function draw_recursively(arg)
-				for k, v in pairs(arg) do
-					if type(v) == "table" and arg[k].sprite then
-						queue.add(scenes.drawlist, 1000, function()
-							sprite.debug_draw(arg[k])
-						end)
-					elseif type(v) == "table" then
-						draw_recursively(arg[k])
-					end
-				end
-			end
-			
-			draw_recursively(instances[id])
-		end
-		
+		if instances[id].draw and instances[id].visible then instances[id].draw(instances[id]) end	
 	end
 	
 	queue.execute(scenes.drawlist)

@@ -38,14 +38,12 @@ function object.init(self)
 	self.sprite = sprite.init(self.sprite, skin)
 	self.sprite.z = 1
 	
-	self.hitbox = collision.init(self.hitbox, "hitbox",
-		{rect = {width = 16, height = 32}}
-	)
+	self.hitbox = collision.init(self.hitbox, "hitbox", {rect = {width = 16, height = 32}})
 	
 	self.collider = {}
-	self.collider.down = collision.init(self.collider.down, "collider_down",{line = {}})
-	self.collider.left = collision.init(self.collider.left, "collider_left",{line = {}})
-	self.collider.right = collision.init(self.collider.right, "collider_right",{line = {}})
+	self.collider.down = collision.init(self.collider.down, "collider_down", {line = {}})
+	self.collider.left = collision.init(self.collider.left, "collider_left", {line = {}})
+	self.collider.right = collision.init(self.collider.right, "collider_right", {line = {}})
 
 end
 
@@ -97,7 +95,7 @@ function object.update(self)
 	
 	-- falling
 	if not player.ground then
-		local gravity = input.a and player.gravity or player.gravity * 2
+		local gravity = (input.a and player.y_speed < -1) and player.gravity or player.gravity * 2
 		player.y_speed = player.y_speed + gravity
 	end
 	

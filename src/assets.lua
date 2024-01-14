@@ -356,7 +356,8 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	
 end
 
-function sprite.draw(sprite) -- DRAW SPRITE --
+function sprite.draw(sprite, queued) -- DRAW SPRITE --
+	if queued == nil then queued = true end
 
 	assert(sprite, "sprite.draw() | not a valid sprite")
 	assert(sprite.sprite, "sprite.draw() | not a valid sprite")
@@ -369,8 +370,8 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	local x = sprite.x or 0; x = math.round(x)
 	local y = sprite.y or 0; y = math.round(y)
 	local angle = sprite.angle or 0; angle = math.rad(angle)
-	local scalex = sprite.scalex or 1
-	local scaley = sprite.scaley or 1
+	local scalex = sprite.scalex or sprite.scale or 1
+	local scaley = sprite.scaley or sprite.scale or 1
 	local skewx = sprite.skewx or 0
 	local skewy = sprite.skewy or 0
 	
@@ -380,7 +381,6 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	-- opacity and tinting
 	local rgb = sprite.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
 	local opacity = sprite.opacity or 100; opacity = opacity/100
-	love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 	
 	-- animation shenanigans
 	local anim = sprite.animation
@@ -416,6 +416,8 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 	end
 	assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
 	
+	local draw = function() end
+	
 	-- finally drawing itself
 	if spritedef.tiled then -- TILED SPRITE
 		
@@ -435,9 +437,9 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		framey = qheight * (framedef.y / framedef.height) or 0
 		
 		quad:setViewport(qx, qy, qwidth, qheight, qref_width, qref_height)
-		queue.add(scenes.drawlist, z, function()
+		draw = function()
 			love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
-		end)
+		end
 		
 	elseif spritedef.nineslice then -- NINE-SLICE SPRITE
 	
@@ -449,20 +451,30 @@ function sprite.draw(sprite) -- DRAW SPRITE --
 		framex = nwidth * (framedef.x / framedef.width) or 0
 		framey = nheight * (framedef.y / framedef.height) or 0
 		
-		queue.add(scenes.drawlist, z, function()
+		draw = function()
 			love.graphics.draw( nineslice.draw(sprite, anim, frame, animdef, framedef),
 			x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
-		end)
+		end
 		
 	else -- REGULAR SPRITE
 		
-		queue.add(scenes.drawlist, z, function()
+		draw = function()
 			love.graphics.draw(image, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
-		end)
+		end
 		
 	end
 	
-	love.graphics.reset()
+	if queued then
+		queue.add(scenes.drawlist, z, function()
+			love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+			draw()
+			love.graphics.reset()
+		end)
+	else
+		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+		draw()
+	end
+	
 end
 
 function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
@@ -484,24 +496,29 @@ function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
 	love.graphics.setColor(sprite.debug.rgb[1]/255, sprite.debug.rgb[2]/255, sprite.debug.rgb[3]/255, 0.5)
 	love.graphics.setLineWidth(3)
 	
-	local x = sprite.x - framedef.x
-	local y = sprite.y - framedef.y
-	local width = sprite.scalex or 1; width = math.abs(width) * framedef.width
-	local height = sprite.scaley or 1; height = math.abs(height) * framedef.height
+	local x = sprite.x or 0 
+	local y = sprite.y or 0 
+	local scalex = sprite.scalex or sprite.scale or 1; scalex = math.abs(scalex)
+	local scaley = sprite.scaley or sprite.scale or 1; scaley = math.abs(scaley)
+	
+	local bbox_x = x - (framedef.x * scalex)
+	local bbox_y = y - (framedef.y * scaley)
+	local width = scalex * framedef.width
+	local height = scaley * framedef.height
 	
 	-- bbox
 	if sprite.angle == 0 or not sprite.angle then
-		love.graphics.rectangle(mode, x, y, width, height)
+		love.graphics.rectangle(mode, bbox_x, bbox_y, width, height)
 	else
-		local poly_old = collision.poly.rect(x, y, width, height)
-		local poly = collision.poly.rotate(poly_old, sprite.angle, framedef.x, framedef.y)
+		local poly_old = collision.poly.rect(bbox_x, bbox_y, width, height)
+		local poly = collision.poly.rotate(poly_old, sprite.angle, framedef.x * scalex, framedef.y * scaley)
 		
 		love.graphics.polygon(mode, collision.poly.unpack(poly))
 	end
 	
 	-- origin
-	love.graphics.line(sprite.x-4, sprite.y, sprite.x+4, sprite.y)
-	love.graphics.line(sprite.x, sprite.y-4, sprite.x, sprite.y+4)
+	love.graphics.line(x-4, y, x+4, y)
+	love.graphics.line(x, y-4, x, y+4)
 	
 	love.graphics.reset()
 end

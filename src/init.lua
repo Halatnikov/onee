@@ -16,8 +16,7 @@ require("src/imgui")
 
 ---------------------------------------------------------------- 
 
-local major, minor, revision = love.getVersion()
-love.version = "LOVE2D "..major.."."..minor.."."..revision.." (".._VERSION..")"
+love.version = "LOVE2D "..love._version_major.."."..love._version_minor.."."..love._version_revision.." (".._VERSION..")"
 
 if love._os == "Android" or love._os == "iOS" then
 	mobile = true
@@ -89,6 +88,7 @@ end
 			
 function debug.draw()
 	if not debug_mode then return end
+	debug.drawlist = {}
 	
 	if mobile then
 		love.graphics.print(love.timer.getFPS(), windowwidth-18, 4)
@@ -100,7 +100,31 @@ function debug.draw()
 		end
 	end
 	
-	angle = (angle or 0) + 0.15
+	for id in pairs(instances) do
+		local function draw_recursively(arg)
+			for k, v in pairs(arg) do
+				if type(v) == "table" then
+					if debug_draw_collisions and arg[k].collision == true then
+						queue.add(debug.drawlist, 1, function()
+							collision.debug_draw(arg[k])
+						end)
+					elseif debug_draw_sprites and arg[k].sprite == true then
+						queue.add(debug.drawlist, 2, function()
+							sprite.debug_draw(arg[k])
+						end)
+					else
+						draw_recursively(arg[k])
+					end
+				end
+			end
+		end
+		
+		draw_recursively(instances[id])
+	end
+	
+	queue.execute(debug.drawlist)
+	
+	local angle = (angle or 0) + 0.15
 	--b = collision.poly.move(a, angle, angle, ox, oy)
 	--b = collision.poly.rotate(a, angle, ox, oy)
 	

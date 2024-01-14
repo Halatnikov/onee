@@ -67,6 +67,9 @@ function love.errorhandler(msg)
 		"H",
 		"Well, I heard you CAN lose a lot of weight on it",
 		"But you can't keep it off, gotta eat less and exercise more",
+		"So, what brings you here?",
+		"things are happening",
+		"Catastrophic failure",
 	}
 
 	table.insert(err, titles[love.math.random(#titles)].."\n")

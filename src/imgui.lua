@@ -4,7 +4,7 @@ imgui = {
 }
 
 -- init
-if love._os == "Windows" and debug_mode then 
+if (love._os == "Windows" or love._os == "Linix") and debug_mode then 
 	gui = require("src/libs/cimgui")
 	
 	gui.love.Init()
@@ -13,7 +13,7 @@ if love._os == "Windows" and debug_mode then
 	imgui.open.menubar = true
 	imgui.open.main = true
 	
-	imgui.open.inspector = true
+	--imgui.open.inspector = true
 	
 end
 
@@ -260,8 +260,6 @@ function imgui.table_fancy_block(arg, k, v)
 	return true
 end
 
-local add_type, add_key, add_value
-
 function imgui.table_fancy_allow(arg)
 	
 	if arg.x and arg.y then
@@ -290,6 +288,8 @@ function imgui.table_fancy_allow(arg)
 	end
 	
 end
+
+local add_type, add_key, add_value
 
 function imgui.table_fancy_edit(arg)
 	
@@ -530,7 +530,7 @@ function imgui.window.overlay()
 	local function collisions_recursively(arg, id, object)
 		for k, v in pairs(arg) do
 			if type(v) == "table" then
-				if arg[k].collision then
+				if arg[k].collision == true then
 					check, col = collision.check(self, object, arg[k].name)
 					if check then collision_inspect[col.instance..col.name] = col end
 				else
@@ -540,6 +540,7 @@ function imgui.window.overlay()
 		end
 	end
 	
+	-- todo: maybe loop through objects instead?
 	for id in pairs(instances) do
 		collisions_recursively(instances[id], id, instances[id].object)
 	end
@@ -551,7 +552,7 @@ function imgui.window.overlay()
 			for k,v in pairs(collision_inspect) do
 				local col = collision_inspect[k]
 				
-				if col.collision then
+				if col.collision == true then
 					gui.Text(col.instance)
 					gui.SameLine()
 					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..col.name..")")

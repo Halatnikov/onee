@@ -8,8 +8,10 @@ end
 
 ---------------------------------------------------------------- MATH
 -- TODO: lerp, smoothstep, decay, map from one min-max range to another, ^2, construct 2, vector 2?
+-- angle from x1 y1 to x2 y2
 
 math.random = love.math.random
+inf = math.huge
 
 function math.choose(...)
 	local arg = {...}
@@ -144,6 +146,7 @@ function queue.add(arg, i, add)
 		table.append(arg, {queue = {}, first = 1, last = 1})
 	end
 
+	i = i or arg.last + 1
 	if i < arg.first then arg.first = i end
 	if i > arg.last then arg.last = i end
 	
@@ -166,6 +169,9 @@ end
 -- TODO: construct 2 (left right (trim?), etc)
 
 string.replace = string.gsub
+string.lowercase = string.lower
+string.uppercase = string.upper
+newline = "\n"
 
 function string.split(arg)
 	local t = {}
@@ -229,3 +235,8 @@ files.exists = love.filesystem.getInfo
 function debug.table(arg,drop,indent) -- alias
 	print(tserial.pack(arg,drop or true,indent or true))
 end
+
+--TODO
+--color random, color constants like red, white, black
+--rgb(math.random(0,255), math.random(0,255), math.random(0,255))
+--rgb(collision.debug.rgb, opacity)
