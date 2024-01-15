@@ -31,6 +31,8 @@ function scenes.set(name, data) -- SWITCH CURRENT SCENE --
 	
 	if scene.init then scene.init() end
 	
+	unrequire("scenes/"..name)
+	
 end
 
 function scenes.update() -- SCENE UPDATE LOOP --
@@ -78,6 +80,7 @@ function object.new(path, data, name) -- CREATE NEW OBJECT --
 	end
 	
 	objects[name] = t -- done
+	unrequire("objects/"..path)
 	
 	return name
 	

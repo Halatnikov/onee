@@ -60,8 +60,9 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 			elseif animdef.strip then
 				spritesheet.strip("sprites/"..path.."/"..filename..".png", animdef, assets[name][anim])
 				
-			else
-				-- look in framedef
+			-- look in framedef
+			elseif animdef.frames then
+				
 				for frame in pairs(animdef.frames) do
 					local framedef = animdef.frames[frame]
 					
@@ -73,13 +74,19 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 					else
 						local imagepath = path.."/"..filename.."_"..(frame-1)
 						if framedef.filename then imagepath = path.."/"..framedef.filename end
-						
 						local image = love.graphics.newImage("sprites/"..imagepath..".png")
 						
 						assets[name][anim][frame] = image -- new frame entry
 					end
 					
 				end
+			
+			-- get single frame from filename if no frames defined
+			else
+				animdef.frames = {[1] = {}}
+				local image = love.graphics.newImage("sprites/"..path.."/"..filename..".png")
+				
+				assets[name][anim][1] = image -- new frame entry
 			end
 			
 		end
@@ -147,6 +154,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	end
 	
 	sprites[name] = sprite -- done
+	unrequire("sprites/"..path)
 	
 	local time_finish = love.timer.getTime()
 	print("took "..math.round(time_finish - time_start, 4))
@@ -203,6 +211,7 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 	assets[name]:continueLoading(5)
 	
 	models[name] = modeldef -- done
+	unrequire("models/"..path)
 	
 end
 
@@ -361,6 +370,9 @@ function sprite.draw(sprite, queued) -- DRAW SPRITE --
 
 	assert(sprite, "sprite.draw() | not a valid sprite")
 	assert(sprite.sprite, "sprite.draw() | not a valid sprite")
+	
+	if queued == false then sprite.queued = false end
+	
 	if not sprite.visible then return end
 	
 	local spritedef = sprites[sprite.name]
@@ -479,6 +491,7 @@ end
 
 function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
 	if not sprite.active then return end 
+	if sprite.queued == false then return end
 	if sprite.tiled or sprite.nineslice then return end -- temp
 	
 	local spritedef = sprites[sprite.name]

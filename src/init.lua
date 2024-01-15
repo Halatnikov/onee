@@ -1,9 +1,8 @@
 require("src/libs/errorhandler")
-require("src/libs/tserial")
+require("src/libs/df-serialize")
 require("src/libs/json")
---loveframes = require("src/libs/loveframes")
-gifload = require("src/libs/gifload")
-gltf = require("src/libs/gltf")
+require("src/libs/gifload")
+require("src/libs/gltf")
 
 require("src/utils")
 require("src/input")
@@ -11,23 +10,16 @@ require("src/collisions")
 require("src/assets")
 require("src/scene")
 
---require("src/gui")
+require("src/yui")
 require("src/imgui")
 
 ---------------------------------------------------------------- 
 
-love.version = "LOVE2D "..love._version_major.."."..love._version_minor.."."..love._version_revision.." (".._VERSION..")"
+_VERSION_major, _VERSION_minor = string.match(_VERSION, "Lua (%d+)%.(%d+)")
 
-if love._os == "Android" or love._os == "iOS" then
-	mobile = true
-end
+love.version = "LOVE2D "..love._version_major.."."..love._version_minor.."."..love._version_revision.." (Lua ".._VERSION_major..".".._VERSION_minor..")"
 
 time_start = os.time()
-
-tick = 0.016
-framerate = 60
-
-before_update = 0
 allow_update = true
 ms = 0 
 frames = 0
@@ -41,6 +33,18 @@ print(love.version.." | onee "..version)
 ---------------------------------------------------------------- 
 
 misc = {}
+
+function misc.update_start()
+	before_update = (before_update or 0) + (1 / framerate)
+end
+
+function misc.draw_end()
+	love.graphics.reset()
+	
+	after_draw = love.timer.getTime()
+	if before_update <= after_draw then before_update = after_draw end
+	love.timer.sleep(before_update - after_draw)
+end
 
 function misc.update()
 	dt = love.timer.getDelta()
@@ -85,7 +89,7 @@ end
 			a = {{0,0}, {100,10}, {50,100}, {60,30}}
 			local ox = 50
 			local oy = 50
-			
+
 function debug.draw()
 	if not debug_mode then return end
 	debug.drawlist = {}
@@ -112,7 +116,8 @@ function debug.draw()
 						queue.add(debug.drawlist, 2, function()
 							sprite.debug_draw(arg[k])
 						end)
-					else
+					-- skip 3d models, they cause a stack overflow
+					elseif arg[k].model ~= true then
 						draw_recursively(arg[k])
 					end
 				end

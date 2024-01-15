@@ -6,7 +6,6 @@ sprite.animations = {
 		filename = "spr_player_stand_scruffy",
 		x = 24,
 		y = 32,
-		strip = {frames = 1},
 	},
 	
 	walk = {
@@ -22,7 +21,6 @@ sprite.animations = {
 		filename = "spr_player_skid_scruffy",
 		x = 24,
 		y = 32,
-		strip = {frames = 1},
 	},
 	
 	jump = {

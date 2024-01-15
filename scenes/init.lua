@@ -17,7 +17,7 @@ function scene.init()
 	instance.new("solid", {x = 400, y = 290, width = 64, height = 64})
 	
 	object.new("test_gdportal")
-	instance.new("test_gdportal", {x = 200, y = 280, scale = 0.5})
+	instance.new("test_gdportal", {x = 200, y = 280, scale = 0.5, angle = 45})
 	
 	scene.a = 2
 	--debug.table(object.instances("test"))

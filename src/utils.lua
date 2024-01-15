@@ -11,10 +11,12 @@ end
 -- angle from x1 y1 to x2 y2
 
 math.random = love.math.random
+pi = math.pi
 inf = math.huge
 
 function math.choose(...)
 	local arg = {...}
+	if type(arg[1]) == "table" then arg = arg[1] end
 	return arg[math.random(#arg)]
 end
 
@@ -45,6 +47,7 @@ end
 
 function math.average(...)
 	local arg = {...}
+	if type(arg[1]) == "table" then arg = arg[1] end
 	local sum = 0
 	for i=1, #arg do
 		sum = sum + arg[i]
@@ -151,14 +154,14 @@ function queue.add(arg, i, add)
 	if i > arg.last then arg.last = i end
 	
 	if not arg.queue[i] then arg.queue[i] = {} end
-	table.insert(arg.queue[i], add)
+	arg.queue[i][#arg.queue[i] + 1] = add
 end
 
 function queue.execute(arg)
 	if not arg.queue then return end
 	for i = arg.first, arg.last do
 		if arg.queue[i] then
-			for k,v in pairs(arg.queue[i]) do v() end
+			for j = 1, #arg.queue[i] do arg.queue[i][j]() end
 		end
 	end
 	
@@ -230,10 +233,14 @@ files = {}
 
 files.exists = love.filesystem.getInfo
 
+function unrequire(arg)
+	package.loaded[arg] = nil
+end
+
 ---------------------------------------------------------------- DEBUG
 
-function debug.table(arg,drop,indent) -- alias
-	print(tserial.pack(arg,drop or true,indent or true))
+function debug.table(arg, mode, indent) -- alias
+	print(serialize.pack(arg, indent or 1, mode or "lax"))
 end
 
 --TODO

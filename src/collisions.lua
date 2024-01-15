@@ -1,5 +1,9 @@
 -- functions
 collision = {
+	point = {},
+	line = {},
+	rect = {},
+	circ = {},
 	poly = {},
 }
 
@@ -85,7 +89,9 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 	local function check_recursively(arg, id)
 		for k, v in pairs(arg) do
 			if type(v) == "table" then
-				if arg[k].collision and arg[k].name == collisionname then
+				if arg[k].collision and arg[k].name == collisionname and
+				self ~= arg[k] and arg[k].active then
+					--todo: add IDs in a separate table
 					arg[k].instance = id
 					table.insert(candidates, arg[k])
 				else
@@ -108,7 +114,7 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 		local other = candidates[i]
 		
 		-- return only when a collision is found, otherwise continue
-		if self ~= other and other.active and collision.resolve(self, other) then
+		if collision.resolve(self, other) then
 			return true, other
 		end
 	end
@@ -385,6 +391,18 @@ end
 
 ---------------------------------------------------------------- INDIVIDUAL SHAPES
 
+-- POINTS
+function collision.point.rotate(x, y, angle, ox, oy)
+	if angle == 0 then return x, y end
+	
+	angle = math.rad(angle)
+	ox = ox or x
+	oy = oy or y
+	
+	return ox + (math.cos(angle) * (x - ox) - math.sin(angle) * (y - oy)),
+		oy + (math.sin(angle) * (x - ox) + math.cos(angle) * (y - oy))
+end
+
 -- POLYGONS
 function collision.poly.unpack(arg)
 	local t = {}
@@ -427,6 +445,8 @@ function collision.poly.move(arg, x, y, ox, oy)
 end
 
 function collision.poly.rotate(arg, angle, ox, oy)
+	if angle == 0 then return arg, angle end
+	
 	local t = copy(arg)
 	angle = math.rad(angle)
 	

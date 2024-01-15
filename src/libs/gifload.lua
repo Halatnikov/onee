@@ -486,7 +486,7 @@ local function gifframe(self, n)
   return self.imgs[n*5-2], self.imgs[n*5-1], self.imgs[n*5], self.imgs[n*5-3], self.imgs[n*5-4]
 end
 
-local function gifnew(retver)
+function gifload(retver)
   if retver == "version" then
     return 0x010002
   -- else just ignore it and create the object
@@ -516,4 +516,4 @@ local function gifnew(retver)
   return self
 end
 
-return gifnew
+return gifload

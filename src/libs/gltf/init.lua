@@ -16,7 +16,7 @@ local base = (...) .. "."
 local Asset   = require(base..'asset')
 local DefaultRenderer = require(base..'defaultRenderer')
 
-local gltf = {}
+gltf = {}
 
 -- @function gltf.newAsset
 -- @desc loads a new gltf asset from file. uses love.filesystem.

@@ -4,8 +4,10 @@ imgui = {
 }
 
 -- init
+local gui
 if (love._os == "Windows" or love._os == "Linix") and debug_mode then 
-	gui = require("src/libs/cimgui")
+	gui_imgui = require("src/libs/cimgui")
+	gui = gui_imgui
 	
 	gui.love.Init()
 	gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
@@ -28,7 +30,9 @@ end
 function imgui.draw()
 	if not gui then return end
 	
-	imgui.main()
+	for k,v in pairs(imgui.open) do
+		if imgui.open[k] then imgui.window[k]() end
+	end
     
     gui.Render()
     gui.love.RenderDrawLists()
@@ -103,6 +107,7 @@ local function _char(arg, default) -- char* pointer
 end
 
 ---------------------------------------------------------------- table browser
+do--#region TABLE BROWSER
 function imgui.table(arg, name, settings, level)
 	local level = level or 0
 	local settings = settings or {
@@ -279,12 +284,22 @@ function imgui.table_fancy_allow(arg)
 	end
 	
 	if arg.rgb then
-		local _v = _float({arg.rgb[1]/255,arg.rgb[2]/255,arg.rgb[3]/255})
-		gui.ColorEdit3("rgb", _v)
-		
-		arg.rgb[1] = _v[0]*255
-		arg.rgb[2] = _v[1]*255
-		arg.rgb[3] = _v[2]*255
+		if #arg.rgb == 3 then
+			local _v = _float({arg.rgb[1]/255, arg.rgb[2]/255, arg.rgb[3]/255})
+			gui.ColorEdit3("rgb", _v)
+			
+			arg.rgb[1] = _v[0]*255
+			arg.rgb[2] = _v[1]*255
+			arg.rgb[3] = _v[2]*255
+		elseif #arg.rgb == 4 then
+			local _v = _float({arg.rgb[1]/255, arg.rgb[2]/255, arg.rgb[3]/255, arg.rgb[4]/100})
+			gui.ColorEdit4("rgb", _v)
+			
+			arg.rgb[1] = _v[0]*255
+			arg.rgb[2] = _v[1]*255
+			arg.rgb[3] = _v[2]*255
+			arg.rgb[4] = _v[3]*100
+		end
 	end
 	
 end
@@ -361,20 +376,7 @@ function imgui.table_fancy_edit(arg)
 	end
 	
 end
-
--- control function
-function imgui.main()
-	if imgui.open.menubar then imgui.window.menubar() end
-	
-	if imgui.open.overlay then imgui.window.overlay() end
-	
-	if imgui.open.main then imgui.window.main() end
-	
-	if imgui.open.inspector then imgui.window.inspector() end
-	
-	if imgui.open.demo then imgui.window.demo() end
-	
-end
+end--#endregion
 
 local freeze = false; local advance_frame = false; local old_frame
 
@@ -533,7 +535,8 @@ function imgui.window.overlay()
 				if arg[k].collision == true then
 					check, col = collision.check(self, object, arg[k].name)
 					if check then collision_inspect[col.instance..col.name] = col end
-				else
+				-- skip 3d models, they cause a stack overflow
+				elseif arg[k].model ~= true then
 					collisions_recursively(arg[k], id, instances[id].object)
 				end
 			end
@@ -700,6 +703,23 @@ function imgui.window.main()
 				gui.TableSetColumnIndex(1); gui.Text(tostring(table.length(models)))
 				
 				gui.EndTable()
+			end
+			
+			gui.Separator()
+			--loaded requires tree
+			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("1")
+					
+					for k in kpairs(package.loaded) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0)
+						gui.Text(tostring(k))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
 			end
 			
 		end
