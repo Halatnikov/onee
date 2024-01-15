@@ -3,36 +3,41 @@ yui = {
 	new = {},
 }
 
-local gui
+-- init
 gui_yui = require("src/libs/yui")
-gui = gui_yui
+local gui = gui_yui
 
-if mobile and debug_mode then yui.open.debug_button = true end
+if not mobile and debug_mode then yui.open.debug_button = true end
 
-function yui.update()
+function yui.draw()
+	-- individual UIs updates
 	if yui.debug_button then
 		yui.debug_button[1].x = windowwidth - 20 - 4
 	end
 	
 	if yui.debug then
+		love.graphics.setColor(0.1, 0.1, 0.1, 0.9)
+		love.graphics.rectangle("fill", yui.debug.x, yui.debug.y, yui.debug.w, yui.debug.h, 4)
+		love.graphics.reset()
+		
 		yui.debug[1][2].text = love.timer.getFPS().." "..math.round(fps,2).." FPS "..math.round(1000*love.timer.getAverageDelta(),2).."ms"
 	end
-end
-
-function yui.draw()
+	
+	-- main loop
 	for k,v in pairs(yui.open) do
 		if not yui[k] then yui[k] = yui.new[k]() end
 	end
 	
 	for k,v in pairs(yui) do
 		if type(yui[k]) == "table" and yui[k].yui == true then
-			yui[k]:update(dt)
+			yui[k]:update(tick)
 			yui[k]:draw()
 			if not yui.open[k] then yui[k] = nil end
 		end
 	end
 end
 
+-- UIs
 function yui.new.debug_button()
 	return gui.Ui:new {
 		x = windowwidth-20-4, y = 20+4,

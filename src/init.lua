@@ -66,10 +66,10 @@ if debug_mode then
 	debug_draw_collisions = true
 	debug_draw_sprites = false
 	
-	-- todo: init imgui here
-	-- todo: on debug_mode disable, close all the ui
-	-- todo: shortcut ` or f1 to open/close the debug window
-	-- todo: something quick and dirty on loveframes for android
+	-- TODO: init imgui here
+	-- TODO: on debug_mode disable, close all the ui
+	-- TODO: shortcut ` or f1 to open/close the debug window
+	-- TODO: something quick and dirty on loveframes for android
 	--gui.open.debug()
 	
 end

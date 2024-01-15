@@ -33,7 +33,7 @@ function input.update() -- MAIN LOOP --
 		if config.input.keyboard[key].m then
 			if love.mouse.isDown(config.input.keyboard[key].m)
 			and not input.mouse_istouch[1] then -- prevent touch input
-				input.mode = "keyboard"
+				input.mode = "mouse"
 				input[key] = true
 			end
 		end
@@ -41,7 +41,7 @@ function input.update() -- MAIN LOOP --
 		if config.input.keyboard[key].mw then
 			if math.abs(input.mouse_wheel) > 0
 			and math.sign(input.mouse_wheel) == config.input.keyboard[key].mw then
-				input.mode = "keyboard"
+				input.mode = "mouse"
 				input[key] = true 
 			end
 		end
@@ -207,6 +207,7 @@ function love.joystickremoved()
 end
 
 -- mouse wheel input
+-- TODO: broke?
 function input.wheelmoved(x,y) 
 	input.mouse_wheel = y
 end

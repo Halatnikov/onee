@@ -40,6 +40,7 @@ function Button:new(args)
     self.text = self.text or ""
     self.align = self.align or 'center'
     self.valign = self.valign or 'center'
+	self.shadowtext = self.shadowtext or self.shadowtext == nil and true
     self.active = false
     return self
 end
@@ -72,7 +73,11 @@ function Button:draw()
     love.graphics.setFont(font)
 
     y = y + core.verticalOffsetForAlign(self.valign, font, h)
-    shadowtext.printf(self.text, x+2, y, w-4, self.align)
+    if self.shadowtext == true then
+		shadowtext.printf(self.text, x+2, y, w-4, self.align)
+	else
+		love.graphics.printf(self.text, x+2, y, w-4, self.align)
+	end
 end
 
 return Button

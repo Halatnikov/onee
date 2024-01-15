@@ -89,9 +89,9 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 	local function check_recursively(arg, id)
 		for k, v in pairs(arg) do
 			if type(v) == "table" then
-				if arg[k].collision and arg[k].name == collisionname and
+				if arg[k].collision == true and arg[k].name == collisionname and
 				self ~= arg[k] and arg[k].active then
-					--todo: add IDs in a separate table
+					--TODO: add IDs in a separate table
 					arg[k].instance = id
 					table.insert(candidates, arg[k])
 				else

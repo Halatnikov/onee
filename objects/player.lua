@@ -156,7 +156,7 @@ function object.update(self)
 	self.collider.down.line.y = player.y + 32
 	
 	-- end loop
-	player.ground = false
+	--player.ground = false
 	
 end
 

@@ -21,7 +21,7 @@ function math.choose(...)
 end
 
 function math.sign(arg)
-	return (arg > 0) and 1 or (arg < 0) and -1 or 1
+	return (arg > 0) and 1 or (arg < 0) and -1 or 0
 end
 
 function math.flipsign(arg)

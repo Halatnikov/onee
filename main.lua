@@ -22,8 +22,7 @@ function love.update(dt)
 	end
 	
 	debug.update()
-	imgui.update(dt)
-	yui.update()
+	imgui.update()
 end
 
 function love.draw()

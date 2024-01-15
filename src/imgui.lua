@@ -20,10 +20,10 @@ if (love._os == "Windows" or love._os == "Linix") and debug_mode then
 end
 
 -- main loop
-function imgui.update(dt)
+function imgui.update()
 	if not gui then return end
 	
-	gui.love.Update(dt)
+	gui.love.Update(tick)
     gui.NewFrame()
 end
 
@@ -203,8 +203,8 @@ function imgui.table_entries(arg, settings, level)
 end
 
 function imgui.table_fancy_table(arg)
-	-- todo: resize through getfontsize*#string
-	-- todo: align values in subtables with setnextitemwidth(-100)
+	-- TODO: resize through getfontsize*#string
+	-- TODO: align values in subtables with setnextitemwidth(-100)
 	if not arg.collision and not arg.sprite then return end
 	
 	local label
@@ -543,7 +543,7 @@ function imgui.window.overlay()
 		end
 	end
 	
-	-- todo: maybe loop through objects instead?
+	-- TODO: maybe loop through objects instead?
 	for id in pairs(instances) do
 		collisions_recursively(instances[id], id, instances[id].object)
 	end
