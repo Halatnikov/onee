@@ -3,9 +3,9 @@
 -- that often, but maybe textures/bin files?
 -- TODO: threaded loading? probably hard to do well
 local base = (...):gsub("%.[^.]+$",".")
-local mat4 = require 'src/libs/gltf/cpml.modules.mat4'
-local quat = require 'src/libs/gltf/cpml.modules.quat'
-local vec3 = require 'src/libs/gltf/cpml.modules.vec3'
+local mat4 = require 'onee/libs/gltf/cpml.modules.mat4'
+local quat = require 'onee/libs/gltf/cpml.modules.quat'
+local vec3 = require 'onee/libs/gltf/cpml.modules.vec3'
 
 -- prefer cjson if available
 local ok, json = pcall(require, "cjson")

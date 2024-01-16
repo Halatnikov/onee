@@ -114,7 +114,8 @@ end
 -- @return string recreating the table, use serialize.unpack() to do so.
 function serialize.pack(o, indent, mode)
     if type(o) ~= 'table' then
-        error("Can't serialize.pack() a `"..type(o).."'.")
+        print("Can't serialize.pack() a `"..type(o).."'.")
+		return
     end
 
     return dopack(o, indent or 1, mode)

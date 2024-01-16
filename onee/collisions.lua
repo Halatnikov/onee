@@ -1,11 +1,11 @@
 -- functions
-collision = {
-	point = {},
-	line = {},
-	rect = {},
-	circ = {},
-	poly = {},
-}
+collision = {}
+
+point = {}
+line = {}
+rect = {}
+circ = {}
+poly = {}
 
 ---------------------------------------------------------------- INSTANCES
 
@@ -48,9 +48,10 @@ function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
 	if not collision.active then return end 
 	
 	if not collision.debug then
-		collision.debug = {}
-		collision.debug.rgb = {math.random(0,255), math.random(0,255), math.random(0,255)}
-		collision.debug.highlighted = false
+		collision.debug = {
+			rgb = {math.random(0,255), math.random(0,255), math.random(0,255)},
+			highlighted = false,
+		}
 	end
 	
 	local mode = collision.debug.highlighted and "fill" or "line"
@@ -76,7 +77,7 @@ function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
 		love.graphics.line(collision.x, collision.y-4, collision.x, collision.y+4)
 		love.graphics.circle(mode, collision.x, collision.y, 6)
 	end
-	love.graphics.reset()
+	love.graphics.setColor(1,1,1,1)
 	
 end
 
@@ -219,6 +220,8 @@ end
 
 ---------------------------------------------------------------- CALCULATIONS
 -- add intersections? (maybe for raycasts?)
+
+do--#region CALCULATIONS
 
 ---- points
 -- POINT WITH POINT COLLISION --
@@ -388,11 +391,13 @@ function collision.poly_line(A, Bx1, By1, Bx2, By2)
 	
 	return colB or result
 end
+end--#endregion
 
 ---------------------------------------------------------------- INDIVIDUAL SHAPES
+-- todo: width, height, bbox, move, rotate
 
 -- POINTS
-function collision.point.rotate(x, y, angle, ox, oy)
+function point.rotate(x, y, angle, ox, oy)
 	if angle == 0 then return x, y end
 	
 	angle = math.rad(angle)
@@ -404,7 +409,7 @@ function collision.point.rotate(x, y, angle, ox, oy)
 end
 
 -- POLYGONS
-function collision.poly.unpack(arg)
+function poly.unpack(arg)
 	local t = {}
 	for i=1, #arg do
 		table.insert(t, arg[i][1])
@@ -413,7 +418,7 @@ function collision.poly.unpack(arg)
 	return t
 end
 
-function collision.poly.pack(arg)
+function poly.pack(arg)
 	local t = {}
 	for i=1, #arg, 2 do
 		table.insert(t, {arg[i], arg[i+1]})
@@ -421,7 +426,7 @@ function collision.poly.pack(arg)
 	return t
 end
 
-function collision.poly.rect(x, y, width, height)
+function poly.rect(x, y, width, height)
 	return {
 		{x, y},
 		{x + width, y},
@@ -430,7 +435,7 @@ function collision.poly.rect(x, y, width, height)
 	}
 end
 
-function collision.poly.move(arg, x, y, ox, oy)
+function poly.move(arg, x, y, ox, oy)
 	local t = copy(arg)
 	
 	ox = t[1][1] + (ox or 0)
@@ -444,7 +449,7 @@ function collision.poly.move(arg, x, y, ox, oy)
 	return t
 end
 
-function collision.poly.rotate(arg, angle, ox, oy)
+function poly.rotate(arg, angle, ox, oy)
 	if angle == 0 then return arg, angle end
 	
 	local t = copy(arg)

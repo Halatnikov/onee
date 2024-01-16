@@ -18,10 +18,12 @@ function scenes.set(name, data) -- SWITCH CURRENT SCENE --
 	end
 	-- TODO: account persist objects somehow, a clear unused assets function?
 	for name in pairs(assets) do asset.delete(name) end
-	love.graphics.setBackgroundColor(8/255,8/255,8/255)
+	-- TODO: general graphics reset stuff here?
+	--rgb = {8/255, 8/255, 8/255}
 	collectgarbage()
 	
 	-- load new scene
+	-- TODO: do it like objects, don't make the lua file mandatory, also do a path
 	scene = require("scenes/"..name)
 	
 	scene.scene = true
@@ -66,9 +68,10 @@ function object.new(path, data, name) -- CREATE NEW OBJECT --
 	if not name then name = string.tokenize(path, "/", -1) end
 	if objects[name] then print("object.new() | object \""..name.."\" already exists!") return end
 	
-	local t = {} -- init
-	t.object = true
-	t.instances = 0
+	local t = { -- init
+		object = true,
+		instances = 0,
+	}
 	
 	if files.exists("objects/"..path..".lua") then 
 		t.data = require("objects/"..path) -- add code to object, if it exists
@@ -113,13 +116,14 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 	local id = name.."_"..string.random(6)
 	local object = objects[name]
 	
-	local t = {} -- init
-	t.instance = true
-	t.object = name
-	t.id = id
-	t.id_i = table.length(instances)+1
-	t.active = true
-	t.visible = true
+	local t = { -- init
+		instance = true,
+		object = name,
+		id = id,
+		id_i = table.length(instances) + 1,
+		active = true,
+		visible = true,
+	}
 	
 	if object.data then table.append(t, object.data) end
 	if data then table.append(t, data) end -- pass additional stuff to instance through this table

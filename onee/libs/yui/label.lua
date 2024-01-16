@@ -9,7 +9,7 @@ local BASE = (...):gsub('label$', '')
 local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
-local shadowtext = require 'src/libs/yui/gear.shadowtext'
+local shadowtext = require 'onee/libs/yui/gear.shadowtext'
 
 -- Labels don't accept focus
 local Label = setmetatable({

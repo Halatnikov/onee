@@ -7,11 +7,12 @@ function object.init(self)
 	
 	asset.sprite("test_gdportal")
 	
-	self.sprites = {}
-	self.sprites.back = sprite.init(self.sprites.back, "test_gdportal", {animation = "back"})
-	self.sprites.front = sprite.init(self.sprites.front, "test_gdportal", {animation = "front"})
-	self.sprites.detail = sprite.init(self.sprites.detail, "test_gdportal", {animation = "detail"})
-	self.sprites.icon = sprite.init(self.sprites.icon, "test_gdportal", {animation = "icon"})
+	self.sprites = {
+		back = sprite.init(back, "test_gdportal", {animation = "back"}),
+		front = sprite.init(front, "test_gdportal", {animation = "front"}),
+		detail = sprite.init(detail, "test_gdportal", {animation = "detail"}),
+		icon = sprite.init(icon, "test_gdportal", {animation = "icon"}),
+	}
 	
 	local scalex = self.scalex or self.scale or 1; scalex = math.abs(scalex)
 	local scaley = self.scaley or self.scale or 1; scaley = math.abs(scaley)
@@ -22,9 +23,10 @@ function object.init(self)
 		rect = {width = 196 * scalex, height = 340 * scaley}}
 	)
 	
-	self.canvas = {}
-	self.canvas.back = love.graphics.newCanvas(196, 340)
-	self.canvas.front = love.graphics.newCanvas(196, 340)
+	self.canvas = {
+		back = love.graphics.newCanvas(196, 340),
+		front = love.graphics.newCanvas(196, 340),
+	}
 	
 	--HotParticles
 	self.particles = love.graphics.newParticleSystem(assets["test_gdportal"]["particle"][1], 24)
@@ -72,7 +74,7 @@ function object.draw(self)
 	local opacity = self.opacity or 100; opacity = opacity/100
 	
 	local pwidth, pheight = 32*scalex, 128*scaley
-	local px, py = collision.point.rotate((x - 64 - pwidth - (pwidth/2)), y, math.deg(angle), x, y)
+	local px, py = point.rotate((x - 64 - pwidth - (pwidth/2)), y, math.deg(angle), x, y)
 	
 	queue.add(scenes.drawlist, -1, function()
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)

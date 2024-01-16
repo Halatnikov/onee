@@ -5,8 +5,8 @@ local Renderer_mt = {__index = Renderer}
 
 local base = (...):gsub("%.[^.]+$",".")
 local shaderSource = require(base..'defaultShader')
-local mat4 = require 'src/libs/gltf/cpml.modules.mat4'
-local vec3 = require 'src/libs/gltf/cpml.modules.vec3'
+local mat4 = require 'onee/libs/gltf/cpml.modules.mat4'
+local vec3 = require 'onee/libs/gltf/cpml.modules.vec3'
 
 function Renderer.new()
 	local self = setmetatable({}, Renderer_mt)

@@ -15,7 +15,7 @@ local Layout = require(BASE..'layout')
 local Columns = require(BASE..'columns')
 local Rows = require(BASE..'rows')
 local theme = require(BASE..'theme')
-local gear = require 'src/libs/yui/gear'
+local gear = require 'onee/libs/yui/gear'
 
 local Timer = gear.Timer
 local isinstance = gear.meta.isinstance

@@ -24,12 +24,47 @@ DISPOSE = {
 	PREVIOUS = 3, -- revert 1 frame back
 }
 
-local gif = require("src/assets/gif")
-local spritesheet = require("src/assets/spritesheet")
-local nineslice = require("src/assets/nineslice")
+local gif = require("onee/assets/gif")
+local spritesheet = require("onee/assets/spritesheet")
+local nineslice = require("onee/assets/nineslice")
 
----------------------------------------------------------------- ASSETS
+---------------------------------------------------------------- AUXILLARY
 
+function asset.delete(name) -- UNLOAD ASSET
+	assets[name] = nil
+	
+	sprites[name] = nil
+	models[name] = nil
+	
+	collectgarbage()
+end
+
+function asset.add_frames(count, x,y,length) -- helper for adding frames to sprite def
+	local t = {}
+	for i=1, count do
+		t[i] = {
+			x = x or 0,
+			y = y or 0,
+			length = length or 1,
+		}
+	end
+	return t
+end
+
+function asset.negative_frames(animdef) -- helper for handling negative frame declarations
+	for frame in pairs(animdef.frames) do
+		if frame < 0 then -- if your frame is -1, that means the last frame, -2 second to last and so on
+			local i = (#animdef.frames+1) + frame
+			animdef.frames[i] = table.append(animdef.frames[i], animdef.frames[frame])
+		
+			animdef.frames[frame] = nil
+		end
+	end
+end
+
+---------------------------------------------------------------- SPRITES
+
+do--#region SPRITES
 function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	
 	local name = string.tokenize(path, "/", -1)
@@ -161,95 +196,6 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	
 end
 
-function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
-	
-	local name = string.tokenize(path, "/", -1)
-	if assets[name] then return end -- already loaded
-	
-	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
-	local modeldef = {}
-	if files.exists("models/"..path..".lua") then modeldef = require("models/"..path) end
-	
-	-- overwrite texture images
-	if model.images then
-		for i=1, #model.images do
-			local texture = model.textures[i].name or model.images[i].name..".png"
-			
-			if files.exists("models/"..path.."/"..texture) then
-				local image = love.filesystem.read("models/"..path.."/"..texture)
-				
-				model.images[i].uri = "data:image/png;base64,"..love.data.encode("string", "base64", image)
-			end
-		end
-	end
-	
-	-- animation definitions
-	if model.animations then
-		modeldef.animationsref = {}
-		
-		if not modeldef.animations then modeldef.animations = {} end
-		
-		for i=1, #model.animations do
-			if not modeldef.animations[model.animations[i].name] then
-				modeldef.animations[model.animations[i].name] = {
-					loop = true,
-				}
-			end
-			modeldef.animationsref[i] = model.animations[i].name
-		end
-	end
-	
-	-- overwrite materials
-	if modeldef.materials then
-		for mat in pairs(modeldef.materials) do
-			model.materials[mat].alphaMode = modeldef.materials[mat].alphaMode or nil
-			model.materials[mat].doubleSided = modeldef.materials[mat].doubleSided or nil
-		end
-	end
-	
-	assets[name] = gltf.newAsset(model)
-	assets[name]:continueLoading(5)
-	
-	models[name] = modeldef -- done
-	unrequire("models/"..path)
-	
-end
-
-function asset.delete(name) -- UNLOAD ASSET
-	assets[name] = nil
-	
-	sprites[name] = nil
-	models[name] = nil
-	
-	collectgarbage()
-end
-
----------------------------------------------------------------- HELPER FUNCTIONS
-
-function asset.add_frames(count, x,y,length) -- shortcut for adding frames to sprite def
-	local t = {}
-	for i=1, count do
-		t[i] = {}
-		t[i].x = x or 0
-		t[i].y = y or 0
-		t[i].length = length or 1
-	end
-	return t
-end
-
-function asset.negative_frames(animdef) -- handle negative frame declarations
-	for frame in pairs(animdef.frames) do
-		if frame < 0 then -- if your frame is -1, that means the last frame, -2 second to last and so on
-			local i = (#animdef.frames+1) + frame
-			animdef.frames[i] = table.append(animdef.frames[i], animdef.frames[frame])
-		
-			animdef.frames[frame] = nil
-		end
-	end
-end
-
----------------------------------------------------------------- SPRITES
-
 function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 	assert(sprites[name], "sprite.init() | \""..name.."\" is not a valid sprite!")
 	
@@ -259,7 +205,7 @@ function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 		visible = true,
 		name = name,
 		animation = "idle",
-		current = "idle",
+		animation_old = "idle",
 		frame = 1,
 		timer = 0,
 		seq = "seq_start",
@@ -303,14 +249,14 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	sprite.timer = sprite.timer + tick
 	
 	-- animation was changed from outside
-	if sprite.animation ~= sprite.current then
+	if sprite.animation ~= sprite.animation_old then
 		sprite.speed = nil
 		sprite.timer = 0
 		sprite.seq = "seq_start"
 		sprite.seq_index = 1
 		sprite.loops = 0
 	
-		sprite.current = sprite.animation
+		sprite.animation_old = sprite.animation
 		sprite.frame = animdef[sprite.seq][sprite.seq_index]
 	end
 	
@@ -499,9 +445,10 @@ function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
 	local framedef = animdef.frames[sprite.frame]
 	
 	if not sprite.debug then
-		sprite.debug = {}
-		sprite.debug.rgb = {math.random(0,255), math.random(0,255), math.random(0,255)}
-		sprite.debug.highlighted = false
+		sprite.debug = {
+			rgb = {math.random(0,255), math.random(0,255), math.random(0,255)},
+			highlighted = false,
+		}
 	end
 	
 	local mode = sprite.debug.highlighted and "fill" or "line"
@@ -523,10 +470,10 @@ function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
 	if sprite.angle == 0 or not sprite.angle then
 		love.graphics.rectangle(mode, bbox_x, bbox_y, width, height)
 	else
-		local poly_old = collision.poly.rect(bbox_x, bbox_y, width, height)
-		local poly = collision.poly.rotate(poly_old, sprite.angle, framedef.x * scalex, framedef.y * scaley)
+		local poly_old = poly.rect(bbox_x, bbox_y, width, height)
+		local poly = poly.rotate(poly_old, sprite.angle, framedef.x * scalex, framedef.y * scaley)
 		
-		love.graphics.polygon(mode, collision.poly.unpack(poly))
+		love.graphics.polygon(mode, poly.unpack(poly))
 	end
 	
 	-- origin
@@ -535,11 +482,67 @@ function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
 	
 	love.graphics.reset()
 end
+end--#endregion
 
 ---------------------------------------------------------------- 3D MODELS
 
-local vec3 = require "src/libs/gltf/cpml.modules.vec3"
-local mat4 = require "src/libs/gltf/cpml.modules.mat4"
+do--#region 3D MODELS
+function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
+	
+	local name = string.tokenize(path, "/", -1)
+	if assets[name] then return end -- already loaded
+	
+	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
+	local modeldef = {}
+	if files.exists("models/"..path..".lua") then modeldef = require("models/"..path) end
+	
+	-- overwrite texture images
+	if model.images then
+		for i=1, #model.images do
+			local texture = model.textures[i].name or model.images[i].name..".png"
+			
+			if files.exists("models/"..path.."/"..texture) then
+				local image = love.filesystem.read("models/"..path.."/"..texture)
+				
+				model.images[i].uri = "data:image/png;base64,"..love.data.encode("string", "base64", image)
+			end
+		end
+	end
+	
+	-- animation definitions
+	if model.animations then
+		modeldef.animationsref = {}
+		
+		if not modeldef.animations then modeldef.animations = {} end
+		
+		for i=1, #model.animations do
+			if not modeldef.animations[model.animations[i].name] then
+				modeldef.animations[model.animations[i].name] = {
+					loop = true,
+				}
+			end
+			modeldef.animationsref[i] = model.animations[i].name
+		end
+	end
+	
+	-- overwrite materials
+	if modeldef.materials then
+		for mat in pairs(modeldef.materials) do
+			model.materials[mat].alphaMode = modeldef.materials[mat].alphaMode or nil
+			model.materials[mat].doubleSided = modeldef.materials[mat].doubleSided or nil
+		end
+	end
+	
+	assets[name] = gltf.newAsset(model)
+	assets[name]:continueLoading(5)
+	
+	models[name] = modeldef -- done
+	unrequire("models/"..path)
+	
+end
+
+local vec3 = require "onee/libs/gltf/cpml.modules.vec3"
+local mat4 = require "onee/libs/gltf/cpml.modules.mat4"
 
 function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	assert(models[name], "model.init() | \""..name.."\" is not a valid 3d model!")
@@ -675,3 +678,4 @@ function model.draw(model) -- DRAW 3D MODEL --
 	
 	love.graphics.reset()
 end
+end--#endregion

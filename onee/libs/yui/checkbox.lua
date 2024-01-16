@@ -11,7 +11,7 @@ local BASE = (...):gsub('checkbox$', '')
 local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
-local shadowtext = require 'src/libs/yui/gear.shadowtext'
+local shadowtext = require 'onee/libs/yui/gear.shadowtext'
 
 local Checkbox = setmetatable({
     __call = function(cls, args) return cls:new(args) end

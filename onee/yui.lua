@@ -4,10 +4,13 @@ yui = {
 }
 
 -- init
-gui_yui = require("src/libs/yui")
-local gui = gui_yui
+local gui
+do
+	yui_ = require("onee/libs/yui")
+	gui = yui_
 
-if not mobile and debug_mode then yui.open.debug_button = true end
+	if not mobile and debug_mode then yui.open.debug_button = true end
+end
 
 function yui.draw()
 	-- individual UIs updates
@@ -65,7 +68,7 @@ function yui.new.debug()
 			-- close debug menu
 			gui.Button {
 				w = width, h = height, align = "right",
-				text = version.." -",
+				text = onee.version.." -",
 				onHit = function()
 					yui.open.debug_button = true
 					yui.open.debug = nil

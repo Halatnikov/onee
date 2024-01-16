@@ -7,16 +7,16 @@ function bool.int(arg)
 end
 
 ---------------------------------------------------------------- MATH
--- TODO: lerp, smoothstep, decay, map from one min-max range to another, ^2, construct 2, vector 2?
+-- TODO: lerp (and pingpong), smoothstep, decay, map from one min-max range to another (0-255 to 0-1), closest to ^2, construct 2, vector 2?
 -- angle from x1 y1 to x2 y2
 
 math.random = love.math.random
+math.int = math.floor
 pi = math.pi
 inf = math.huge
 
 function math.choose(...)
-	local arg = {...}
-	if type(arg[1]) == "table" then arg = arg[1] end
+	local arg = type(...) == "table" and ... or {...}
 	return arg[math.random(#arg)]
 end
 
@@ -46,8 +46,7 @@ function math.round(arg, decimals)
 end
 
 function math.average(...)
-	local arg = {...}
-	if type(arg[1]) == "table" then arg = arg[1] end
+	local arg = type(...) == "table" and ... or {...}
 	local sum = 0
 	for i=1, #arg do
 		sum = sum + arg[i]
@@ -70,8 +69,7 @@ function table.find(arg, result)
 end
 
 function table.append(a, b)
-	if not a then a = {} end
-	if not b then b = {} end
+	a, b = a or {}, b or {}
 	for k,v in pairs(b) do 
 		if type(v) == "table" and type(a[k] or false) == "table" then
 			table.append(a[k], b[k])
@@ -108,37 +106,31 @@ end
 function kpairs(arg)
 	local keys = {}
 	for k in pairs(arg) do table.insert(keys, k) end
-	table.sort(keys, 
-		function(a, b)
-			if type(a) ~= type(b) then return tostring(a) < tostring(b) end
-			return a < b
-		end)
+	table.sort(keys, function(a, b)
+		if type(a) ~= type(b) then return tostring(a) < tostring(b) end
+		return a < b
+	end)
 	local i = 0
-	local function iterate()
+	return function()
 		i = i + 1
-		if keys[i] == nil then
-			return nil
-		else 
-			return keys[i], arg[keys[i]]
-		end
+		return keys[i] and keys[i], arg[keys[i]] or nil
 	end
-	return iterate
 end
 
-function copy(obj, seen)
-	if type(obj) ~= 'table' then
-		return obj 
+function copy(a, seen)
+	if type(a) ~= "table" then
+		return a 
 	end
-	if seen and seen[obj] then
-		return seen[obj] 
+	if seen and seen[a] then
+		return seen[a] 
 	end
-	local seen = seen or {}
-	local res = setmetatable({}, getmetatable(obj))
-	seen[obj] = res
-	for k, v in pairs(obj) do 
-		res[copy(k, seen)] = copy(v, seen) 
+	seen = seen or {}
+	local b = setmetatable({}, getmetatable(a))
+	seen[a] = b
+	for k, v in pairs(a) do 
+		b[copy(k, seen)] = copy(v, seen) 
 	end
-	return res
+	return b
 end
 
 ---------------------------------------------------------------- QUEUEING
@@ -169,19 +161,32 @@ function queue.execute(arg)
 end
 
 ---------------------------------------------------------------- STRINGS
--- TODO: construct 2 (left right (trim?), etc)
 
 string.replace = string.gsub
+string.mid = string.sub
 string.lowercase = string.lower
 string.uppercase = string.upper
 newline = "\n"
 
+function string.findcase(arg, find, i, plain) -- case insensitive
+	return string.find(string.lower(arg), string.lower(find), i, plain)
+end
+
 function string.split(arg)
 	local t = {}
 	for i = 1, #arg do
-		table.insert(t, string.sub(arg, i, i))
+		table.insert(t, string.mid(arg, i, i))
 	end
 	return t
+end
+
+function string.left(arg, len) -- alias
+	return string.mid(arg, 1, len)
+end
+
+function string.right(arg, len) --alias
+	if len < 0 then len = #arg - math.abs(len) end -- count from end
+	return string.mid(arg, #arg - (len - 1), #arg)
 end
 
 function string.random(length)
@@ -189,9 +194,15 @@ function string.random(length)
 	local t = {}
 	for i=1, length do
 		local r = math.random(1, #charset)
-		table.insert(t, string.sub(charset, r, r))
+		table.insert(t, string.mid(charset, r, r))
 	end
 	return table.concat(t)
+end
+
+function string.zeropad(arg, decimals)
+	arg = tostring(arg)
+	if #arg < decimals then decimals = decimals - #arg else decimals = 0 end
+	return string.rep("0", decimals)..arg
 end
 
 function string.md5(arg) -- alias
@@ -215,17 +226,15 @@ function string.tokenize(arg, separator, index)
 end
 
 function string.version(arg)
-	local ver = arg or version
-	local pre
+	arg = arg or onee.version
 	
-	if string.find(ver,"-") then
-		ver = string.tokenize(arg,"%-",1)
-		pre = tonumber(string.tokenize(arg,"%-",2))
-	end
+	local ver = string.tokenize(arg, "-", 1)
+	local pre = string.tokenize(arg, "-", 2)
 	
-	ver = tonumber(table.concat(string.tokenize(ver,"%.")))
+	ver = string.tokenize(ver, ".")
+	if type(pre) == "string" then table.insert(ver, pre) end
 	
-	return ver, pre
+	return unpack(ver)
 end
 
 ---------------------------------------------------------------- FILES

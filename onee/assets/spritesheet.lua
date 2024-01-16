@@ -1,6 +1,7 @@
 local spritesheet = {}
 
 ----------------------------------------------------------------
+
 function spritesheet.add(path, frame, animdef, framedef, export)
 	local sheetdef = framedef.sheet
 	

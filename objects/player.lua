@@ -40,10 +40,11 @@ function object.init(self)
 	
 	self.hitbox = collision.init(self.hitbox, "hitbox", {rect = {width = 16, height = 32}})
 	
-	self.collider = {}
-	self.collider.down = collision.init(self.collider.down, "collider_down", {line = {}})
-	self.collider.left = collision.init(self.collider.left, "collider_left", {line = {}})
-	self.collider.right = collision.init(self.collider.right, "collider_right", {line = {}})
+	self.collider = {
+		down = collision.init(down, "collider_down", {line = {}}),
+		left = collision.init(left, "collider_left", {line = {}}),
+		right = collision.init(right, "collider_right", {line = {}}),
+	}
 
 end
 

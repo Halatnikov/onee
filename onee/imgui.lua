@@ -6,8 +6,8 @@ imgui = {
 -- init
 local gui
 if (love._os == "Windows" or love._os == "Linix") and debug_mode then 
-	gui_imgui = require("src/libs/cimgui")
-	gui = gui_imgui
+	imgui_ = require("onee/libs/cimgui")
+	gui = imgui_
 	
 	gui.love.Init()
 	gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
@@ -402,7 +402,7 @@ function imgui.window.menubar()
 			-- advance frame controls shortcut
 			if gui.SmallButton(freeze and "|>" or "||") then
 				freeze = not freeze
-				allow_update = not allow_update
+				onee.allow_update = not onee.allow_update
 			end
 			if freeze then -- (only show these when frozen)
 				gui.SameLine()
@@ -415,9 +415,9 @@ function imgui.window.menubar()
 			end
 			
 			if advance_frame then -- (one frame forward)
-				allow_update = true
+				onee.allow_update = true
 				if frames > old_frame then
-					allow_update = false
+					onee.allow_update = false
 					advance_frame = false
 				end
 			end
@@ -612,7 +612,7 @@ end
 function imgui.window.main()
 	local open = _bool(imgui.open.main)
 	
-	if gui.Begin(version.."###main", open) then
+	if gui.Begin(onee.version.."###main", open) then
 		
 		------------------------------------------------ FIRST ROW
 		-- reload button
@@ -628,7 +628,7 @@ function imgui.window.main()
 		gui.SameLine()
 		if gui.Button(freeze and "|>" or "||") then
 			freeze = not freeze
-			allow_update = not allow_update
+			onee.allow_update = not onee.allow_update
 		end
 		if freeze then -- (only show these when frozen)
 			gui.SameLine()
@@ -641,9 +641,9 @@ function imgui.window.main()
 		end
 		
 		if advance_frame then -- (one frame forward)
-			allow_update = true
+			onee.allow_update = true
 			if frames > old_frame then
-				allow_update = false
+				onee.allow_update = false
 				advance_frame = false
 			end
 		end
