@@ -158,7 +158,8 @@ function Choice:draw()
 
     love.graphics.setColor(c.fg)
     love.graphics.setFont(font)
-    shadowtext.printf(text, x+h+2, y, w-2*(h + 2), self.align)
+    --shadowtext.printf(text, x+h+2, y, w-2*(h + 2), self.align)
+    love.graphics.printf(text, x+h+2, y, w-2*(h + 2), self.align)
 end
 
 return Choice

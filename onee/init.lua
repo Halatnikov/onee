@@ -4,6 +4,12 @@ onee = {
 
 ---------------------------------------------------------------- INIT
 
+-- temp font storage
+fonts = {}
+fonts.proggy_clean = love.graphics.newFont("ProggyClean.ttf", 16, "mono", 2)
+fonts.proggy_clean:setFilter("nearest")
+
+-- init itself
 do
 	require("conf")
 	require("onee/libs/errorhandler")
@@ -51,7 +57,7 @@ jit.version_revision = string.left(jit.version_rolling, 2)
 
 function onee.update(dt_)
 	-- fps limiter start
-	before_update = (before_update or 0) + tick
+	onee.before_update = (onee.before_update or 0) + tick
 	
 	-- various helper globals
 	windowwidth = love.graphics.getWidth()
@@ -89,27 +95,31 @@ function onee.draw()
 	love.graphics.setBackgroundColor(onee.bg[1], onee.bg[2], onee.bg[3])
 	
 	-- fps limiter end
-	after_draw = love.timer.getTime()
-	if before_update <= after_draw then before_update = after_draw end
-	love.timer.sleep(before_update - after_draw)
+	onee.after_draw = love.timer.getTime()
+	if onee.before_update <= onee.after_draw then onee.before_update = onee.after_draw end
+	love.timer.sleep(onee.before_update - onee.after_draw)
 end
 
 ---------------------------------------------------------------- DEBUG
 
 if debug_mode then
 	love.setDeprecationOutput(true)
+	love.window.setTitle(love.config.window.title.." (debug)")
 	
 	debug_draw_collisions = true
 	debug_draw_sprites = false
 	
 	lurker.interval = 1
 	
-	-- TODO: set window title to "title (debug)"
-	
+	-- TODO: functions on disabling/reenabling debug mode, maybe unrequire lurker completely
 	-- TODO: init imgui here
 	-- TODO: on debug_mode disable, close all the ui
 	-- TODO: shortcut ` or f1 to open/close the debug window
 	
+end
+
+function debug.disable()
+	love.window.setTitle(love.config.window.title)
 end
 
 function debug.keypressed(k)
@@ -118,18 +128,22 @@ function debug.keypressed(k)
 	if k == "f2" then love.event.quit("restart") end
 	
 	if k == "q" or k == "f3" then scenes.set("init") end
+	
+	if k == "f" then table.insert(qqueue, {text = {{1,0,0,1},(#qqueue+1).." HOLY SHIT ",{1,1,1,1},string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms}, timestamp = ms}) end
 end
 love.keypressed = debug.keypressed
 
 function debug.update()
-	if not debug_mode then return end
+	if not debug_mode then debug.disable() return end
 	
 	if debug_hotswap then lurker.update() end
 end
-			a = {{0,0}, {100,10}, {50,100}, {60,30}}
-			local ox = 50
-			local oy = 50
 
+a = {{0,0}, {100,10}, {50,100}, {60,30}}
+local ox = 50
+local oy = 50
+
+qqueue = {}
 function debug.draw()
 	if not debug_mode then return end
 	debug.drawlist = {}
@@ -166,6 +180,23 @@ function debug.draw()
 	end
 	
 	queue.execute(debug.drawlist)
+	
+	-- TODO: show same thing for profiling
+	if debug_hotswap then
+		local h = math.loop(0, 1, 4)
+		love.graphics.setColor(color.hsv(h, 1, 0.5))
+		love.graphics.printf("HOTSWAP", fonts.proggy_clean, windowwidth-128-4, windowheight-16, 128, "right")
+		love.graphics.reset()
+	end
+	
+	
+	local i = 0
+	for k, v in ripairs(qqueue) do
+		i = i + 1
+		love.graphics.print(qqueue[k].text, fonts.proggy_clean, 4, windowheight - 4 - (13  * i))
+		if ms - qqueue[k].timestamp > 3 then table.remove(qqueue, k) end
+	end
+	if #qqueue > 24 then table.remove(qqueue, 1) end
 	
 	--local angle = (angle or 0) + 0.15
 	--b = poly.move(a, angle, angle, ox, oy)

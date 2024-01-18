@@ -74,7 +74,9 @@ function lurker.listdir(path, recursive, skipdotfiles)
       if recursive and isdir(f) then
         t = lume.concat(t, lurker.listdir(f, true, true))
       else
-        table.insert(t, lume.trim(f, "/"))
+		if not (path == "/onee/libs/lurker" or f == "/onee/libs/errorhandler.lua") then
+			table.insert(t, lume.trim(f, "/"))
+		end
       end
     end
   end
@@ -119,59 +121,24 @@ function lurker.onerror(e, nostacktrace)
     love[v] = function() end
   end
 
-  love.update = lurker.update
+  errorhandler.print(e, 2)
+  
+  local draw, copyToClipboard = errorhandler.draw(e, "lurker", nostacktrace)
 
+  love.update = lurker.update
+  
   love.keypressed = function(k)
     if k == "escape" then
-      lurker.print("Exiting...")
       love.event.quit()
-    end
+    elseif k == "space" then
+		love.event.quit("restart")
+	elseif k == "c" and love.keyboard.isDown("lctrl", "rctrl") then
+		copyToClipboard()
+	end
   end
 
-  local stacktrace = nostacktrace and "" or
-                     lume.trim((debug.traceback("", 2):gsub("\t", "")))
-  local msg = lume.format("{1}\n\n{2}", {e, stacktrace})
-  local colors = {
-    { lume.color("#1e1e2c", 256) },
-    { lume.color("#f0a3a3", 256) },
-    { lume.color("#92b5b0", 256) },
-    { lume.color("#66666a", 256) },
-    { lume.color("#cdcdcd", 256) },
-  }
-  love.graphics.reset()
-  love.graphics.setFont(love.graphics.newFont(12))
-
-  love.draw = function()
-    local pad = 25
-    local width = love.graphics.getWidth()
-
-    local function drawhr(pos, color1, color2)
-      local animpos = lume.smooth(pad, width - pad - 8, lume.pingpong(time()))
-      if color1 then love.graphics.setColor(color1) end
-      love.graphics.rectangle("fill", pad, pos, width - pad*2, 1)
-      if color2 then love.graphics.setColor(color2) end
-      love.graphics.rectangle("fill", animpos, pos, 8, 1)
-    end
-
-    local function drawtext(str, x, y, color, limit)
-      love.graphics.setColor(color)
-      love.graphics[limit and "printf" or "print"](str, x, y, limit)
-    end
-
-    love.graphics.setBackgroundColor(colors[1])
-    love.graphics.clear()
-
-    drawtext("An error has occurred", pad, pad, colors[2])
-    drawtext("lurker", width - love.graphics.getFont():getWidth("lurker") -
-             pad, pad, colors[4])
-    drawhr(pad + 32, colors[4], colors[5])
-    drawtext("If you fix the problem and update the file the program will " ..
-             "resume", pad, pad + 46, colors[3])
-    drawhr(pad + 72, colors[4], colors[5])
-    drawtext(msg, pad, pad + 90, colors[5], width - pad * 2)
-
-    love.graphics.reset()
-  end
+  love.draw = draw
+  
 end
 
 
@@ -227,10 +194,11 @@ end
 
 
 function lurker.hotswapfile(f)
-  lurker.print("Hotswapping '{1}'...", {f})
   if lurker.state == "error" then
+    lurker.print("Resuming to normal state")
     lurker.exiterrorstate()
   end
+  lurker.print("Hotswapping '{1}'...", {f})
   if lurker.preswap(f) then
     lurker.print("Hotswap of '{1}' aborted by preswap", {f})
     lurker.resetfile(f)
@@ -241,7 +209,7 @@ function lurker.hotswapfile(f)
   if ok then
     lurker.print("Swapped '{1}' in {2} secs", {f, t})
   else
-    lurker.print("Failed to swap '{1}' : {2}", {f, err})
+    --lurker.print("Failed to swap '{1}' : {2}", {f, err})
     if not lurker.quiet and lurker.protected then
       lurker.lasterrorfile = f
       lurker.onerror(err, true)

@@ -45,7 +45,8 @@ function Label:draw()
 
     love.graphics.setColor(color.normal.fg)
     love.graphics.setFont(font)
-    shadowtext.printf(self.text, x+2, y, w-4, self.align)
+    --shadowtext.printf(self.text, x+2, y, w-4, self.align)
+    love.graphics.printf(self.text, x+2, y, w-4, self.align)
 end
 
 return Label

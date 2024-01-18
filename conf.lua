@@ -1,3 +1,8 @@
+mobile = (love._os == "Android" or love._os == "iOS")
+framerate = 60
+debug_mode = true
+debug_hotswap = true
+
 function love.conf(t)
 	t.window.title = "onee"
 	t.version = "11.3"
@@ -5,18 +10,15 @@ function love.conf(t)
 	--TODO: maybe do these as functions inside init.lua and do a t.onee (set them as globals later)
 	t.window.vsync = 0
 	t.window.resizable = true
-	t.window.fullscreen = (love._os == "Android" or love._os == "iOS")
+	t.window.fullscreen = mobile
 	t.gammacorrect = true
 	
 	t.identity = "savedata"
 	t.appendidentity = true
 	t.externalstorage = true
+	
+	love.config = t
 end
-
-mobile = (love._os == "Android" or love._os == "iOS")
-framerate = 60
-debug_mode = true
---debug_hotswap = true
 
 config = {
 	input = {

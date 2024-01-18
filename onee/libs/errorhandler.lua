@@ -1,3 +1,4 @@
+errorhandler = {}
 local utf8 = require("utf8")
 
 local function error_printer(msg, layer)
@@ -36,82 +37,8 @@ function love.errorhandler(msg)
 		end
 	end
 	if love.audio then love.audio.stop() end
-
-	love.graphics.reset()
-	local font = love.graphics.setNewFont(14)
-
-	love.graphics.setColor(1, 1, 1)
 	
-	local trace = debug.traceback()
-
-	love.graphics.origin()
-
-	local sanitizedmsg = {}
-	for char in msg:gmatch(utf8.charpattern) do
-		table.insert(sanitizedmsg, char)
-	end
-	sanitizedmsg = table.concat(sanitizedmsg)
-
-	local err = {}
-	
-	local titles = {
-		"Error",
-		"It's going to be okay",
-		"the",
-		"Guys, I just saw a dog!",
-		"That'll be four bucks baby you want fries with that?",
-		"Funfetti code injection exploit",
-		"Death",
-		"The New Technology",
-		"Arbitrary freak execution",
-		"H",
-		"Well, I heard you CAN lose a lot of weight on it",
-		"But you can't keep it off, gotta eat less and exercise more",
-		"So, what brings you here?",
-		"things are happening",
-		"Catastrophic failure",
-	}
-
-	table.insert(err, titles[love.math.random(#titles)].."\n")
-	table.insert(err, sanitizedmsg)
-
-	if #sanitizedmsg ~= #msg then
-		table.insert(err, "Invalid UTF-8 string in error message.")
-	end
-
-	table.insert(err, "\n")
-
-	for l in trace:gmatch("(.-)\n") do
-		if not l:match("boot.lua") then
-			l = l:gsub("stack traceback:", "Traceback\n")
-			table.insert(err, l)
-		end
-	end
-
-	local p = table.concat(err, "\n")
-
-	p = p:gsub("\t", "")
-	p = p:gsub("%[string \"(.-)\"%]", "%1")
-	
-	p = p.."\n"
-	p = p.."\nPress Ctrl+C to copy to clipboard"
-	p = p.."\nPress Esc to quit or Space to restart"
-	p = p.."\n"
-
-	local function draw()
-		if not love.graphics.isActive() then return end
-		local pos = 70
-		love.graphics.clear(89/255, 157/255, 220/255)
-		love.graphics.printf(p, pos, pos, love.graphics.getWidth() - pos)
-		love.graphics.present()
-	end
-
-	local fullErrorText = p
-	local function copyToClipboard()
-		if not love.system then return end
-		love.system.setClipboardText(fullErrorText)
-		p = p .. "\nCopied to clipboard!"
-	end
+	local draw, copyToClipboard = errorhandler.draw(msg, "love")
 	
 	return function()
 		love.event.pump()
@@ -141,10 +68,97 @@ function love.errorhandler(msg)
 			end
 		end
 		
+		love.graphics.present()
 		draw()
 		
 		if love.timer then
 			love.timer.sleep(0.1)
 		end
 	end
+end
+
+errorhandler.print = error_printer
+-- todo: an option for more detailed tracebacks
+
+function errorhandler.draw(msg, mode, notraceback)
+	
+	love.graphics.reset()
+	local font = love.graphics.setNewFont(14)
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.origin()
+	
+	msg = tostring(msg)
+	local trace = notraceback and "" or debug.traceback()
+
+	local sanitizedmsg = {}
+	for char in msg:gmatch(utf8.charpattern) do
+		table.insert(sanitizedmsg, char)
+	end
+	sanitizedmsg = table.concat(sanitizedmsg)
+
+	local titles = {
+		"Error",
+		"It's going to be okay",
+		"the",
+		"Guys, I just saw a dog!",
+		"That'll be four bucks baby you want fries with that?",
+		"Funfetti code injection exploit",
+		"Death",
+		"The New Technology",
+		"Arbitrary freak execution",
+		"H",
+		"Well, I heard you CAN lose a lot of weight on it",
+		"But you can't keep it off, gotta eat less and exercise more",
+		"So, what brings you here?",
+		"things are happening",
+		"Catastrophic failure",
+	}
+
+	local err = {}
+	table.insert(err, titles[love.math.random(#titles)].."\n")
+	
+	if mode == "lurker" then
+		table.insert(err, "[lurker] - If you fix the problem and update the file, the program will try to resume\n")
+	end
+	
+	table.insert(err, sanitizedmsg)
+	if #sanitizedmsg ~= #msg then
+		table.insert(err, "Invalid UTF-8 string in error message.")
+	end
+	
+	table.insert(err, "\n")
+	for l in trace:gmatch("(.-)\n") do
+		if not l:match("boot.lua") then
+			l = l:gsub("stack traceback:", "Traceback\n")
+			table.insert(err, l)
+		end
+	end
+
+	err = table.concat(err, "\n")
+
+	err = err:gsub("\t", "")
+	err = err:gsub("%[string \"(.-)\"%]", "%1")
+	
+	err = err.."\n"
+	err = err.."\nPress Ctrl+C to copy to clipboard"
+	err = err.."\nPress Esc to quit or Space to restart"
+	err = err.."\n"
+
+	local fullErrorText = err
+	local function copyToClipboard()
+		if not love.system then return end
+		love.system.setClipboardText(fullErrorText)
+		err = err.."\nCopied to clipboard!"
+	end
+	
+	local function draw()
+		if not love.graphics.isActive() then return end
+		local pos = 70
+		love.graphics.clear(89/255, 157/255, 220/255)
+		love.graphics.printf(err, font, pos, pos, love.graphics.getWidth() - pos)
+		love.graphics.reset()
+	end
+	
+	return draw, copyToClipboard
+	
 end

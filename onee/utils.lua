@@ -143,7 +143,7 @@ end
 function string.tokenize(arg, separator, index)
 	if index == -1 then index = #string.tokenize(arg, separator) end -- get last index
 	
-	escaped = string.replace(separator, "[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
+	local escaped = string.replace(separator, "[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
 	
 	local t = {}
 	for k in string.gmatch(arg..separator, "([^"..escaped.."]*)"..separator) do
@@ -230,14 +230,6 @@ function table.protect(arg, blacklist)
 	return proxy
 end
 
-local _pairs = pairs
-function pairs(arg)
-	local mt = getmetatable(arg)
-	if mt and mt.protected then arg = mt.__index end
-	
-	return _pairs(arg)
-end
-
 function table.mostcommon(arg)
 	local count = {}
 	for k, v in pairs(arg) do
@@ -255,6 +247,14 @@ function table.mostcommon(arg)
 	return current
 end
 
+local _pairs = pairs
+function pairs(arg)
+	local mt = getmetatable(arg)
+	if mt and mt.protected then arg = mt.__index end
+	
+	return _pairs(arg)
+end
+
 function kpairs(arg)
 	local keys = {}
 	for k in pairs(arg) do table.insert(keys, k) end
@@ -268,6 +268,15 @@ function kpairs(arg)
 		-- nil is important
 		return keys[i] == nil and nil or keys[i], arg[keys[i]]
 	end
+end
+
+function ripairs(arg)
+	return function(arg, i)
+		i = i - 1
+		if i ~= 0 then
+			return i, arg[i]
+		end
+	end, arg, #arg + 1
 end
 
 ---------------------------------------------------------------- QUEUEING
@@ -297,6 +306,31 @@ function queue.execute(arg)
 	arg.queue = nil
 end
 
+---------------------------------------------------------------- COLORS
+--TODO
+--color random, color constants like red, white, black
+--rgb(math.random(0,255), math.random(0,255), math.random(0,255))
+--rgb(collision.debug.rgb, opacity)
+color = {}
+
+function color.hsv(h, s, l, a)
+	a = a or 1
+	if s <= 0 then return l, l, l, a end
+	h = h * 6
+	local c = (1 - math.abs( 2 * l - 1)) * s
+	local x = (1 - math.abs( h % 2 - 1)) * c
+	local m = (1 - 0.5 * c)
+	local r, g, b
+	if h < 1 then r, g, b = c, x, 0
+	elseif h < 2 then r, g, b = x, c, 0
+	elseif h < 3 then r, g, b = 0, c, x
+	elseif h < 4 then r, g, b = 0, x, c
+	elseif h < 5 then r, g, b = x, 0, c
+	else r, g, b = c, 0, x
+	end 
+	return r + m, g + m, b + m, a
+end
+
 ---------------------------------------------------------------- FILES
 files = {}
 
@@ -311,9 +345,3 @@ end
 function debug.table(arg, mode, indent) -- alias
 	print(serialize.pack(arg, indent or 1, mode or "lax"))
 end
-
---TODO
---color random, color constants like red, white, black
---rgb(math.random(0,255), math.random(0,255), math.random(0,255))
---rgb(collision.debug.rgb, opacity)
-

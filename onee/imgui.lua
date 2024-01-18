@@ -35,15 +35,6 @@ function imgui.draw()
 	for k,v in pairs(imgui.open) do
 		if imgui.open[k] then imgui.window[k]() end
 	end
-	
-	gui.SetNextWindowPos(gui.ImVec2_Float(windowwidth+4, windowheight+4), nil, gui.ImVec2_Float(1, 1))
-	if gui.Begin("always on notifs", nil, gui.love.WindowFlags("NoDecoration", "NoInputs", "NoBackground", "AlwaysAutoResize")) then
-		if debug_hotswap then
-			local a = math.loop_pingpong(0,1,2)
-			gui.TextColored(gui.ImVec4_Float(1,1,1,a), "HOTSWAP")
-		end
-		gui.End()
-	end
     
     gui.Render()
     gui.love.RenderDrawLists()
@@ -459,13 +450,13 @@ function imgui.window.menubar()
 			if gui.MenuItem_Bool("Debug mode", nil, debug_mode) then
 				debug_mode = not debug_mode
 			end
-			-- toggle file hot reload
-			if gui.MenuItem_Bool("File hotswap", nil, debug_hotswap) then
-				debug_hotswap = not debug_hotswap
-			end
 			-- toggle mobile mode
 			if gui.MenuItem_Bool("Mobile mode", nil, mobile) then
 				mobile = not mobile
+			end
+			-- toggle file hot reload
+			if gui.MenuItem_Bool("File hotswap", nil, debug_hotswap) then
+				debug_hotswap = not debug_hotswap
 			end
 			-- change target fps
 			gui.AlignTextToFramePadding()
@@ -765,6 +756,24 @@ function imgui.window.main()
 			end
 			
 			gui.Separator()
+			-- object summary tree
+			if gui.TreeNodeEx_Str("Objects summary", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("object_counts", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("1")
+					gui.TableSetupColumn("2")
+					
+					for k in kpairs(objects) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0)
+						gui.Text(tostring(k))
+						gui.TableSetColumnIndex(1)
+						gui.Text(tostring(objects[k].instances))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
 			--loaded requires tree
 			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
 				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
