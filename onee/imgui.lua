@@ -11,6 +11,8 @@ if (love._os == "Windows" or love._os == "Linix") and debug_mode then
 	
 	gui.love.Init()
 	gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
+	imgui_io = gui.GetIO()
+	
 	
 	imgui.open.menubar = true
 	imgui.open.main = true
@@ -32,6 +34,15 @@ function imgui.draw()
 	
 	for k,v in pairs(imgui.open) do
 		if imgui.open[k] then imgui.window[k]() end
+	end
+	
+	gui.SetNextWindowPos(gui.ImVec2_Float(windowwidth+4, windowheight+4), nil, gui.ImVec2_Float(1, 1))
+	if gui.Begin("always on notifs", nil, gui.love.WindowFlags("NoDecoration", "NoInputs", "NoBackground", "AlwaysAutoResize")) then
+		if debug_hotswap then
+			local a = math.loop_pingpong(0,1,2)
+			gui.TextColored(gui.ImVec4_Float(1,1,1,a), "HOTSWAP")
+		end
+		gui.End()
 	end
     
     gui.Render()
@@ -119,9 +130,7 @@ function imgui.table(arg, name, settings, level)
 	if level == 0 then
 		if not settings.nowindow then
 			local header = gui.CollapsingHeader_BoolPtr(name.."##"..string.md5(arg)) 
-			
-			gui.SetItemTooltip(tostring(arg))
-			if settings.fancy then imgui.table_fancy_table(arg) end
+			imgui.table_label(arg, settings)
 			
 			if header then
 				if gui.BeginChild_Str(name.."##"..string.md5(arg), nil, gui.love.ChildFlags("Border", "ResizeY")) then
@@ -136,12 +145,10 @@ function imgui.table(arg, name, settings, level)
 		
 	elseif level == 1 then
 		local header = gui.CollapsingHeader_BoolPtr(name.."##"..string.md5(arg)) 
-		
-		gui.SetItemTooltip(tostring(arg))
-		if settings.fancy then imgui.table_fancy_table(arg) end
+		imgui.table_label(arg, settings)
 		
 		if header then
-			if gui.BeginChild_Str(name, nil, gui.love.ChildFlags("Border", "AutoResizeY")) then
+			if gui.BeginChild_Str(name.."##"..string.md5(arg), nil, gui.love.ChildFlags("Border", "AutoResizeY")) then
 				imgui.table_entries(arg, settings, 2)
 				
 				gui.EndChild()
@@ -150,9 +157,7 @@ function imgui.table(arg, name, settings, level)
 		
 	elseif level == 2 then
 		local header = gui.TreeNodeEx_Str(name.."##"..string.md5(arg), gui.love.TreeNodeFlags("SpanAvailWidth"))
-		
-		gui.SetItemTooltip(tostring(arg))
-		if settings.fancy then imgui.table_fancy_table(arg) end
+		imgui.table_label(arg, settings)
 		
 		if header then
 			imgui.table_entries(arg, settings, 2)
@@ -162,6 +167,31 @@ function imgui.table(arg, name, settings, level)
 		end
 	end
 	
+end
+
+function imgui.table_label(arg, settings)
+	local mt = getmetatable(arg)
+	
+	if gui.BeginItemTooltip() then
+		gui.Text(tostring(arg))
+		if mt then gui.Text("metatable: "..tostring(mt)) end
+		gui.EndTooltip()
+	end
+	
+	if settings.fancy then imgui.table_fancy_label(arg) end
+end
+
+function imgui.table_fancy_label(arg)
+	-- TODO: resize through getfontsize*#string
+	-- TODO: align values in subtables with setnextitemwidth(-100)
+	if not arg.collision and not arg.sprite then return end
+	
+	local label
+	if arg.collision == true then label = "collision \""..arg.name.."\"" end
+	if arg.sprite == true then label = "sprite \""..arg.name.."\"" end
+	
+	gui.SameLine(200)
+	gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), label)
 end
 
 function imgui.table_entries(arg, settings, level)
@@ -202,29 +232,18 @@ function imgui.table_entries(arg, settings, level)
 	
 end
 
-function imgui.table_fancy_table(arg)
-	-- TODO: resize through getfontsize*#string
-	-- TODO: align values in subtables with setnextitemwidth(-100)
-	if not arg.collision and not arg.sprite then return end
-	
-	local label
-	if arg.collision == true then label = "collision \""..arg.name.."\"" end
-	if arg.sprite == true then label = "sprite \""..arg.name.."\"" end
-	
-	gui.SameLine(200)
-	gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), label)
-end
-
 function imgui.table_fancy_entry(arg, k, v, settings)
 	if type(v) == "boolean" then
 		local _v = _bool(v)
-		gui.Checkbox(tostring(k), _v)
-		arg[k] = _v[0]
+		if gui.Checkbox(tostring(k), _v) then
+			arg[k] = _v[0]
+		end
 		
 	elseif type(v) == "number" then
 		local _v = _float(v)
-		gui.DragFloat(tostring(k), _v)
-		arg[k] = _v[0]
+		if gui.DragFloat(tostring(k), _v) then
+			arg[k] = _v[0]
+		end
 		
 	elseif type(v) == "string" then
 		local _v = _char(v)
@@ -307,6 +326,9 @@ end
 local add_type, add_key, add_value
 
 function imgui.table_fancy_edit(arg)
+	
+	local mt = getmetatable(arg)
+	if mt then imgui.table(mt, "metatable", {fancy = true, edit = true}, 1) end
 	
 	if gui.Button("+") then
 		add_key = "key"
@@ -437,6 +459,27 @@ function imgui.window.menubar()
 			if gui.MenuItem_Bool("Debug mode", nil, debug_mode) then
 				debug_mode = not debug_mode
 			end
+			-- toggle file hot reload
+			if gui.MenuItem_Bool("File hotswap", nil, debug_hotswap) then
+				debug_hotswap = not debug_hotswap
+			end
+			-- toggle mobile mode
+			if gui.MenuItem_Bool("Mobile mode", nil, mobile) then
+				mobile = not mobile
+			end
+			-- change target fps
+			gui.AlignTextToFramePadding()
+			gui.Text("Target framerate")
+			gui.SameLine()
+			gui.SetNextItemWidth(32)
+			local _v = _char(tostring(framerate))
+			gui.InputText("", _v, _v[0])
+			if gui.IsItemDeactivatedAfterEdit() then
+				framerate = tonumber(ffi.string(_v))
+				tick = 1 / framerate
+			end
+			
+			gui.Separator()
 			-- trigger a crash
 			if gui.MenuItem_Bool("Crash!") then
 				error("you did this to yourself")
@@ -474,6 +517,21 @@ function imgui.window.menubar()
 			gui.EndMenu()
 		end
 		
+		------------------------------------------------ yui menu
+		if gui.BeginMenu("yui") then
+			
+			-- open debug menu button
+			if gui.MenuItem_Bool("Debug menu button", nil, yui.open.debug_button) then
+				yui.open.debug_button = not yui.open.debug_button
+			end
+			-- debug menu itself
+			if gui.MenuItem_Bool("Debug menu", nil, yui.open.debug) then
+				yui.open.debug = not yui.open.debug
+			end
+			
+			gui.EndMenu()
+		end
+		
 		------------------------------------------------ about button
 		if gui.MenuItem_Bool("?") then
 			gui.SetNextWindowPos(gui.ImVec2_Float(windowwidth/2,windowheight/2), nil, gui.ImVec2_Float(0.5, 0.5))
@@ -493,7 +551,8 @@ function imgui.window.menubar()
 		
 		------------------------------------------------ right corner fps and dt
 		gui.SameLine(windowwidth-120)
-		gui.Text(love.timer.getFPS().." FPS "..math.round(1000*love.timer.getAverageDelta(),2).."ms")
+		gui.Text(love.timer.getFPS().." FPS "..string.zeropad(math.round(1000*love.timer.getAverageDelta(),2), 0.2).."ms")
+		gui.SetItemTooltip(string.zeropad(fps, 0.2).." FPS "..string.zeropad(math.round(1000*dt, 2), 0.2).."ms")
 		
 		gui.EndMainMenuBar()
 	end

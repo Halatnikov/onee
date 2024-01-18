@@ -9,7 +9,7 @@ do
 	yui_ = require("onee/libs/yui")
 	gui = yui_
 
-	if not mobile and debug_mode then yui.open.debug_button = true end
+	if mobile and debug_mode then yui.open.debug_button = true end
 end
 
 function yui.draw()
@@ -33,9 +33,12 @@ function yui.draw()
 	
 	for k,v in pairs(yui) do
 		if type(yui[k]) == "table" and yui[k].yui == true then
-			yui[k]:update(tick)
-			yui[k]:draw()
-			if not yui.open[k] then yui[k] = nil end
+			if yui.open[k] == true then
+				yui[k]:update(tick)
+				yui[k]:draw()
+			else
+				yui[k] = nil
+			end
 		end
 	end
 end

@@ -28,6 +28,7 @@ local theme = {
     cornerRadius = 4,
 
     -- font = nil defaults to love.graphics.getFont()
+	font = love.graphics.newFont("ProggyClean.ttf", 13, "none", 2),
 
     color = {
         normal   = {bg = { 0.25, 0.25, 0.25}, fg = {0.73, 0.73, 0.73}},

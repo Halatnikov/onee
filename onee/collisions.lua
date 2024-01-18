@@ -15,6 +15,7 @@ function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE 
 	local t = {
 		collision = true,
 		name = name,
+		
 		active = true,
 	}
 	table.append(t, data)
@@ -40,6 +41,8 @@ function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE 
 		
 		t.circ.radius = t.circ.radius or 0
 	end
+	
+	t = table.protect(t, {"collision", "name"})
 	
 	return table.append(collision, t)
 end
@@ -394,7 +397,7 @@ end
 end--#endregion
 
 ---------------------------------------------------------------- INDIVIDUAL SHAPES
--- todo: width, height, bbox, move, rotate
+-- todo: width, height, bbox, move, rotate, scale
 
 -- POINTS
 function point.rotate(x, y, angle, ox, oy)

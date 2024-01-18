@@ -9,15 +9,19 @@ end
 ---------------------------------------------------------------- MATH
 -- TODO: lerp (and pingpong), smoothstep, decay, map from one min-max range to another (0-255 to 0-1), closest to ^2, construct 2, vector 2?
 -- angle from x1 y1 to x2 y2
+-- every x seconds
 
 math.random = love.math.random
 math.int = math.floor
 pi = math.pi
 inf = math.huge
 
-function math.choose(...)
-	local arg = type(...) == "table" and ... or {...}
-	return arg[math.random(#arg)]
+function math.is_int(arg)
+	return math.floor(arg) == arg and true or false
+end
+
+function math.is_float(arg)
+	return not math.is_int(arg)
 end
 
 function math.sign(arg)
@@ -45,6 +49,11 @@ function math.round(arg, decimals)
     return math.floor(arg * mul + 0.5) / mul;
 end
 
+function math.choose(...)
+	local arg = type(...) == "table" and ... or {...}
+	return arg[math.random(#arg)]
+end
+
 function math.average(...)
 	local arg = type(...) == "table" and ... or {...}
 	local sum = 0
@@ -60,24 +69,127 @@ function math.distance(x1, y1, x2, y2)
 	return math.sqrt((x2 - x1)^2 + (y2 - y1)^2)
 end
 
+function math.loop(a, b, t)
+	-- t in seconds from a to b
+	if b < a then a, b, t = b, a, -t end
+	t = ms / (t / b)
+	local len = b - a
+	return math.clamp(a, t - math.floor(t / len) * len, b*2)
+end
+
+function math.loop_pingpong(a, b, t)
+	-- t in seconds from a to b
+	if b < a then a, b = b, a
+		t = t + (0.707 * (b - a)) -- offset starting point by sqrt(2)/2 if going from b to a
+	end
+	t = ms / (t / b)
+	local len = b - a
+	t = math.clamp(a, t - math.floor(t / (len*2)) * (len*2), b*2)
+	return len - math.abs(t - len)
+end
+
+---------------------------------------------------------------- STRINGS
+
+string.replace = string.gsub
+string.mid = string.sub
+string.lowercase = string.lower
+string.uppercase = string.upper
+newline = "\n"
+
+function string.split(arg)
+	local t = {}
+	for i = 1, #arg do
+		table.insert(t, string.mid(arg, i, i))
+	end
+	return t
+end
+
+function string.left(arg, len) -- alias
+	return string.mid(arg, 1, len)
+end
+
+function string.right(arg, len) --alias
+	if len < 0 then len = #arg - math.abs(len) end -- count from end
+	return string.mid(arg, #arg - (len - 1), #arg)
+end
+
+function string.findcase(arg, find, i, plain) -- case insensitive alias
+	return string.find(string.lower(arg), string.lower(find), i, plain)
+end
+
+function string.random(length)
+	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
+	local t = {}
+	for i=1, length do
+		local r = math.random(1, #charset)
+		table.insert(t, string.mid(charset, r, r))
+	end
+	return table.concat(t)
+end
+
+function string.zeropad(arg, decimals)
+	if math.is_int(decimals) then -- do 20 -> 0020
+		return string.format("%0"..decimals.."d", arg)
+	elseif math.between(0, decimals, 1) then -- do 0.2 -> 0.200
+		decimals = #tostring(decimals) == 3 and decimals * 10 or decimals * 100
+		return string.format("%."..decimals.."f", arg)
+	end
+end
+
+function string.md5(arg) -- alias
+	return love.data.hash("md5", tostring(arg))
+end
+
+function string.tokenize(arg, separator, index)
+	if index == -1 then index = #string.tokenize(arg, separator) end -- get last index
+	
+	escaped = string.replace(separator, "[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
+	
+	local t = {}
+	for k in string.gmatch(arg..separator, "([^"..escaped.."]*)"..separator) do
+		table.insert (t, k)
+		
+		if index then
+			if table.find(t, k) == index then return t[index] end
+		end
+	end
+	if not index then return t end
+end
+
+function string.version(arg)
+	arg = arg or onee.version
+	
+	local ver = string.tokenize(arg, "-", 1)
+	local pre = string.tokenize(arg, "-", 2)
+	
+	ver = string.tokenize(ver, ".")
+	if pre then table.insert(ver, pre) end
+	
+	return unpack(ver)
+end
+
 ---------------------------------------------------------------- TABLES
+
+function copy(a, seen)
+	if type(a) ~= "table" then
+		return a 
+	end
+	if seen and seen[a] then
+		return seen[a] 
+	end
+	local seen = seen or {}
+	local b = setmetatable({}, getmetatable(a))
+	seen[a] = b
+	for k, v in pairs(a) do 
+		b[copy(k, seen)] = copy(v, seen) 
+	end
+	return b
+end
 
 function table.find(arg, result)
     for k,v in pairs(arg) do
         if v == result then return k end
     end
-end
-
-function table.append(a, b)
-	a, b = a or {}, b or {}
-	for k,v in pairs(b) do 
-		if type(v) == "table" and type(a[k] or false) == "table" then
-			table.append(a[k], b[k])
-		else
-			a[k] = v
-		end
-	end
-	return a
 end
 
 function table.length(arg)
@@ -86,23 +198,63 @@ function table.length(arg)
 	return i
 end
 
+function table.append(a, b)
+	a, b = a or {}, b or {}
+	local mt_a, mt_b = getmetatable(a) or {}, getmetatable(b) or {}
+	if mt_b ~= {} then setmetatable(a, mt_b) end
+	
+	for k,v in pairs(b) do 
+		if type(v) == "table" and type(a[k] or false) == "table" then
+			table.append(a[k], b[k])
+		else
+			if mt_b.protected and table.find(mt_b.blacklist, k) then k = "__"..k end
+			a[k] = v
+		end
+	end
+	return a
+end
+
+function table.protect(arg, blacklist)
+	local proxy = {}
+	local mt = {
+		protected = true,
+		blacklist = blacklist,
+		__index = arg,
+		__newindex = function(t, k, v)
+			assert(not table.find(blacklist, k), "attempt to overwrite protected key \""..k.."\"")
+			k = string.replace(k, "__", "") -- bypass by setting __key
+			arg[k] = v
+		end,
+	}
+	setmetatable(proxy, mt)
+	return proxy
+end
+
+local _pairs = pairs
+function pairs(arg)
+	local mt = getmetatable(arg)
+	if mt and mt.protected then arg = mt.__index end
+	
+	return _pairs(arg)
+end
+
 function table.mostcommon(arg)
 	local count = {}
 	for k, v in pairs(arg) do
 		count[v] = (count[v] or 0) + 1
 	end
 	
-	local common = next(count)
-	local current = count[common]
+	local current = next(count)
+	local best = count[current]
 	for k, v in pairs(count) do
-		if count[k] > current then
-			common, current = k, v
+		if count[k] > best then
+			current, best = k, v
 		end
 	end
 	
-	return common
+	return current
 end
-	
+
 function kpairs(arg)
 	local keys = {}
 	for k in pairs(arg) do table.insert(keys, k) end
@@ -113,24 +265,9 @@ function kpairs(arg)
 	local i = 0
 	return function()
 		i = i + 1
-		return keys[i] and keys[i], arg[keys[i]] or nil
+		-- nil is important
+		return keys[i] == nil and nil or keys[i], arg[keys[i]]
 	end
-end
-
-function copy(a, seen)
-	if type(a) ~= "table" then
-		return a 
-	end
-	if seen and seen[a] then
-		return seen[a] 
-	end
-	seen = seen or {}
-	local b = setmetatable({}, getmetatable(a))
-	seen[a] = b
-	for k, v in pairs(a) do 
-		b[copy(k, seen)] = copy(v, seen) 
-	end
-	return b
 end
 
 ---------------------------------------------------------------- QUEUEING
@@ -160,83 +297,6 @@ function queue.execute(arg)
 	arg.queue = nil
 end
 
----------------------------------------------------------------- STRINGS
-
-string.replace = string.gsub
-string.mid = string.sub
-string.lowercase = string.lower
-string.uppercase = string.upper
-newline = "\n"
-
-function string.findcase(arg, find, i, plain) -- case insensitive
-	return string.find(string.lower(arg), string.lower(find), i, plain)
-end
-
-function string.split(arg)
-	local t = {}
-	for i = 1, #arg do
-		table.insert(t, string.mid(arg, i, i))
-	end
-	return t
-end
-
-function string.left(arg, len) -- alias
-	return string.mid(arg, 1, len)
-end
-
-function string.right(arg, len) --alias
-	if len < 0 then len = #arg - math.abs(len) end -- count from end
-	return string.mid(arg, #arg - (len - 1), #arg)
-end
-
-function string.random(length)
-	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
-	local t = {}
-	for i=1, length do
-		local r = math.random(1, #charset)
-		table.insert(t, string.mid(charset, r, r))
-	end
-	return table.concat(t)
-end
-
-function string.zeropad(arg, decimals)
-	arg = tostring(arg)
-	if #arg < decimals then decimals = decimals - #arg else decimals = 0 end
-	return string.rep("0", decimals)..arg
-end
-
-function string.md5(arg) -- alias
-	return love.data.hash("md5", tostring(arg))
-end
-
--- % is the escape character for separator, because this uses patterns (not regex)
--- TODO: automatically replace ( with %( and |+ with %|%+ and etc 
-function string.tokenize(arg, separator, index)
-	-- get last index
-	if index == -1 then index = #string.tokenize(arg, separator) end
-	
-	local t = {}
-	for i in string.gmatch(arg..separator, "([^"..separator.."]*)"..separator) do
-		table.insert (t, i)
-		if index then
-			if table.find(t, i) == index then return t[index] end
-		end
-	end
-	return t
-end
-
-function string.version(arg)
-	arg = arg or onee.version
-	
-	local ver = string.tokenize(arg, "-", 1)
-	local pre = string.tokenize(arg, "-", 2)
-	
-	ver = string.tokenize(ver, ".")
-	if type(pre) == "string" then table.insert(ver, pre) end
-	
-	return unpack(ver)
-end
-
 ---------------------------------------------------------------- FILES
 files = {}
 
@@ -256,3 +316,4 @@ end
 --color random, color constants like red, white, black
 --rgb(math.random(0,255), math.random(0,255), math.random(0,255))
 --rgb(collision.debug.rgb, opacity)
+

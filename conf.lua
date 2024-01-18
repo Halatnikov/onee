@@ -16,6 +16,7 @@ end
 mobile = (love._os == "Android" or love._os == "iOS")
 framerate = 60
 debug_mode = true
+--debug_hotswap = true
 
 config = {
 	input = {

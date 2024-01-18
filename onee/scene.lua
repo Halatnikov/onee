@@ -24,14 +24,18 @@ function scenes.set(name, data) -- SWITCH CURRENT SCENE --
 	
 	-- load new scene
 	-- TODO: do it like objects, don't make the lua file mandatory, also do a path
-	scene = require("scenes/"..name)
+	local t = require("scenes/"..name)
 	
-	scene.scene = true
-	scene.name = name
+	t.scene = true
+	t.name = name
 	
-	if data then table.append(scene, data) end -- pass additional stuff to scene through this table
+	if data then table.append(t, data) end -- pass additional stuff to scene through this table
 	
-	if scene.init then scene.init() end
+	t = table.protect(t, {"scene", "name"})
+	
+	scene = t
+	
+	if t.init then t.init() end
 	
 	unrequire("scenes/"..name)
 	
@@ -82,6 +86,8 @@ function object.new(path, data, name) -- CREATE NEW OBJECT --
 		table.append(t.data, data)
 	end
 	
+	t = table.protect(t, {"object"})
+	
 	objects[name] = t -- done
 	unrequire("objects/"..path)
 	
@@ -121,6 +127,7 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 		object = name,
 		id = id,
 		id_i = table.length(instances) + 1,
+		
 		active = true,
 		visible = true,
 	}
@@ -132,11 +139,13 @@ function instance.new(name, data) -- CREATE NEW INSTANCE --
 		instance.delete(t.id)
 	end
 	
+	t = table.protect(t, {"instance", "object", "id", "id_i"})
+	
 	instances[id] = t -- done
 	
 	object.instances = object.instances + 1
 	
-	if t.init then instances[id].init(instances[id]) end
+	if t.init then t.init(t) end
 	
 	return id
 	

@@ -1,5 +1,5 @@
 onee = {
-	version = "0.0.2-11",
+	version = "0.0.2-12",
 }
 
 ---------------------------------------------------------------- INIT
@@ -9,6 +9,7 @@ do
 	require("onee/libs/errorhandler")
 
 	-- libraries
+	require("onee/libs/lurker")
 	require("onee/libs/df-serialize")
 	require("onee/libs/json")
 	require("onee/libs/gifload")
@@ -42,7 +43,7 @@ do
 end
 
 -- misc
-_VERSION_major, _VERSION_minor = string.match(_VERSION, "Lua (%d+)%.(%d+)")
+_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
 jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
 jit.version_revision = string.left(jit.version_rolling, 2)
 
@@ -65,23 +66,23 @@ function onee.update(dt_)
 		ms = (ms or 0) + dt
 		frames = (frames or 0) + 1
 		
-		if scenes then scenes.update() end
-		if input then input.update() end
+		scenes.update()
+		input.update()
 	end
 	
 	debug.update()
-	if imgui then imgui.update() end
+	imgui.update()
 	
 end
 
 function onee.draw()
 	
-	if scenes then scenes.draw() end
-	if input then input.draw() end
+	scenes.draw()
+	input.draw()
 	
 	debug.draw()
-	if imgui then imgui.draw() end
-	if yui then yui.draw() end
+	imgui.draw()
+	yui.draw()
 	
 	-- reset the graphics state constantly
 	love.graphics.reset()
@@ -100,6 +101,8 @@ if debug_mode then
 	
 	debug_draw_collisions = true
 	debug_draw_sprites = false
+	
+	lurker.interval = 1
 	
 	-- TODO: set window title to "title (debug)"
 	
@@ -120,6 +123,8 @@ love.keypressed = debug.keypressed
 
 function debug.update()
 	if not debug_mode then return end
+	
+	if debug_hotswap then lurker.update() end
 end
 			a = {{0,0}, {100,10}, {50,100}, {60,30}}
 			local ox = 50

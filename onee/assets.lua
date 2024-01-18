@@ -201,9 +201,10 @@ function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 	
 	local t = {
 		sprite = true,
+		name = name,
+		
 		active = true,
 		visible = true,
-		name = name,
 		animation = "idle",
 		animation_old = "idle",
 		frame = 1,
@@ -232,7 +233,10 @@ function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 	
 	table.append(t, data) -- additional data
 	
+	t = table.protect(t, {"sprite", "name"})
+	
 	return table.append(sprite, t)
+	
 end
 
 function sprite.update(sprite) -- UPDATE SPRITE --
@@ -550,6 +554,7 @@ function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	local t = {
 		model = true,
 		name = name,
+		
 		active = true,
 		visible = true,
 		
@@ -570,6 +575,8 @@ function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	t.projection:setCanvases(t.canvas.main, t.canvas.depth)
 	
 	t.instance:playAnimation(1) --temp
+	
+	t = table.protect(t, {"model", "name"})
 	
 	return table.append(model, t)
 end
