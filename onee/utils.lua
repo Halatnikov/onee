@@ -303,7 +303,7 @@ function queue.execute(arg)
 		end
 	end
 	
-	arg.queue = nil
+	arg.queue, arg.first, arg.last = nil, nil, nil
 end
 
 ---------------------------------------------------------------- COLORS
@@ -313,7 +313,7 @@ end
 --rgb(collision.debug.rgb, opacity)
 color = {}
 
-function color.hsv(h, s, l, a)
+function color.hsl(h, s, l, a)
 	a = a or 1
 	if s <= 0 then return l, l, l, a end
 	h = h * 6

@@ -41,10 +41,8 @@ do
 	onee.bg = {8/255, 8/255, 8/255}
 	
 	-- :)
-	print(
-		"LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version
-		..newline..os.date()
-	)
+	print("LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version)
+	print(os.date())
 	scenes.set("init")
 end
 
@@ -116,6 +114,15 @@ if debug_mode then
 	-- TODO: on debug_mode disable, close all the ui
 	-- TODO: shortcut ` or f1 to open/close the debug window
 	
+	-- monitor global variable :eyes:
+	debug.globals = {}
+	setmetatable(_G, {
+		__newindex = function (t, k, v)
+			table.insert(debug.globals, k)
+			rawset(t, k, v)
+		end
+	})
+	
 end
 
 function debug.disable()
@@ -129,7 +136,8 @@ function debug.keypressed(k)
 	
 	if k == "q" or k == "f3" then scenes.set("init") end
 	
-	if k == "f" then table.insert(qqueue, {text = {{1,0,0,1},(#qqueue+1).." HOLY SHIT ",{1,1,1,1},string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms}, timestamp = ms}) end
+	if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
+	if k == "g" then log(string.random(150)) end
 end
 love.keypressed = debug.keypressed
 
@@ -184,7 +192,7 @@ function debug.draw()
 	-- TODO: show same thing for profiling
 	if debug_hotswap then
 		local h = math.loop(0, 1, 4)
-		love.graphics.setColor(color.hsv(h, 1, 0.5))
+		love.graphics.setColor(color.hsl(h, 1, 0.5))
 		love.graphics.printf("HOTSWAP", fonts.proggy_clean, windowwidth-128-4, windowheight-16, 128, "right")
 		love.graphics.reset()
 	end
@@ -193,7 +201,10 @@ function debug.draw()
 	local i = 0
 	for k, v in ripairs(qqueue) do
 		i = i + 1
-		love.graphics.print(qqueue[k].text, fonts.proggy_clean, 4, windowheight - 4 - (13  * i))
+		local text = qqueue[k].text
+		local width, wraps = fonts.proggy_clean:getWrap(text, windowwidth - 4)
+		
+		love.graphics.printf(text, fonts.proggy_clean, 4, windowheight - 4 - ((13  * i)*#wraps), windowwidth - 4)
 		if ms - qqueue[k].timestamp > 3 then table.remove(qqueue, k) end
 	end
 	if #qqueue > 24 then table.remove(qqueue, 1) end
@@ -208,3 +219,19 @@ function debug.draw()
 	--print(collision.poly_line(b, mousex-16,mousey, mousex+24,mousey+32))
 	
 end
+
+--TODO: make this support ... arguments and then just check if they're all strings or something
+-- don't print to console if it has a category maybe
+
+-- maybe i should just make a log() function, this doesn't seem like a good idea
+--print_ = print
+function log(arg)
+	debug.table(debug.getinfo(2)) --get name of the function that called this somehow
+	--io.write(tostring(arg), newline)
+	print(arg)
+	-- use kinda sparingly, because this is laggy
+	table.insert(qqueue, {text = {{1,1,1,1},tostring(arg)}, timestamp = ms})
+end
+-- /!\ [AssetLoading] asset.sprite() | asset "name" already loaded!
+
+require("onee/_tests/utils")

@@ -716,22 +716,67 @@ function imgui.window.main()
 			
 			-- window size
 			gui.Text("Window size: "..windowwidth.."x"..windowheight)
+			--newly declared globals tree
+			if gui.TreeNodeEx_Str("Newly declared globals", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("globals", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("1")
+					
+					for k,v in kpairs(debug.globals) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0)
+						gui.Text(tostring(v))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
+			--loaded requires tree
+			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("1")
+					
+					for k in kpairs(package.loaded) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0)
+						gui.Text(tostring(k))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
 			gui.Separator()
 			
 			-- objects table
-			if gui.BeginTable("scene_stats_objects", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-				gui.TableSetupColumn("1")
-				gui.TableSetupColumn("2")
+			if gui.BeginTable("scene_stats_objects", 2) then
+				gui.TableSetupColumn("instances")
+				gui.TableSetupColumn("objects")
+				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text("objects")
+				gui.TableSetColumnIndex(0); gui.Text(tostring(table.length(instances)))
 				gui.TableSetColumnIndex(1); gui.Text(tostring(table.length(objects)))
 				
-				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text("instances")
-				gui.TableSetColumnIndex(1); gui.Text(tostring(table.length(instances)))
-				
 				gui.EndTable()
+			end
+			-- object summary tree
+			if gui.TreeNodeEx_Str("Objects summary", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("object_counts", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("1")
+					gui.TableSetupColumn("2")
+					
+					for k in kpairs(objects) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0)
+						gui.Text(tostring(k))
+						gui.TableSetColumnIndex(1)
+						gui.Text(tostring(objects[k].instances))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
 			end
 			gui.Separator()
 			
@@ -756,39 +801,6 @@ function imgui.window.main()
 			end
 			
 			gui.Separator()
-			-- object summary tree
-			if gui.TreeNodeEx_Str("Objects summary", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				if gui.BeginTable("object_counts", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					gui.TableSetupColumn("2")
-					
-					for k in kpairs(objects) do
-						gui.TableNextRow()
-						gui.TableSetColumnIndex(0)
-						gui.Text(tostring(k))
-						gui.TableSetColumnIndex(1)
-						gui.Text(tostring(objects[k].instances))
-					end
-					
-					gui.EndTable()
-				end
-				gui.TreePop()
-			end
-			--loaded requires tree
-			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					
-					for k in kpairs(package.loaded) do
-						gui.TableNextRow()
-						gui.TableSetColumnIndex(0)
-						gui.Text(tostring(k))
-					end
-					
-					gui.EndTable()
-				end
-				gui.TreePop()
-			end
 			
 		end
 		
