@@ -104,6 +104,10 @@ function string.split(arg)
 	return t
 end
 
+function string.trim(arg)
+   return string.gsub(arg, "^%s*(.-)%s*$", "%1")
+end
+
 function string.left(arg, len) -- alias
 	return string.mid(arg, 1, len)
 end
@@ -134,6 +138,10 @@ function string.zeropad(arg, decimals)
 		decimals = #tostring(decimals) == 3 and decimals * 10 or decimals * 100
 		return string.format("%."..decimals.."f", arg)
 	end
+end
+
+function string.remove(arg, find)
+	return string.replace(arg, find, "")
 end
 
 function string.md5(arg) -- alias
@@ -222,7 +230,7 @@ function table.protect(arg, blacklist)
 		__index = arg,
 		__newindex = function(t, k, v)
 			assert(not table.find(blacklist, k), "attempt to overwrite protected key \""..k.."\"")
-			k = string.replace(k, "__", "") -- bypass by setting __key
+			k = string.remove(k, "__") -- bypass by setting __key
 			arg[k] = v
 		end,
 	}
@@ -335,6 +343,15 @@ end
 files = {}
 
 files.exists = love.filesystem.getInfo
+
+dofile_ = dofile
+function dofile(path, env)
+	local run = assert(love.filesystem.load(path), path.." not found")
+	if env then
+		setfenv(run, env)
+	end
+	run()
+end
 
 function unrequire(arg)
 	package.loaded[arg] = nil

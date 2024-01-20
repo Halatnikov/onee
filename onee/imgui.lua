@@ -17,7 +17,7 @@ if (love._os == "Windows" or love._os == "Linix") and debug_mode then
 	imgui.open.menubar = true
 	imgui.open.main = true
 	
-	--imgui.open.inspector = true
+	imgui.open.tests = true
 	
 end
 
@@ -497,6 +497,10 @@ function imgui.window.menubar()
 			-- open inspector window
 			if gui.MenuItem_Bool("Inspector", nil, imgui.open.inspector) then
 				imgui.open.inspector = not imgui.open.inspector
+			end
+			-- open tests runner window
+			if gui.MenuItem_Bool("Tests runner", nil, imgui.open.tests) then
+				imgui.open.tests = not imgui.open.tests
 			end
 			
 			gui.Separator()
@@ -1232,6 +1236,86 @@ function imgui.window.inspector()
 	end
 	
 	imgui.open.inspector = open[0]
+end
+
+---------------------------------------------------------------- TESTS RUNNER
+
+local test_current, test_last, test_success, test_summary, test_passes, test_errors, test_took
+
+function imgui.window.tests()
+	local open = _bool(imgui.open.tests)
+	
+	if gui.Begin("Tests runner", open) then
+		
+		local tests = love.filesystem.getDirectoryItems("onee/_tests")
+		if not test_current then test_current = string.remove(tests[1], ".lua") end
+		if gui.BeginCombo("##tests", test_current) then
+			for k, v in kpairs(tests) do
+				v = string.remove(v, ".lua")
+				if gui.Selectable_Bool(v) then test_current = v end
+			end
+			gui.EndCombo()
+		end
+		
+		gui.SameLine()
+		if gui.Button("Run") and test_current then
+			test_success, test_summary, test_passes, test_errors, test_took = debug.test(test_current)
+			test_last = test_current
+		end
+		
+		gui.Separator()
+		if not test_last then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -") end
+		if test_last then
+			gui.Text(test_last.." -")
+			gui.SameLine()
+			if test_success then
+				gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
+			else
+				gui.TextColored(gui.ImVec4_Float(1,0,0,1), "ERRORED")
+			end
+			
+			gui.TextColored(gui.ImVec4_Float(0,1,0,1), tostring(test_passes))
+			gui.SameLine(); gui.Text("passes")
+			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
+			gui.SameLine(); gui.Text("errors")
+			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..tostring(math.round(test_took, 5))..")")
+			
+			gui.Separator()
+		end
+		if gui.BeginChild_Str("test summary", nil) and test_last then
+			for i=1, #test_summary do
+				local test = test_summary[i]
+				gui.Text(string.rep("  ", test.level-1))
+				gui.SameLine()
+				if not test.error then
+					gui.Text(test.name)
+				else
+					local message = string.tokenize(test.error, newline)
+					local error = message[1]
+					local at = string.trim(message[2])
+					
+					local filepath = string.tokenize(error, ":", 2)
+					if string.find(filepath, test_last..".lua") then
+						error = string.replace(error, filepath..":", " line ")
+					end
+					
+					gui.TextColored(gui.ImVec4_Float(1,0,0,1), test.name)
+					gui.Text(string.rep("    ", test.level+1))
+					gui.SameLine(); gui.TextWrapped(error)
+					if at ~= "AT:" then
+						gui.Text(string.rep("    ", test.level+1))
+						gui.SameLine(); gui.TextWrapped(at)
+					end
+				end
+			end
+			
+			gui.EndChild()
+		end
+		
+		gui.End()
+	end
+	
+	imgui.open.tests = open[0]
 end
 
 ---------------------------------------------------------------- IMGUI DEMO

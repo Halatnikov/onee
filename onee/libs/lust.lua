@@ -9,6 +9,7 @@ lust.errors = 0
 lust.befores = {}
 lust.afters = {}
 lust.summary = {}
+lust.success = true
 
 local function indent(level) return string.rep('\t', level or lust.level) end
 
@@ -38,7 +39,9 @@ function lust.it(name, fn)
   local label = success and 'O PASS' or 'X FAIL'
   print(indent() .. label .. ' - ' .. name)
   if err then
+    lust.success = false
     local errlabel = string.find(err, "AT: ") and "ERROR: " or "LUA ERROR: "
+	lust.summary[#lust.summary].error = errlabel..tostring(err)
     print(indent(lust.level + 1) .. errlabel .. tostring(err))
   end
 

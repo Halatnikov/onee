@@ -74,7 +74,14 @@ function lurker.listdir(path, recursive, skipdotfiles)
       if recursive and isdir(f) then
         t = lume.concat(t, lurker.listdir(f, true, true))
       else
-		if not (path == "/onee/libs/lurker" or f == "/onee/libs/errorhandler.lua") then
+		if not (
+			path == "/onee/libs/lurker" 
+			or f == "/onee/libs/errorhandler.lua"
+			or f == "/onee/libs/lust.lua"
+			or f == "/onee/libs/lust.lua"
+			or path == "/onee/_tests" 
+			)
+		then
 			table.insert(t, lume.trim(f, "/"))
 		end
       end
