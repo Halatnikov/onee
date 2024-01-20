@@ -12,7 +12,7 @@ if debug_mode then
 	-- TODO: on debug_mode disable, close all the ui
 	-- TODO: shortcut ` or f1 to open/close the debug window
 	
-	-- monitor global variable :eyes:
+	-- monitor global variables :eyes:
 	debug.globals = {}
 	setmetatable(_G, {
 		__newindex = function (t, k, v)
@@ -41,7 +41,6 @@ local oy = 50
 qqueue = {}
 function debug.draw()
 	if not debug_mode then return end
-	debug.drawlist = {}
 	
 	if mobile then
 		for i,id in ipairs(love.touch.getTouches()) do
@@ -51,6 +50,7 @@ function debug.draw()
 		end
 	end
 	
+	debug.drawlist = {}
 	for id in pairs(instances) do
 		local function draw_recursively(arg)
 			for k, v in pairs(arg) do
@@ -73,10 +73,8 @@ function debug.draw()
 		
 		draw_recursively(instances[id])
 	end
-	
 	queue.execute(debug.drawlist)
 	
-	-- TODO: show same thing for profiling
 	local h = math.loop(0, 1, 4)
 	love.graphics.setColor(color.hsl(h, 1, 0.5))
 	if debug_hotswap then

@@ -78,12 +78,18 @@ function dopack(o, i, mode)
 
     -- Attempt to encode as array.
     for k,v in ipairs(o) do
-        if mode == 'skip-functions' and type(v) == 'function' then
+        if (mode == 'skip-functions' and type(v) == 'function') then
             goto skip
         end
 
-        fields[#fields + 1] = ("%s%s"):format(is, vals(v, i, mode))
+        if mode ~= "numberkeys" then
+			fields[#fields + 1] = ("%s%s"):format(is, vals(v, i, mode))
+		else
+			local f = ("%s%s = %s"):format(is, keys(k, i, mode), vals(v, i, mode))
 
+			fields[#fields + 1] = f
+		end
+		
     ::skip:: seen[k] = true
     end
 

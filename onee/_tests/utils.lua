@@ -43,7 +43,7 @@ group("math library extension", function()
 	test("math.between(min, arg, max)", function()
 		assert(math.between(0, 1, 2)).pass("1 is between 0 and 2")
 		assert(math.between(0, 0, 2) and math.between(0, 2, 2)).pass("0 and 2 are between 0 and 2")
-		assert(math.between(0, 3, 2)).deny("3 isn't between 0 and 2")
+		assert(math.between(0, -1, 2) and math.between(0, 3, 2)).deny("-1 and 3 aren't between 0 and 2")
 		assert(math.between(2, 3, 0)).deny("wrong min max order")
 	end)
 	test("math.clamp(min, arg, max)", function()
@@ -86,6 +86,10 @@ group("math library extension", function()
 		assert(math.distance(0,1,1,2) == math.distance(0,1,1,0)).pass("ima be honest, i've no idea")
 		assert(math.distance(0,1) == math.distance(0,0,1,1)).pass("accept just the first 2 args")
 	end)
+	test("math.map(arg, a_min, a_max, b_min, b_max)", function()
+		assert(math.round(math.map(128, 0, 255, 0, 1), 1) == 0.5).pass("map value from 0-255 range to 0-1")
+		assert(math.round(math.map(0.25, 0, 1, 0, 255)) == 64).pass("vice versa")
+	end)
 	test("math.loop(a, b, t)", function()
 		local before, after = math.loop(0, 1, 1), math.loop(0, 1, 1)
 		assert(after > before).pass("loops a through b over t in seconds with unspecified starting point")
@@ -110,22 +114,23 @@ group("string library extension", function()
 		assert(string.uppercase == string.upper).pass()
 		assert(newline == "\n").pass()
 	end)
+	test("string.split(arg)", function()
+		assert(table.compare(string.split("a,b!c1d"), {"a",",","b","!","c","1","d"})).pass("split string into table")
+	end)
 end)
 
 group("table library extension", function()
 	
 	test("copy(arg) - deep-copying a table", function()
 		local a, b
-		a, b = {}, {}
-		a = b
+		a, b = {}, {}; a = b
 		local function modifies_origin(arg)
 			local t = arg; t.test = 1
 		end
 		modifies_origin(b)
 		assert(a.test).exist("let's say tables are weird sometimes")
 		
-		a, b = {}, {}
-		a = b
+		a, b = {}, {}; a = b
 		local function doesnt_modify(arg)
 			local t = copy(arg); t.test = 1
 		end
@@ -137,10 +142,10 @@ group("table library extension", function()
 		local string_vals = { "a", "b", "c", }
 		local number_vals = { 1, 3, 2, }
 		
-		assert(table.find(t,"A") == "c").pass()
-		assert(table.find(t,"d") == nil).pass()
-		assert(table.find(string_vals,"c")).type("number")
-		assert(table.find(number_vals,2) == 3).pass()
+		assert(table.find(t,"A") == "c").pass("search value, get key")
+		assert(table.find(t,"d")).deny("no such value")
+		assert(table.find(string_vals,"c")).type("number", "string values")
+		assert(table.find(number_vals,2) == 3).pass("number values")
 	end)
 	test("table.length(arg)", function()
 		local t_num = {1, 2, 3}
@@ -179,14 +184,8 @@ group("table library extension", function()
 	test("table.mostcommon(arg)", function()
 		local t = { 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 }
 		local common, counts = table.mostcommon(t)
-		assert(common == 4).pass("most common numeric key in a table")
-		assert(counts[1] == 2).pass("table with count of occurances of keys")
-	end)
-	test("kpairs() iterator", function()
-		local t = {a = true, d = true, b = true, c = true}
-		local t_sorted = {}; for k,v in kpairs(t) do table.insert(t_sorted, k) end
-		
-		assert(t_sorted[2] == "b" and t_sorted[4] == "d").pass("keys alphabetically sorted")
+		assert(common == 4).pass("most common numeric value in a table")
+		assert(counts[1] == 2).pass("table with count of occurances of values")
 	end)
 	test("kpairs() iterator", function()
 		local t = {a = true, d = true, b = true, c = true}

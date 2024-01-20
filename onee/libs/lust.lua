@@ -206,7 +206,7 @@ function lust.expect(v)
       if paths[t.action].test then
         local res, err, nerr, msg = paths[t.action].test(t.val, ...)
 		msg = msg or ""
-		lust.summary[#lust.summary].msg = msg
+		--lust.summary[#lust.summary].msg = msg
         if assertion.negate then
           res = not res
           err = nerr or err

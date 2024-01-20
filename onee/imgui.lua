@@ -499,7 +499,7 @@ function imgui.window.menubar()
 				imgui.open.inspector = not imgui.open.inspector
 			end
 			-- open tests runner window
-			if gui.MenuItem_Bool("Tests runner", nil, imgui.open.tests) then
+			if gui.MenuItem_Bool("Test suite", nil, imgui.open.tests) then
 				imgui.open.tests = not imgui.open.tests
 			end
 			
@@ -1239,85 +1239,83 @@ function imgui.window.inspector()
 	imgui.open.inspector = open[0]
 end
 
----------------------------------------------------------------- TESTS RUNNER
+---------------------------------------------------------------- TEST SUITE
 
 local test_current, test_last, test_success, test_summary, test_passes, test_errors, test_took
 
 function imgui.window.tests()
 	local open = _bool(imgui.open.tests)
 	
-	if gui.Begin("Tests runner", open) then
-		
-		-- test selector
-		local tests = love.filesystem.getDirectoryItems("onee/_tests")
-		if not test_current then test_current = string.remove(tests[1], ".lua") end
-		if gui.BeginCombo("##tests", test_current) then
-			for k, v in kpairs(tests) do
-				v = string.remove(v, ".lua")
-				if gui.Selectable_Bool(v) then test_current = v end
-			end
-			gui.EndCombo()
-		end
-		
-		-- run button
-		gui.SameLine()
-		if gui.Button("Run") and test_current then
-			test_success, test_summary, test_passes, test_errors, test_took = debug.test(test_current)
-			test_last = test_current
-		end
-		
-		-- test overview
-		gui.Separator()
-		if not test_last then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -") end
-		if test_last then
-			gui.Text(test_last.." -")
-			gui.SameLine()
-			if test_success then
-				gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
-			else
-				gui.TextColored(gui.ImVec4_Float(1,0,0,1), "FAILED")
-			end
-			
-			local ratio = (test_passes - test_errors) / test_passes
-			gui.ProgressBar(ratio, gui.ImVec2_Float(gui.GetWindowWidth()-16,12), math.floor(ratio*100).."%")
-			
-			gui.TextColored(gui.ImVec4_Float(0,1,0,1), tostring(test_passes))
-			gui.SameLine(); gui.Text("passes")
-			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
-			gui.SameLine(); gui.Text("fails")
-			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..tostring(math.round(test_took, 5))..")")
-			
-			gui.Separator()
-		end
-		
-		-- test summary
-		if gui.BeginChild_Str("test summary", nil) and test_last then
-			for i=1, #test_summary do
-				local test = test_summary[i]
-				if not test.error then
-					gui.Selectable_Bool(string.rep("    ", test.level-1)..test.name)
-				else
-					local message = string.tokenize(test.error, newline)
-					local error = message[1]
-					local at = message[2] and string.trim(message[2]) or ""
-					
-					local filepath = string.tokenize(error, ":", 2)
-					if string.find(filepath, test_last..".lua") then
-						error = string.replace(error, filepath..":", " line ")
+	if gui.Begin("Test suite", open) then
+		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton", "Reorderable")) then
+			if gui.BeginTabItem("Tests runner") then
+				-- test selector
+				local tests = love.filesystem.getDirectoryItems("onee/_tests")
+				if not test_current then test_current = string.remove(tests[1], ".lua") end
+				if gui.BeginCombo("##tests", test_current) then
+					for k, v in kpairs(tests) do
+						v = string.remove(v, ".lua")
+						if gui.Selectable_Bool(v) then test_current = v end
 					end
-					
-					gui.TextColored(gui.ImVec4_Float(1,0,0,1), string.rep("  ", test.level)..test.name)
-					gui.Text(string.rep("    ", test.level))
-					gui.SameLine(); gui.TextWrapped(error)
-					if at ~= "AT:" then
-						gui.Text(string.rep("    ", test.level))
-						gui.SameLine(); gui.TextWrapped(at)
-					end
+					gui.EndCombo()
 				end
+				
+				-- run button
+				gui.SameLine()
+				if gui.Button("Run") and test_current then
+					test_success, test_summary, test_passes, test_errors, test_took = debug.test(test_current)
+					test_last = test_current
+				end
+				
+				-- test overview
+				if not test_last then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -") end
+				if test_last then
+					gui.Text(test_last.." -"); gui.SameLine()
+					if test_success then gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
+					else gui.TextColored(gui.ImVec4_Float(1,0,0,1), "FAILED")
+					end
+					
+					local ratio = (test_passes - test_errors) / test_passes
+					gui.ProgressBar(ratio, gui.ImVec2_Float(gui.GetWindowWidth()-16,12), math.floor(ratio*100).."%")
+					
+					gui.TextColored(gui.ImVec4_Float(0,1,0,1), tostring(test_passes))
+					gui.SameLine(); gui.Text("passes")
+					gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
+					gui.SameLine(); gui.Text("fails")
+					gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..tostring(math.round(test_took, 5))..")")
+					gui.Separator()
+				end
+				
+				-- test summary
+				if gui.BeginChild_Str("test summary", nil) and test_last then
+					for i=1, #test_summary do
+						local test = test_summary[i]
+						if not test.error then
+							gui.Selectable_Bool(string.rep("    ", test.level-1)..test.name)
+						else
+							local message = string.tokenize(test.error, newline)
+							local error, at = message[1], message[2] and string.trim(message[2]) or ""
+							local filepath = string.tokenize(error, ":", 2)
+							if string.find(filepath, test_last..".lua") then
+								error = string.replace(error, filepath..":", " line ")
+							end
+							
+							gui.TextColored(gui.ImVec4_Float(1,0,0,1), string.rep("  ", test.level)..test.name)
+							gui.Text(string.rep("    ", test.level))
+							gui.SameLine(); gui.TextWrapped(error)
+							if at ~= "AT:" and at ~= "" then
+								gui.Text(string.rep("    ", test.level))
+								gui.SameLine(); gui.TextWrapped(at)
+							end
+						end
+					end
+					gui.EndChild()
+				end
+				gui.EndTabItem()
 			end
-			gui.EndChild()
+			
+			gui.EndTabBar()
 		end
-		
 		gui.End()
 	end
 	

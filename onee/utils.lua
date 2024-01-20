@@ -45,8 +45,8 @@ function math.wrap(min, arg, max)
 end
 
 function math.round(arg, decimals)
-	local mul = math.pow(10, math.abs(decimals or 0))
-    return math.floor(arg * mul + 0.5) / mul;
+	decimals = 10 ^ math.abs(decimals or 0)
+    return math.floor(arg * decimals + 0.5) / decimals
 end
 
 function math.choose(...)
@@ -54,11 +54,12 @@ function math.choose(...)
 	return arg[math.random(#arg)]
 end
 
-function math.randomfake(min, max)
+function math.randomfake(min, max, precision)
 	if not (min and max) then min, max = 0, 1 end
 	max = max or min
+	precision = precision or 4
 	local time = love.timer.getTime()
-	time = math.floor((time - math.floor(time)) * 10^4)
+	time = math.floor((time - math.floor(time)) * 10^precision)
 	return time % 2 == 0 and max or min
 end
 
@@ -68,7 +69,6 @@ function math.average(...)
 	for i=1, #arg do
 		sum = sum + arg[i]
 	end
-	
 	return sum / #arg
 end
 
@@ -90,7 +90,6 @@ function math.loop(a, b, t)
 end
 
 function math.loop_pingpong(a, b, t)
-	-- t in seconds from a to b
 	if b < a then a, b = b, a
 		t = t + (0.707 * (b - a)) -- offset starting point by sqrt(2)/2 if going from b to a
 	end
@@ -101,6 +100,7 @@ function math.loop_pingpong(a, b, t)
 end
 
 ---------------------------------------------------------------- STRINGS
+--TODO: string.join
 
 string.replace = string.gsub
 string.mid = string.sub
@@ -189,6 +189,7 @@ function string.version(arg)
 end
 
 ---------------------------------------------------------------- TABLES
+--TODO: reverse a table, maxn
 
 function copy(a, seen)
 	if type(a) ~= "table" then
@@ -208,16 +209,15 @@ function copy(a, seen)
 	return b
 end
 
-function table.find(arg, result)
-    for k,v in pairs(arg) do
-        if v == result then return k end
-    end
-end
-
-function table.length(arg)
-	local i = 0
-	for k,v in pairs(arg) do i = i + 1 end
-	return i
+function table.compare(a, b)
+	if a == b then return true end
+	for k, v in pairs(a) do
+		if a[k] ~= b[k] then return false end
+	end
+	for k, v in pairs(b) do
+		if b[k] ~= a[k] then return false end
+	end
+	return true
 end
 
 function table.append(a, b)
@@ -236,21 +236,28 @@ function table.append(a, b)
 	return a
 end
 
-function table.protect(arg, blacklist)
-	local proxy = {}
-	local mt = {
-		protected = true,
-		blacklist = blacklist,
-		__index = arg,
-		__newindex = function(t, k, v)
-			assert(not table.find(blacklist, "__"), "attempt to modify protected table")
-			assert(not table.find(blacklist, k), "attempt to overwrite protected key \""..k.."\"")
-			k = string.remove(k, "__") -- bypass by setting __key
-			arg[k] = v
-		end,
-	}
-	setmetatable(proxy, mt)
-	return proxy
+function table.find(arg, result)
+    for k,v in pairs(arg) do
+        if v == result then return k end
+    end
+end
+
+function table.length(arg)
+	local i = 0
+	for k,v in pairs(arg) do i = i + 1 end
+	return i
+end
+
+function table.reverse(arg)
+	local t = copy(arg)
+	table.sort(t, function(a,b) return a > b end)
+	return t
+end
+
+function table.sortby(arg, k)
+	local t = copy(arg)
+	table.sort(t, function(a,b) return a[k] < b[k] end)
+	return t
 end
 
 function table.mostcommon(arg)
@@ -268,6 +275,23 @@ function table.mostcommon(arg)
 	end
 	
 	return current, count
+end
+
+function table.protect(arg, blacklist)
+	local proxy = {}
+	local mt = {
+		protected = true,
+		blacklist = blacklist,
+		__index = arg,
+		__newindex = function(t, k, v)
+			assert(not table.find(blacklist, "__"), "attempt to modify protected table")
+			assert(not table.find(blacklist, k), "attempt to overwrite protected key \""..k.."\"")
+			k = string.remove(k, "__") -- bypass by setting __key
+			arg[k] = v
+		end,
+	}
+	setmetatable(proxy, mt)
+	return proxy
 end
 
 local _pairs = pairs
@@ -309,7 +333,6 @@ function queue.add(arg, i, add)
 	if not arg.queue then
 		table.append(arg, {queue = {}, first = 1, last = 1})
 	end
-
 	i = i or arg.last + 1
 	if i < arg.first then arg.first = i end
 	if i > arg.last then arg.last = i end
@@ -325,7 +348,6 @@ function queue.execute(arg)
 			for j = 1, #arg.queue[i] do arg.queue[i][j]() end
 		end
 	end
-	
 	arg.queue, arg.first, arg.last = nil, nil, nil
 end
 
