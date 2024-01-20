@@ -140,7 +140,7 @@ function string.zeropad(arg, decimals)
 	end
 end
 
-function string.remove(arg, find)
+function string.remove(arg, find) -- alias
 	return string.replace(arg, find, "")
 end
 
@@ -186,9 +186,11 @@ function copy(a, seen)
 		return seen[a] 
 	end
 	local seen = seen or {}
-	local b = setmetatable({}, getmetatable(a))
+	local mt_a = getmetatable(a) or {}
+	local b = setmetatable({}, mt_a)
 	seen[a] = b
 	for k, v in pairs(a) do 
+		if mt_a.protected and table.find(mt_a.blacklist, k) then k = "__"..k end
 		b[copy(k, seen)] = copy(v, seen) 
 	end
 	return b
@@ -229,6 +231,7 @@ function table.protect(arg, blacklist)
 		blacklist = blacklist,
 		__index = arg,
 		__newindex = function(t, k, v)
+			assert(not table.find(blacklist, "__"), "attempt to modify protected table")
 			assert(not table.find(blacklist, k), "attempt to overwrite protected key \""..k.."\"")
 			k = string.remove(k, "__") -- bypass by setting __key
 			arg[k] = v
@@ -252,7 +255,7 @@ function table.mostcommon(arg)
 		end
 	end
 	
-	return current
+	return current, count
 end
 
 local _pairs = pairs
@@ -347,9 +350,7 @@ files.exists = love.filesystem.getInfo
 dofile_ = dofile
 function dofile(path, env)
 	local run = assert(love.filesystem.load(path), path.." not found")
-	if env then
-		setfenv(run, env)
-	end
+	if env then setfenv(run, env) end
 	run()
 end
 
@@ -357,8 +358,3 @@ function unrequire(arg)
 	package.loaded[arg] = nil
 end
 
----------------------------------------------------------------- DEBUG
-
-function debug.table(arg, mode, indent) -- alias
-	print(serialize.pack(arg, indent or 1, mode or "lax"))
-end

@@ -42,6 +42,16 @@ group("math library extension", function()
 	end)
 end)
 
+group("string library extension", function()
+	test("globals", function()
+		assert(string.replace == string.gsub).pass()
+		assert(string.mid == string.sub).pass()
+		assert(string.lowercase == string.lower).pass()
+		assert(string.uppercase == string.upper).pass()
+		assert(newline == "\n").pass()
+	end)
+end)
+
 group("table library extension", function()
 	
 	test("copy(arg) - deep-copying a table", function()
@@ -105,6 +115,23 @@ group("table library extension", function()
 		
 		local t2 = {}; for k,v in pairs(t) do t2[k] = v end
 		assert(t2.a == 5 and t2.d == 4).pass("still works with pairs() iterator")
+		
+		table.insert(mt.blacklist, "__")
+		assert(function() t.d = 4; t.b = nil end).error("__ in blacklist prevents modifying entire table")
+	end)
+	
+	test("table.mostcommon(arg)", function()
+		local t = { 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 }
+		local common, counts = table.mostcommon(t)
+		assert(common == 4).pass("most common numeric key in a table")
+		assert(counts[1] == 2).pass("table with count of occurances of keys")
+	end)
+	
+	test("kpairs() iterator", function()
+		local t = {a = true, d = true, b = true, c = true}
+		local t_sorted = {}; for k,v in kpairs(t) do table.insert(t_sorted, k) end
+		
+		assert(t_sorted[2] == "b" and t_sorted[4] == "d").pass("keys alphabetically sorted")
 	end)
 	
 	test("kpairs() iterator", function()

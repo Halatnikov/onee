@@ -28,18 +28,6 @@ function debug.disable()
 	love.window.setTitle(love.config.window.title)
 end
 
-function debug.keypressed(k)
-	if not debug_mode then return end
-	
-	if k == "f2" then love.event.quit("restart") end
-	
-	if k == "q" or k == "f3" then scenes.set("init") end
-	
-	if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
-	if k == "g" then log(string.random(150)) end
-end
-love.keypressed = debug.keypressed
-
 function debug.update()
 	if not debug_mode then debug.disable() return end
 	
@@ -126,14 +114,29 @@ function debug.draw()
 	
 end
 
+function debug.keypressed(k)
+	if not debug_mode then return end
+	
+	if k == "f2" then love.event.quit("restart") end
+	
+	if k == "q" or k == "f3" then scenes.set("init") end
+	 
+	if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
+	if k == "g" then log(string.random(150)) end
+end
+love.keypressed = debug.keypressed
+
+function debug.table(arg, mode, indent)
+	print(serialize.pack(arg, indent or 1, mode or "lax"))
+end
+
 function debug.test(arg)
 	debug_testing = true
-	local time_start = love.timer.getTime()
 	local path = "onee/_tests/"..arg..".lua"
 	
 	-- set up the test environment
 	local env = {}
-	table.append(env, _G)
+	env = copy(_G) -- add globals, techically isolated for that test only?
 	
 	local lust = require("onee/libs/lust")
 	
@@ -142,6 +145,13 @@ function debug.test(arg)
 	env.spy = lust.spy
 
 	env.group, env.test, env.assert = env.describe, env.it, env.expect
+	
+	-- set up custom functions
+	function lust.fail(msg)
+		msg = msg or ""
+		error("Test failed on purpose"..newline..lust.indent(lust.level+1).."AT: "..msg, 2)
+	end
+	env.fail = lust.fail
 	
 	-- set up custom assertions
 	local paths = lust.paths
@@ -195,18 +205,17 @@ function debug.test(arg)
 	env.paths = paths
 	
 	-- run test
-	log("STARTING TEST \""..arg.."\"")
+	local time_start = love.timer.getTime()
+	log("RUNNING TEST \""..arg.."\"")
 	dofile(path, env)
 	
 	-- test finished
 	local success, summary, passes, errors = lust.success, lust.summary, lust.passes, lust.errors
-	
-	if success then
-		log("O TEST PASSED")
-	else
-		log("X TEST FAILED")
-	end
 	local took = math.round(love.timer.getTime() - time_start, 5)
+	
+	if success then log("TEST PASSED")
+	else log("TEST FAILED")
+	end
 	log("PASSES: "..lust.passes..", ERRORS: "..lust.errors..", TOOK: "..took)
 	
 	unrequire("onee/libs/lust")

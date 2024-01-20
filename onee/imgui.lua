@@ -1247,6 +1247,7 @@ function imgui.window.tests()
 	
 	if gui.Begin("Tests runner", open) then
 		
+		-- test selector
 		local tests = love.filesystem.getDirectoryItems("onee/_tests")
 		if not test_current then test_current = string.remove(tests[1], ".lua") end
 		if gui.BeginCombo("##tests", test_current) then
@@ -1257,12 +1258,14 @@ function imgui.window.tests()
 			gui.EndCombo()
 		end
 		
+		-- run button
 		gui.SameLine()
 		if gui.Button("Run") and test_current then
 			test_success, test_summary, test_passes, test_errors, test_took = debug.test(test_current)
 			test_last = test_current
 		end
 		
+		-- test overview
 		gui.Separator()
 		if not test_last then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -") end
 		if test_last then
@@ -1271,17 +1274,22 @@ function imgui.window.tests()
 			if test_success then
 				gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
 			else
-				gui.TextColored(gui.ImVec4_Float(1,0,0,1), "ERRORED")
+				gui.TextColored(gui.ImVec4_Float(1,0,0,1), "FAILED")
 			end
+			
+			local ratio = (test_passes - test_errors) / test_passes
+			gui.ProgressBar(ratio, gui.ImVec2_Float(gui.GetWindowWidth()-16,12), math.floor(ratio*100).."%")
 			
 			gui.TextColored(gui.ImVec4_Float(0,1,0,1), tostring(test_passes))
 			gui.SameLine(); gui.Text("passes")
 			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
-			gui.SameLine(); gui.Text("errors")
+			gui.SameLine(); gui.Text("fails")
 			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..tostring(math.round(test_took, 5))..")")
 			
 			gui.Separator()
 		end
+		
+		-- test summary
 		if gui.BeginChild_Str("test summary", nil) and test_last then
 			for i=1, #test_summary do
 				local test = test_summary[i]
@@ -1292,7 +1300,7 @@ function imgui.window.tests()
 				else
 					local message = string.tokenize(test.error, newline)
 					local error = message[1]
-					local at = string.trim(message[2])
+					local at = message[2] and string.trim(message[2]) or ""
 					
 					local filepath = string.tokenize(error, ":", 2)
 					if string.find(filepath, test_last..".lua") then
@@ -1308,7 +1316,6 @@ function imgui.window.tests()
 					end
 				end
 			end
-			
 			gui.EndChild()
 		end
 		
