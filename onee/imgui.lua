@@ -841,6 +841,7 @@ function imgui.window.main()
 				gui.TableSetColumnIndex(2)
 				gui.Text(tostring(math.round(love.timer.getTime(),2)))
 				if gui.BeginItemTooltip() then
+					gui.Text(tostring(love.timer.getTime()))
 					gui.Text("unix timestamp: "..os.time())
 					gui.Text("os.clock(): "..os.clock())
 					gui.EndTooltip()
@@ -1293,10 +1294,8 @@ function imgui.window.tests()
 		if gui.BeginChild_Str("test summary", nil) and test_last then
 			for i=1, #test_summary do
 				local test = test_summary[i]
-				gui.Text(string.rep("  ", test.level-1))
-				gui.SameLine()
 				if not test.error then
-					gui.Text(test.name)
+					gui.Selectable_Bool(string.rep("    ", test.level-1)..test.name)
 				else
 					local message = string.tokenize(test.error, newline)
 					local error = message[1]
@@ -1307,11 +1306,11 @@ function imgui.window.tests()
 						error = string.replace(error, filepath..":", " line ")
 					end
 					
-					gui.TextColored(gui.ImVec4_Float(1,0,0,1), test.name)
-					gui.Text(string.rep("    ", test.level+1))
+					gui.TextColored(gui.ImVec4_Float(1,0,0,1), string.rep("  ", test.level)..test.name)
+					gui.Text(string.rep("    ", test.level))
 					gui.SameLine(); gui.TextWrapped(error)
 					if at ~= "AT:" then
-						gui.Text(string.rep("    ", test.level+1))
+						gui.Text(string.rep("    ", test.level))
 						gui.SameLine(); gui.TextWrapped(at)
 					end
 				end

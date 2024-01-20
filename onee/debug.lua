@@ -81,6 +81,7 @@ function debug.draw()
 	love.graphics.setColor(color.hsl(h, 1, 0.5))
 	if debug_hotswap then
 		love.graphics.printf("HOTSWAP", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
+		love.graphics.printf(math.loop(3, 2, -2), fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
 	if debug_profiler then
 		love.graphics.printf("PROFILING", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
@@ -114,6 +115,7 @@ function debug.draw()
 	
 end
 
+--TODO: broke?
 function debug.keypressed(k)
 	if not debug_mode then return end
 	
@@ -147,11 +149,14 @@ function debug.test(arg)
 	env.group, env.test, env.assert = env.describe, env.it, env.expect
 	
 	-- set up custom functions
+	-- force fail test
 	function lust.fail(msg)
 		msg = msg or ""
-		error("Test failed on purpose"..newline..lust.indent(lust.level+1).."AT: "..msg, 2)
+		error("Forcefully failed"..newline..lust.indent(lust.level+1).."AT: "..msg, 2)
 	end
 	env.fail = lust.fail
+	
+	env.math.random = math.randomfake
 	
 	-- set up custom assertions
 	local paths = lust.paths

@@ -7,7 +7,7 @@ function bool.int(arg)
 end
 
 ---------------------------------------------------------------- MATH
--- TODO: lerp (and pingpong), smoothstep, decay, map from one min-max range to another (0-255 to 0-1), closest to ^2, construct 2, vector 2?
+-- TODO: lerp (and pingpong), smoothstep, decay, closest to ^2, construct 2, vector 2?
 -- angle from x1 y1 to x2 y2
 -- every x seconds
 
@@ -45,13 +45,21 @@ function math.wrap(min, arg, max)
 end
 
 function math.round(arg, decimals)
-	local mul = math.pow(10, decimals or 0)
+	local mul = math.pow(10, math.abs(decimals or 0))
     return math.floor(arg * mul + 0.5) / mul;
 end
 
 function math.choose(...)
 	local arg = type(...) == "table" and ... or {...}
 	return arg[math.random(#arg)]
+end
+
+function math.randomfake(min, max)
+	if not (min and max) then min, max = 0, 1 end
+	max = max or min
+	local time = love.timer.getTime()
+	time = math.floor((time - math.floor(time)) * 10^4)
+	return time % 2 == 0 and max or min
 end
 
 function math.average(...)
@@ -69,12 +77,16 @@ function math.distance(x1, y1, x2, y2)
 	return math.sqrt((x2 - x1)^2 + (y2 - y1)^2)
 end
 
+function math.map(arg, a_min, a_max, b_min, b_max)
+	return (arg - a_min) * (b_max - b_min) / (a_max - a_min) + b_min
+end
+
 function math.loop(a, b, t)
 	-- t in seconds from a to b
 	if b < a then a, b, t = b, a, -t end
-	t = ms / (t / b)
+	t = love.timer.getTime() / (t / b)
 	local len = b - a
-	return math.clamp(a, t - math.floor(t / len) * len, b*2)
+	return math.map((t - math.floor(t / len) * len), 0, len, a, b)
 end
 
 function math.loop_pingpong(a, b, t)
@@ -82,7 +94,7 @@ function math.loop_pingpong(a, b, t)
 	if b < a then a, b = b, a
 		t = t + (0.707 * (b - a)) -- offset starting point by sqrt(2)/2 if going from b to a
 	end
-	t = ms / (t / b)
+	t = love.timer.getTime() / (t / b)
 	local len = b - a
 	t = math.clamp(a, t - math.floor(t / (len*2)) * (len*2), b*2)
 	return len - math.abs(t - len)
