@@ -576,8 +576,6 @@ function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	
 	t.instance:playAnimation(1) --temp
 	
-	t = table.protect(t, {"model", "name"})
-	
 	return table.append(model, t)
 end
 

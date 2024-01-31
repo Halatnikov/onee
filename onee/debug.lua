@@ -79,7 +79,7 @@ function debug.draw()
 	love.graphics.setColor(color.hsl(h, 1, 0.5))
 	if debug_hotswap then
 		love.graphics.printf("HOTSWAP", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
-		love.graphics.printf(math.loop(3, 2, -2), fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
+		--love.graphics.printf(math.loop(3, 2, -2), fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
 	if debug_profiler then
 		love.graphics.printf("PROFILING", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
@@ -116,6 +116,7 @@ end
 --TODO: broke?
 function debug.keypressed(k)
 	if not debug_mode then return end
+	--press l to learn
 	
 	if k == "f2" then love.event.quit("restart") end
 	
@@ -147,6 +148,7 @@ function debug.test(arg)
 	env.group, env.test, env.assert = env.describe, env.it, env.expect
 	
 	-- set up custom functions
+	
 	-- force fail test
 	function lust.fail(msg)
 		msg = msg or ""
@@ -154,6 +156,7 @@ function debug.test(arg)
 	end
 	env.fail = lust.fail
 	
+	-- mock random
 	env.math.random = math.randomfake
 	
 	-- set up custom assertions
@@ -185,8 +188,8 @@ function debug.test(arg)
 	-- assert().success()
 	paths.success = {test = function(f, msg)
 		return pcall(f),
-		'expected ' .. tostring(f) .. ' to succeed',
-		'expected ' .. tostring(f) .. ' to not succeed',
+		"expected "..tostring(f).." to succeed",
+		"expected "..tostring(f).." to not succeed",
 		msg
 	end}
 	table.insert(paths[""], "success")
@@ -219,7 +222,7 @@ function debug.test(arg)
 	if success then log("TEST PASSED")
 	else log("TEST FAILED")
 	end
-	log("PASSES: "..lust.passes..", ERRORS: "..lust.errors..", TOOK: "..took)
+	log("PASSES: "..passes..", ERRORS: "..errors..", TOOK: "..took)
 	
 	unrequire("onee/libs/lust")
 	debug_testing = nil

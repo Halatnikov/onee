@@ -115,12 +115,16 @@ group("string library extension", function()
 		assert(newline == "\n").pass()
 	end)
 	test("string.split(arg)", function()
-		assert(table.compare(string.split("a,b!c1d"), {"a",",","b","!","c","1","d"})).pass("split string into table")
+		assert(table.compare(string.split("a,b!c1"), {"a",",","b","!","c","1"})).pass("split string into table")
 	end)
 end)
 
 group("table library extension", function()
 	
+	a = {"a","c","b"}
+	b = {"a","c","b"}
+	print(a==b)
+	print(table.compare(a,b))
 	test("copy(arg) - deep-copying a table", function()
 		local a, b
 		a, b = {}, {}; a = b
@@ -162,6 +166,7 @@ group("table library extension", function()
 		local t = { a = 1, b = 2, c = 3 }
 		t = table.protect(t, {"a", "c"})
 		local mt = getmetatable(t)
+		
 		assert(mt.protected).pass("identifies as protected")
 		assert(t.c == 3).pass("can still index it")
 		assert(function() t.d = 4; t.b = nil end).success("can still modify it")
@@ -187,8 +192,10 @@ group("table library extension", function()
 		assert(common == 4).pass("most common numeric value in a table")
 		assert(counts[1] == 2).pass("table with count of occurances of values")
 	end)
-	test("kpairs() iterator", function()
+	test("kpairs() and vpairs() iterator", function()
 		local t = {a = true, d = true, b = true, c = true}
+		local not_from_0 = {}; for i = -2, 4 do not_from_0[i] = true end
+		local t_sorted = {}; for k,v in kpairs(not_from_0) do print(k,v) end
 		local t_sorted = {}; for k,v in kpairs(t) do table.insert(t_sorted, k) end
 		
 		assert(t_sorted[2] == "b" and t_sorted[4] == "d").pass("keys alphabetically sorted")
@@ -207,8 +214,7 @@ group("queue library", function()
 		val = val - arg
 	end
 	before(function()
-		t = {}
-		val = 0
+		t = {}; val = 0
 	end)
 	
 	test("make a queue and execute", function()

@@ -70,7 +70,7 @@ end
 function object.new(path, data, name) -- CREATE NEW OBJECT --
 	
 	if not name then name = string.tokenize(path, "/", -1) end
-	if objects[name] then print("object.new() | object \""..name.."\" already exists!") return end
+	if objects[name] then return end
 	
 	local t = { -- init
 		object = true,
@@ -117,7 +117,7 @@ end
 
 function instance.new(name, data) -- CREATE NEW INSTANCE --
 
-	if not objects[name] then print("instance.new() | can't create instance, object \""..name.."\" doesn't exist!") return end
+	assert(objects[name], "instance.new() | can't create instance, object \""..name.."\" doesn't exist!")
 	
 	local id = name.."_"..string.random(6)
 	local object = objects[name]

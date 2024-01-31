@@ -90,11 +90,12 @@ function math.loop(a, b, t)
 end
 
 function math.loop_pingpong(a, b, t)
+	local len = b - a
 	if b < a then a, b = b, a
-		t = t + (0.707 * (b - a)) -- offset starting point by sqrt(2)/2 if going from b to a
+		len = b - a
+		t = t + (0.707 * len) -- offset starting point by sqrt(2)/2 if going from b to a
 	end
 	t = love.timer.getTime() / (t / b)
-	local len = b - a
 	t = math.clamp(a, t - math.floor(t / (len*2)) * (len*2), b*2)
 	return len - math.abs(t - len)
 end
@@ -189,24 +190,24 @@ function string.version(arg)
 end
 
 ---------------------------------------------------------------- TABLES
---TODO: reverse a table, maxn
+--TODO: maxn
 
-function copy(a, seen)
-	if type(a) ~= "table" then
-		return a 
-	end
-	if seen and seen[a] then
-		return seen[a] 
-	end
-	local seen = seen or {}
-	local mt_a = getmetatable(a) or {}
-	local b = setmetatable({}, mt_a)
-	seen[a] = b
-	for k, v in pairs(a) do 
-		if mt_a.protected and table.find(mt_a.blacklist, k) then k = "__"..k end
-		b[copy(k, seen)] = copy(v, seen) 
-	end
-	return b
+function copy(arg)
+    local ref = {}
+    local function recursive(arg)
+        if type(arg) ~= "table" then
+            return arg
+        elseif ref[arg] then
+            return ref[arg]
+        end
+        local new = {}
+        ref[arg] = new
+        for k,v in pairs(arg) do
+            new[recursive(k)] = recursive(v)
+        end
+        return setmetatable(new, recursive(getmetatable(arg)))
+    end
+    return recursive(arg)
 end
 
 function table.compare(a, b)
@@ -222,14 +223,14 @@ end
 
 function table.append(a, b)
 	a, b = a or {}, b or {}
-	local mt_a, mt_b = getmetatable(a) or {}, getmetatable(b) or {}
-	if mt_b ~= {} then setmetatable(a, mt_b) end
+	local mt = getmetatable(b)
+	if mt then setmetatable(a, mt) end
 	
 	for k,v in pairs(b) do 
 		if type(v) == "table" and type(a[k] or false) == "table" then
 			table.append(a[k], b[k])
 		else
-			if mt_b.protected and table.find(mt_b.blacklist, k) then k = "__"..k end
+			if mt and mt.protected and table.find(mt.blacklist, k) then k = "__"..k end
 			a[k] = v
 		end
 	end
@@ -249,15 +250,10 @@ function table.length(arg)
 end
 
 function table.reverse(arg)
-	local t = copy(arg)
-	table.sort(t, function(a,b) return a > b end)
-	return t
+	table.sort(arg, function(a,b) return a > b end)
 end
-
 function table.sortby(arg, k)
-	local t = copy(arg)
-	table.sort(t, function(a,b) return a[k] < b[k] end)
-	return t
+	table.sort(arg, function(a,b) return a[k] < b[k] end)
 end
 
 function table.mostcommon(arg)
@@ -302,13 +298,20 @@ function pairs(arg)
 	return _pairs(arg)
 end
 
-function kpairs(arg)
+function kpairs(arg, v)
 	local keys = {}
 	for k in pairs(arg) do table.insert(keys, k) end
-	table.sort(keys, function(a, b)
-		if type(a) ~= type(b) then return tostring(a) < tostring(b) end
-		return a < b
-	end)
+	if not v then -- sort keys
+		table.sort(keys, function(a, b)
+			if type(a) ~= type(b) then return tostring(a) < tostring(b) end
+			return a < b
+		end)
+	else -- sort values
+		table.sort(keys, function(a,b)
+			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
+			return arg[a] < arg[b]
+		end)
+	end
 	local i = 0
 	return function()
 		i = i + 1
@@ -316,6 +319,7 @@ function kpairs(arg)
 		return keys[i] == nil and nil or keys[i], arg[keys[i]]
 	end
 end
+function vpairs(arg) return kpairs(arg, true) end -- alias
 
 function ripairs(arg)
 	return function(arg, i)
@@ -391,4 +395,3 @@ end
 function unrequire(arg)
 	package.loaded[arg] = nil
 end
-

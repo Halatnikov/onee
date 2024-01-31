@@ -7,7 +7,7 @@ imgui = {
 local gui
 if (love._os == "Windows" or love._os == "Linix") and debug_mode then 
 	imgui_ = require("onee/libs/cimgui")
-	gui = imgui_
+	gui = imgui_ or nil
 	
 	gui.love.Init()
 	gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
@@ -841,6 +841,8 @@ function imgui.window.main()
 				gui.TableSetColumnIndex(2)
 				gui.Text(tostring(math.round(love.timer.getTime(),2)))
 				if gui.BeginItemTooltip() then
+					local timer = love.timer.getTime()
+					gui.Text(math.floor(timer/3600).."h "..string.zeropad(math.floor(timer/60)%60, 2).."m "..string.zeropad(math.floor(timer)%60, 2).."s "..string.zeropad(math.floor(timer*100)%100, 2).."ms")
 					gui.Text(tostring(love.timer.getTime()))
 					gui.Text("unix timestamp: "..os.time())
 					gui.Text("os.clock(): "..os.clock())

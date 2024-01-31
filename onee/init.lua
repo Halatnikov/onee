@@ -1,5 +1,5 @@
 onee = {
-	version = "0.0.2-13",
+	version = "0.0.2-14",
 }
 
 ---------------------------------------------------------------- INIT
@@ -26,7 +26,7 @@ do
 	require("onee/input")
 	require("onee/collisions")
 	require("onee/assets")
-	require("onee/scene")
+	require("onee/scenes")
 	require("onee/debug")
 
 	-- gui libraries
@@ -81,7 +81,6 @@ function onee.update(dt_)
 end
 
 function onee.draw()
-	
 	scenes.draw()
 	input.draw()
 	
