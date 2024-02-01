@@ -2,7 +2,7 @@ local nineslice = {}
 
 ----------------------------------------------------------------
 
-function nineslice.add(name, anim, frame, image, animdef, framedef)
+function nineslice.add(name, anim, frame, image, animdef, framedef, export)
 	local ninedef = animdef.nineslice
 	assert(ninedef, "nineslice.add() | no nine-slice definition for animation \""..anim.."\" in \""..name.."\"")
 	assert(ninedef.x1, "nineslice.add() | no nine-slice size for animation \""..anim.."\" in \""..name.."\"")
@@ -28,11 +28,11 @@ function nineslice.add(name, anim, frame, image, animdef, framedef)
 	end
 	
 	-- add new assets entries
-	if not assets[name]._nineslices then assets[name]._nineslices = {} end
-	if not assets[name]._nineslices[anim] then assets[name]._nineslices[anim] = {} end
-	assets[name]._nineslices[anim][frame] = {}
+	if not export._nineslices then export._nineslices = {} end
+	if not export._nineslices[anim] then export._nineslices[anim] = {} end
+	export._nineslices[anim][frame] = {}
 	
-	local images = assets[name]._nineslices[anim][frame]
+	local images = export._nineslices[anim][frame]
 	local canvas = {}
 	
 	-- split into 9 images
@@ -120,13 +120,13 @@ end
 
 ----------------------------------------------------------------
 
-function nineslice.draw(sprite, anim, frame, animdef, framedef)
+function nineslice.draw(sprite, scene, anim, frame, animdef, framedef)
 	assert(sprite.nineslice, "nineslice.draw() | no nine-slice instance in \""..sprite.name.."\"")
 	local ninedef = animdef.nineslice
 	assert(ninedef, "nineslice.draw() | no nine-slice definition for animation \""..anim.."\" in \""..sprite.name.."\"")
 	assert(ninedef.x1, "nineslice.draw() | no nine-slice size for animation \""..anim.."\" in \""..sprite.name.."\"")
 	
-	local slices = assets[sprite.name]._nineslices[anim][frame]
+	local slices = scene.assets[sprite.name]._nineslices[anim][frame]
 	local canvas = sprite.nineslice.canvas
 	
 	local nwidth = sprite.nineslice.width or framedef.width

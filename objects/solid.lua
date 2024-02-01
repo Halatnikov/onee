@@ -7,24 +7,24 @@ function object.init(self, scene)
 end
 
 function object.update(self, scene)
-	local check_down, col_down = collision.check(self.collision, "player", "collider_down")
-	local check_left, col_left = collision.check(self.collision, "player", "collider_left")
-	local check_right, col_right = collision.check(self.collision, "player", "collider_right")
+	local check_down, col_down = collision.check(self.collision, scene, "player", "collider_down")
+	local check_left, col_left = collision.check(self.collision, scene, "player", "collider_left")
+	local check_right, col_right = collision.check(self.collision, scene, "player", "collider_right")
 	local player
 	
 	if check_left then 
-		player = instances[col_left.instance].player
+		player = scene.instances[col_left.instance].player
 		player.x_speed = 0
 		player.x = self.collision.x + self.collision.rect.width + 8
 	end
 	if check_right then 
-		player = instances[col_right.instance].player
+		player = scene.instances[col_right.instance].player
 		player.x_speed = 0
 		player.x = self.collision.x - 8
 	end
 	
 	if check_down and not (check_left or check_right) then 
-		player = instances[col_down.instance].player
+		player = scene.instances[col_down.instance].player
 		if player.y_speed > 0 and not player.ground then
 			player.ground = true
 			player.y = self.collision.y - 32

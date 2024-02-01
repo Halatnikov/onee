@@ -3,7 +3,7 @@ local scene = {}
 function scene.init(self)
 	
 	object.new("test", self, {a=1,{3}})
-	--instance.new("test", self ,{b=4})
+	instance.new("test", self ,{b=4})
 	--instance.new("test", self ,{b=5})
 	
 	object.new("yorb", self)

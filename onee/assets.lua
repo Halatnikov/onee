@@ -4,10 +4,6 @@ model = {
 	anim = {}
 }
 
-assets = {} -- actual containers
-sprites = {}
-models = {}
-
 -- constants
 TILE = {
 	TILE = "repeat",
@@ -30,11 +26,11 @@ local nineslice = require("onee/assets/nineslice")
 
 ---------------------------------------------------------------- AUXILLARY
 
-function asset.delete(name) -- UNLOAD ASSET
-	assets[name] = nil
+function asset.delete(name, scene) -- UNLOAD ASSET
+	scene.assets[name] = nil
 	
-	sprites[name] = nil
-	models[name] = nil
+	scene.sprites[name] = nil
+	scene.models[name] = nil
 	
 	collectgarbage()
 end
@@ -65,14 +61,14 @@ end
 ---------------------------------------------------------------- SPRITES
 
 do--#region SPRITES
-function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
+function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 	
 	local name = string.tokenize(path, "/", -1)
-	if assets[name] then return end -- already loaded
+	if scene.assets[name] then return end -- already loaded
 	
 	local time_start = love.timer.getTime()
 	local sprite = require("sprites/"..path) -- init
-	assets[name] = {}
+	scene.assets[name] = {}
 	
 	-- first pass
 	for anim in pairs(sprite.animations) do
@@ -83,17 +79,17 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 		
 		-- load only unique images
 		if not animdef.images then
-			assets[name][anim] = {} -- new anim entry
+			scene.assets[name][anim] = {} -- new anim entry
 			local filename = sprite.filename or animdef.filename or anim
 
 			-- look in animdef
 			-- gif
 			if animdef.gif then
-				gif.add("sprites/"..path.."/"..filename..".gif", animdef, assets[name][anim])
+				gif.add("sprites/"..path.."/"..filename..".gif", animdef, scene.assets[name][anim])
 			
 			-- spritestrip (extension of spritesheet)
 			elseif animdef.strip then
-				spritesheet.strip("sprites/"..path.."/"..filename..".png", animdef, assets[name][anim])
+				spritesheet.strip("sprites/"..path.."/"..filename..".png", animdef, scene.assets[name][anim])
 				
 			-- look in framedef
 			elseif animdef.frames then
@@ -103,7 +99,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 					
 					-- spritesheet
 					if framedef.sheet then
-						spritesheet.add("sprites/"..path.."/"..filename..".png", frame, animdef, framedef, assets[name][anim])
+						spritesheet.add("sprites/"..path.."/"..filename..".png", frame, animdef, framedef, scene.assets[name][anim])
 						
 					-- one image file per frame (default)
 					else
@@ -111,7 +107,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 						if framedef.filename then imagepath = path.."/"..framedef.filename end
 						local image = love.graphics.newImage("sprites/"..imagepath..".png")
 						
-						assets[name][anim][frame] = image -- new frame entry
+						scene.assets[name][anim][frame] = image -- new frame entry
 					end
 					
 				end
@@ -121,7 +117,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 				animdef.frames = {[1] = {}}
 				local image = love.graphics.newImage("sprites/"..path.."/"..filename..".png")
 				
-				assets[name][anim][1] = image -- new frame entry
+				scene.assets[name][anim][1] = image -- new frame entry
 			end
 			
 		end
@@ -142,12 +138,12 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 			
 			local image
 			if not animdef.images then -- unique image
-				image = assets[name][anim][frame]
+				image = scene.assets[name][anim][frame]
 			else
 				if not framedef.image then -- reused animation
-					image = assets[name][animdef.images][frame]
+					image = scene.assets[name][animdef.images][frame]
 				else -- reused animation AND a different frame image
-					image = assets[name][animdef.images][framedef.image]
+					image = scene.assets[name][animdef.images][framedef.image]
 				end
 			end
 			assert(image, "asset.sprite() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"")
@@ -163,7 +159,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 			
 			-- nine-slices (9patches)
 			if sprite.nineslice then
-				nineslice.add(name, anim, frame, image, animdef, framedef)
+				nineslice.add(name, anim, frame, image, animdef, framedef, scene.assets[name])
 			end
 			
 			-- add missing frame variables
@@ -188,7 +184,7 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 		
 	end
 	
-	sprites[name] = sprite -- done
+	scene.sprites[name] = sprite -- done
 	unrequire("sprites/"..path)
 	
 	local time_finish = love.timer.getTime()
@@ -196,8 +192,8 @@ function asset.sprite(path) -- LOAD NEW SPRITE ASSET --
 	
 end
 
-function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
-	assert(sprites[name], "sprite.init() | \""..name.."\" is not a valid sprite!")
+function sprite.init(sprite, scene, name, data) -- INIT A NEW SPRITE INSTANCE --
+	assert(scene.sprites[name], "sprite.init() | \""..name.."\" is not a valid sprite!")
 	
 	local t = {
 		sprite = true,
@@ -214,12 +210,12 @@ function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 		loops = 0,
 	}
 	
-	if sprites[name].tiled then
+	if scene.sprites[name].tiled then
 		t.tiled = {
 			quad = love.graphics.newQuad(0,0,0,0,0,0),
 		}
 	
-	elseif sprites[name].nineslice then
+	elseif scene.sprites[name].nineslice then
 		t.nineslice = {
 			qleft = love.graphics.newQuad(0,0,0,0,0,0),
 			qright = love.graphics.newQuad(0,0,0,0,0,0),
@@ -239,14 +235,14 @@ function sprite.init(sprite, name, data) -- INIT A NEW SPRITE INSTANCE --
 	
 end
 
-function sprite.update(sprite) -- UPDATE SPRITE --
+function sprite.update(sprite, scene) -- UPDATE SPRITE --
 	
 	assert(sprite, "sprite.update() | not a valid sprite")
 	assert(sprite.sprite, "sprite.update() | not a valid sprite")
 	if not sprite.active then return end
 	
-	assert(sprites[sprite.name], "sprite.update() | not a valid sprite")
-	local animdef = sprites[sprite.name].animations[sprite.animation]
+	assert(scene.sprites[sprite.name], "sprite.update() | not a valid sprite")
+	local animdef = scene.sprites[sprite.name].animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	
 	-- update animations
@@ -325,7 +321,7 @@ function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 	
 	if not sprite.visible then return end
 	
-	local spritedef = sprites[sprite.name]
+	local spritedef = scene.sprites[sprite.name]
 	assert(spritedef, "sprite.draw() | no such sprite \""..sprite.name.."\"")
 	
 	-- basics
@@ -368,12 +364,12 @@ function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 	-- assigning an image
 	local image
 	if not animdef.images then -- unique image
-		image = assets[sprite.name][anim][frame]
+		image = scene.assets[sprite.name][anim][frame]
 	else
 		if not framedef.image then -- reused animation
-			image = assets[sprite.name][animdef.images][frame]
+			image = scene.assets[sprite.name][animdef.images][frame]
 		else -- reused animation AND a different frame image
-			image = assets[sprite.name][animdef.images][framedef.image]
+			image = scene.assets[sprite.name][animdef.images][framedef.image]
 		end
 	end
 	assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
@@ -414,7 +410,7 @@ function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 		framey = nheight * (framedef.y / framedef.height) or 0
 		
 		draw = function()
-			love.graphics.draw( nineslice.draw(sprite, anim, frame, animdef, framedef),
+			love.graphics.draw( nineslice.draw(sprite, scene, anim, frame, animdef, framedef),
 			x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		end
 		
@@ -439,12 +435,12 @@ function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 	
 end
 
-function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
+function sprite.debug_draw(sprite, scene) -- DEBUG DRAW SPRITE --
 	if not sprite.active then return end 
 	if sprite.queued == false then return end
 	if sprite.tiled or sprite.nineslice then return end -- temp
 	
-	local spritedef = sprites[sprite.name]
+	local spritedef = scene.sprites[sprite.name]
 	local animdef = spritedef.animations[sprite.animation]
 	local framedef = animdef.frames[sprite.frame]
 	
@@ -474,10 +470,10 @@ function sprite.debug_draw(sprite) -- DEBUG DRAW SPRITE --
 	if sprite.angle == 0 or not sprite.angle then
 		love.graphics.rectangle(mode, bbox_x, bbox_y, width, height)
 	else
-		local poly_old = poly.rect(bbox_x, bbox_y, width, height)
-		local poly = poly.rotate(poly_old, sprite.angle, framedef.x * scalex, framedef.y * scaley)
+		local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
+		local bbox = poly.rotate(bbox_old, sprite.angle, framedef.x * scalex, framedef.y * scaley)
 		
-		love.graphics.polygon(mode, poly.unpack(poly))
+		love.graphics.polygon(mode, poly.unpack(bbox))
 	end
 	
 	-- origin
@@ -491,10 +487,10 @@ end--#endregion
 ---------------------------------------------------------------- 3D MODELS
 
 do--#region 3D MODELS
-function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
+function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
 	
 	local name = string.tokenize(path, "/", -1)
-	if assets[name] then return end -- already loaded
+	if scene.assets[name] then return end -- already loaded
 	
 	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
 	local modeldef = {}
@@ -537,10 +533,10 @@ function asset.model(path) -- LOAD NEW 3D MODEL ASSET --
 		end
 	end
 	
-	assets[name] = gltf.newAsset(model)
-	assets[name]:continueLoading(5)
+	scene.assets[name] = gltf.newAsset(model)
+	scene.assets[name]:continueLoading(5)
 	
-	models[name] = modeldef -- done
+	scene.models[name] = modeldef -- done
 	unrequire("models/"..path)
 	
 end
@@ -548,8 +544,8 @@ end
 local vec3 = require "onee/libs/gltf/cpml.modules.vec3"
 local mat4 = require "onee/libs/gltf/cpml.modules.mat4"
 
-function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
-	assert(models[name], "model.init() | \""..name.."\" is not a valid 3d model!")
+function model.init(model, scene, name, data) -- INIT A NEW 3D MODEL INSTANCE --
+	assert(scene.models[name], "model.init() | \""..name.."\" is not a valid 3d model!")
 	
 	local t = {
 		model = true,
@@ -558,7 +554,7 @@ function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 		active = true,
 		visible = true,
 		
-		instance = assets[name]:newInstance(1),
+		instance = scene.assets[name]:newInstance(1),
 		projection = gltf.newRenderer(),
 		canvas = {
 			main = love.graphics.newCanvas(windowwidth, windowheight),
@@ -579,13 +575,13 @@ function model.init(model, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	return table.append(model, t)
 end
 
-function model.update(model) -- UPDATE 3D MODEL --
+function model.update(model, scene) -- UPDATE 3D MODEL --
 	assert(model, "model.update() | not a valid 3d model")
 	assert(model.model, "model.update() | not a valid 3d model")
 	if not model.active then return end
-	assert(models[model.name], "model.update() | not a valid 3d model")
+	assert(scene.models[model.name], "model.update() | not a valid 3d model")
 	
-	local modeldef = models[model.name]
+	local modeldef = scene.models[model.name]
 	
 	local width = model.canvas.width or windowwidth
 	local height = model.canvas.height or windowheight

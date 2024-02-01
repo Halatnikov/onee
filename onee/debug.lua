@@ -51,27 +51,30 @@ function debug.draw()
 	end
 	
 	debug.drawlist = {}
-	for id in pairs(instances) do
-		local function draw_recursively(arg)
-			for k, v in pairs(arg) do
-				if type(v) == "table" then
-					if debug_draw_collisions and arg[k].collision == true then
-						queue.add(debug.drawlist, 1, function()
-							collision.debug_draw(arg[k])
-						end)
-					elseif debug_draw_sprites and arg[k].sprite == true then
-						queue.add(debug.drawlist, 2, function()
-							sprite.debug_draw(arg[k])
-						end)
-					-- skip 3d models, they cause a stack overflow
-					elseif arg[k].model ~= true then
-						draw_recursively(arg[k])
+	for id in kpairs(scenes) do
+		local scene = scenes[id]
+		for id in pairs(scene.instances) do
+			local function draw_recursively(arg)
+				for k, v in pairs(arg) do
+					if type(v) == "table" then
+						if debug_draw_collisions and arg[k].collision == true then
+							queue.add(debug.drawlist, 1, function()
+								collision.debug_draw(arg[k])
+							end)
+						elseif debug_draw_sprites and arg[k].sprite == true then
+							queue.add(debug.drawlist, 2, function()
+								sprite.debug_draw(arg[k], scene)
+							end)
+						-- skip 3d models, they cause a stack overflow
+						elseif arg[k].model ~= true then
+							draw_recursively(arg[k])
+						end
 					end
 				end
 			end
+			
+			draw_recursively(scene.instances[id])
 		end
-		
-		draw_recursively(instances[id])
 	end
 	queue.execute(debug.drawlist)
 	

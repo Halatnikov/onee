@@ -1,8 +1,8 @@
 local object = {}
 
 function object.init(self, scene)
-	asset.sprite("yorb")
-	self.sprite = sprite.init(self.sprite, "yorb")
+	asset.sprite("yorb", scene)
+	self.sprite = sprite.init(self.sprite, scene, "yorb")
 	
 	self.sprite.x = self.sprite.x or 0
 	self.sprite.y = self.sprite.y or 0
@@ -15,9 +15,9 @@ function object.init(self, scene)
 end
 
 function object.update(self, scene)
-	sprite.update(self.sprite)
+	sprite.update(self.sprite, scene)
 	
-	if collision.check(self.collision, "player", "hitbox") then
+	if collision.check(self.collision, scene, "player", "hitbox") then
 		self.collision = nil
 		self.sprite.animation = "collect"
 		

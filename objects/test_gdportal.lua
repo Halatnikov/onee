@@ -5,13 +5,13 @@ local framey = 340/2
 
 function object.init(self, scene)
 	
-	asset.sprite("test_gdportal")
+	asset.sprite("test_gdportal", scene)
 	
 	self.sprites = {
-		back = sprite.init(back, "test_gdportal", {animation = "back"}),
-		front = sprite.init(front, "test_gdportal", {animation = "front"}),
-		detail = sprite.init(detail, "test_gdportal", {animation = "detail"}),
-		icon = sprite.init(icon, "test_gdportal", {animation = "icon"}),
+		back = sprite.init(back, scene, "test_gdportal", {animation = "back"}),
+		front = sprite.init(front, scene, "test_gdportal", {animation = "front"}),
+		detail = sprite.init(detail, scene, "test_gdportal", {animation = "detail"}),
+		icon = sprite.init(icon, scene, "test_gdportal", {animation = "icon"}),
 	}
 	
 	local scalex = self.scalex or self.scale or 1; scalex = math.abs(scalex)
@@ -29,7 +29,7 @@ function object.init(self, scene)
 	}
 	
 	--HotParticles
-	self.particles = love.graphics.newParticleSystem(assets["test_gdportal"]["particle"][1], 24)
+	self.particles = love.graphics.newParticleSystem(scene.assets["test_gdportal"]["particle"][1], 24)
 	self.particles:setColors(0, 1, 1, 0.5)
 	self.particles:setEmissionRate(30)
 	self.particles:setOffset(16, 16)
@@ -49,7 +49,7 @@ function object.update(self, scene)
 	self.particles:setSizes(0.75*scalex, 0.1*scalex)
 	self.particles:update(tick)
 	
-	for k,v in pairs(self.sprites) do sprite.update(self.sprites[k]) end
+	for k,v in pairs(self.sprites) do sprite.update(self.sprites[k], scene) end
 end
 
 function object.draw(self, scene)	

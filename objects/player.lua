@@ -34,8 +34,8 @@ function object.init(self, scene)
 	player.y = 200
 	
 	local skin = "1u_scruffy"
-	asset.sprite(skin)
-	self.sprite = sprite.init(self.sprite, skin)
+	asset.sprite(skin, scene)
+	self.sprite = sprite.init(self.sprite, scene, skin)
 	self.sprite.z = 1
 	
 	self.hitbox = collision.init(self.hitbox, "hitbox", {rect = {width = 16, height = 32}})
@@ -135,7 +135,7 @@ function object.update(self, scene)
 	self.sprite.x = player.x
 	self.sprite.y = player.y
 	self.sprite.animation = player.animation
-	sprite.update(self.sprite)
+	sprite.update(self.sprite, scene)
 	
 	-- update collision
 	self.hitbox.x = player.x - 8

@@ -3,48 +3,40 @@ object = {}
 instance = {}
 
 scenes = {} -- actual containers
-instances = {}
 
 ---------------------------------------------------------------- SCENE
 
-function scene.set(name, data) -- SWITCH CURRENT SCENE --
+function scene.set(path, data, name) -- SWITCH CURRENT SCENE --
 	
-	-- clear the scene
-	--for name in pairs(objects) do
-		-- TODO: maybe a scene reset function?
-		-- TODO: if same scene as before, then don't recreate persist instances
-		--if not objects[name].persist then object.delete(name) end
-	--end
-	-- TODO: account persist objects somehow, a clear unused assets function?
-	for name in pairs(assets) do asset.delete(name) end
-	-- TODO: general graphics reset stuff here?
-	--rgb = {8/255, 8/255, 8/255}
-	collectgarbage()
+	if not name then name = string.tokenize(path, "/", -1) end
 	
-	-- load new scene
-	-- TODO: do it like objects, don't make the lua file mandatory, also do a path
-	local t = require("scenes/"..name)
+	local t = {
+		scene = true,
+		name = name,
+		id = 1,
+		active = true,
+		visible = true,
+		
+		objects = {},
+		instances = {},
+		
+		assets = {},
+		sprites = {},
+		models = {},
+		
+		drawlist = {},
+	}
 	
-	t.scene = true
-	t.name = name
-	t.id = 1
-	t.active = true
-	t.visible = true
-	
-	t.objects = {}
-	t.instances = {}
-	
-	t.drawlist = {}
-	
-	if data then table.append(t, data) end -- pass additional stuff to scene through this table
+	if files.exists("scenes/"..path..".lua") then table.append(t, require("scenes/"..path)) end
+	if data then table.append(t, data) end
 	
 	t = table.protect(t, {"scene", "name", "id"})
 	
-	scenes[1] = t
+	scenes[1] = t --done
 	
 	if t.init then t.init(t) end
 	
-	unrequire("scenes/"..name)
+	unrequire("scenes/"..path)
 	
 end
 
@@ -94,6 +86,7 @@ function object.new(path, scene, data, name) -- CREATE NEW OBJECT --
 	
 	local t = { -- init
 		object = true,
+		name = name,
 		scene = scene.name,
 		instances = 0,
 	}
@@ -107,7 +100,7 @@ function object.new(path, scene, data, name) -- CREATE NEW OBJECT --
 		table.append(t.data, data)
 	end
 	
-	t = table.protect(t, {"object", "scene"})
+	t = table.protect(t, {"object", "name", "scene"})
 	
 	scene.objects[name] = t -- done
 	unrequire("objects/"..path)
@@ -118,7 +111,7 @@ end
 
 function object.delete(name, scene) -- DELETE OBJECT --
 	if not scene.objects[name] then return end
-	instance.clear(name)
+	instance.clear(name, scene)
 	scene.objects[name] = nil
 end
 
@@ -174,15 +167,15 @@ function instance.new(name, scene, data) -- CREATE NEW INSTANCE --
 end
 
 function instance.delete(id, scene) -- DELETE INSTANCE --
-	if not instances[id] then return end
-	local name = instances[id].object
+	if not scene.instances[id] then return end
+	local name = scene.instances[id].object
 	scene.objects[name].instances = scene.objects[name].instances - 1
 
-	instances[id] = nil
+	scene.instances[id] = nil
 end
 
-function instance.clear(name) -- CLEAR ALL INSTANCES OF OBJECT --
-	for id in pairs(instances) do
-		if instances[id].object == name then instance.delete(id) end
+function instance.clear(name, scene) -- CLEAR ALL INSTANCES OF OBJECT --
+	for id in pairs(scene.instances) do
+		if scene.instances[id].object == name then instance.delete(id, scene) end
 	end
 end

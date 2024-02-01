@@ -84,7 +84,7 @@ function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
 	
 end
 
-function collision.check(self, objectname, collisionname) -- FIND COLLISION BETWEEN INSTANCES --
+function collision.check(self, scene, objectname, collisionname) -- FIND COLLISION BETWEEN INSTANCES --
 	if not self then return end
 	if not self.active then return end
 	
@@ -105,9 +105,9 @@ function collision.check(self, objectname, collisionname) -- FIND COLLISION BETW
 		end
 	end
 	
-	for id in pairs(instances) do
-		if instances[id].object == objectname then
-			check_recursively(instances[id], id)
+	for id in pairs(scene.instances) do
+		if scene.instances[id].object == objectname then
+			check_recursively(scene.instances[id], id)
 		end
 	end
 	
