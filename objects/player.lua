@@ -1,6 +1,6 @@
 local object = {}
 
-function object.init(self)
+function object.init(self, scene)
 	
 	self.player = {
 		x_speed = 0,
@@ -48,7 +48,7 @@ function object.init(self)
 
 end
 
-function object.update(self)
+function object.update(self, scene)
 	local player = self.player
 	
 	-- acceleration
@@ -161,9 +161,9 @@ function object.update(self)
 	
 end
 
-function object.draw(self)
+function object.draw(self, scene)
 	
-	sprite.draw(self.sprite)
+	sprite.draw(self.sprite, scene)
 	
 end
 

@@ -283,7 +283,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 		sprite.seq_index = sprite.seq_index + 1
 		if sprite.seq_index > #animdef[sprite.seq] then -- animation reached end
 			-- callback
-			if sprite.anim_end then sprite.anim_end() end
+			if sprite.anim_end then sprite.anim_end(sprite.animation) end
 			
 			-- loop
 			if not (animdef.loops == false) or (animdef.loops and sprite.loops < animdef.loops) then
@@ -315,7 +315,7 @@ function sprite.update(sprite) -- UPDATE SPRITE --
 	
 end
 
-function sprite.draw(sprite, queued) -- DRAW SPRITE --
+function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 	if queued == nil then queued = true end
 
 	assert(sprite, "sprite.draw() | not a valid sprite")
@@ -427,7 +427,7 @@ function sprite.draw(sprite, queued) -- DRAW SPRITE --
 	end
 	
 	if queued then
-		queue.add(scenes.drawlist, z, function()
+		queue.add(scene.drawlist, z, function()
 			love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 			draw()
 			love.graphics.reset()
@@ -651,7 +651,7 @@ function model.update(model) -- UPDATE 3D MODEL --
 	
 end
 
-function model.draw(model) -- DRAW 3D MODEL --
+function model.draw(model, scene) -- DRAW 3D MODEL --
 	assert(model, "model.draw() | not a valid 3d model")
 	assert(model.model, "model.draw() | not a valid 3d model")
 	if not model.visible then return end
@@ -677,7 +677,7 @@ function model.draw(model) -- DRAW 3D MODEL --
 	local opacity = model.opacity or 100; opacity = opacity/100
 	love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 	
-	queue.add(scenes.drawlist, z, function()
+	queue.add(scene.drawlist, z, function()
 		love.graphics.draw(model.canvas.main, x, y, angle, scalex, scaley, xoffset, yoffset, skewx, skewy)
 	end)
 	

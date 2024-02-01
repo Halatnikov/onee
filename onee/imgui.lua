@@ -17,7 +17,7 @@ if (love._os == "Windows" or love._os == "Linix") and debug_mode then
 	imgui.open.menubar = true
 	imgui.open.main = true
 	
-	imgui.open.tests = true
+	--imgui.open.tests = true
 	
 end
 
@@ -410,7 +410,7 @@ function imgui.window.menubar()
 			end
 			-- reset scene shortcut
 			if gui.MenuItem_Bool("Reset scene", "`") then
-				scenes.set("init")
+				scene.set("init")
 			end
 			-- advance frame controls shortcut
 			if gui.SmallButton(freeze and "|>" or "||") then
@@ -547,7 +547,13 @@ function imgui.window.menubar()
 		------------------------------------------------ right corner fps and dt
 		gui.SameLine(windowwidth-120)
 		gui.Text(love.timer.getFPS().." FPS "..string.zeropad(math.round(1000*love.timer.getAverageDelta(),2), 0.2).."ms")
-		gui.SetItemTooltip(string.zeropad(fps, 0.2).." FPS "..string.zeropad(math.round(1000*dt, 2), 0.2).."ms")
+		if gui.BeginItemTooltip() then
+			gui.Text(string.zeropad(fps, 0.2).." FPS "..string.zeropad(math.round(1000*dt, 2), 0.2).."ms")
+			local date = os.date("*t")
+			gui.Text(date.year.."/"..string.zeropad(date.month,2).."/"..string.zeropad(date.day,2).." "..string.zeropad(date.hour,2)..":"..string.zeropad(date.min,2)..":"..string.zeropad(date.sec,2))
+			
+			gui.EndTooltip()
+		end
 		
 		gui.EndMainMenuBar()
 	end
@@ -676,7 +682,7 @@ function imgui.window.main()
 		-- reset scene button
 		gui.SameLine()
 		if gui.Button("Reset scene") then
-			scenes.set("init")
+			scene.set("init")
 		end
 		-- advance frame controls
 		gui.SameLine()
@@ -715,42 +721,8 @@ function imgui.window.main()
 		gui.Checkbox("Show inspect overlay", _v)
 		imgui.open.overlay = _v[0]
 		
-		------------------------------------------------ GENERAL STATS HEADER
-		if gui.CollapsingHeader_BoolPtr("General stats") then
-			
-			-- window size
-			gui.Text("Window size: "..windowwidth.."x"..windowheight)
-			--newly declared globals tree
-			if gui.TreeNodeEx_Str("Newly declared globals", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				if gui.BeginTable("globals", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					
-					for k,v in kpairs(debug.globals) do
-						gui.TableNextRow()
-						gui.TableSetColumnIndex(0)
-						gui.Text(tostring(v))
-					end
-					
-					gui.EndTable()
-				end
-				gui.TreePop()
-			end
-			--loaded requires tree
-			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					
-					for k in kpairs(package.loaded) do
-						gui.TableNextRow()
-						gui.TableSetColumnIndex(0)
-						gui.Text(tostring(k))
-					end
-					
-					gui.EndTable()
-				end
-				gui.TreePop()
-			end
-			gui.Separator()
+		------------------------------------------------ SCENE STACK HEADER
+		if gui.CollapsingHeader_BoolPtr("Scene stack") then
 			
 			-- objects table
 			if gui.BeginTable("scene_stats_objects", 2) then
@@ -767,15 +739,13 @@ function imgui.window.main()
 			-- object summary tree
 			if gui.TreeNodeEx_Str("Objects summary", gui.love.TreeNodeFlags("SpanAvailWidth")) then
 				if gui.BeginTable("object_counts", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					gui.TableSetupColumn("2")
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("count")
 					
 					for k in kpairs(objects) do
 						gui.TableNextRow()
-						gui.TableSetColumnIndex(0)
-						gui.Text(tostring(k))
-						gui.TableSetColumnIndex(1)
-						gui.Text(tostring(objects[k].instances))
+						gui.TableSetColumnIndex(0); gui.Text(tostring(k))
+						gui.TableSetColumnIndex(1); gui.Text(tostring(objects[k].instances))
 					end
 					
 					gui.EndTable()
@@ -785,26 +755,59 @@ function imgui.window.main()
 			gui.Separator()
 			
 			--assets table
-			if gui.BeginTable("scene_stats_assets", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-				gui.TableSetupColumn("1")
-				gui.TableSetupColumn("2")
+			if gui.BeginTable("scene_stats_assets", 3) then
+				gui.TableSetupColumn("assets")
+				gui.TableSetupColumn("sprites")
+				gui.TableSetupColumn("models")
+				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text("assets")
-				gui.TableSetColumnIndex(1); gui.Text(tostring(table.length(assets)))
-				
-				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text("sprites")
+				gui.TableSetColumnIndex(0); gui.Text(tostring(table.length(assets)))
 				gui.TableSetColumnIndex(1); gui.Text(tostring(table.length(sprites)))
-				
-				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text("models")
-				gui.TableSetColumnIndex(1); gui.Text(tostring(table.length(models)))
+				gui.TableSetColumnIndex(2); gui.Text(tostring(table.length(models)))
 				
 				gui.EndTable()
 			end
 			
 			gui.Separator()
+			
+		end
+		
+		------------------------------------------------ GENERAL STATS HEADER
+		if gui.CollapsingHeader_BoolPtr("General stats") then
+			
+			-- window size
+			gui.Text("Window size: "..windowwidth.."x"..windowheight)
+			--newly declared globals tree
+			if gui.TreeNodeEx_Str("Newly declared globals", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("globals", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("k")
+					
+					for k,v in kpairs(debug.globals) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0)
+						gui.Text(tostring(v))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
+			--loaded requires tree
+			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("k")
+					
+					for k in kpairs(package.loaded) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0)
+						gui.Text(tostring(k))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
 			
 		end
 		
@@ -818,10 +821,8 @@ function imgui.window.main()
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0)
-				gui.Text(tostring(math.round(fps,2)))
-				gui.TableSetColumnIndex(1)
-				gui.Text(math.round(1000*dt,2).."ms")
+				gui.TableSetColumnIndex(0); gui.Text(tostring(math.round(fps,2)))
+				gui.TableSetColumnIndex(1); gui.Text(math.round(1000*dt,2).."ms")
 				
 				gui.EndTable()
 			end
@@ -834,12 +835,9 @@ function imgui.window.main()
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0)
-				gui.Text(tostring(math.round(ms,2)))
-				gui.TableSetColumnIndex(1)
-				gui.Text(tostring(frames))
-				gui.TableSetColumnIndex(2)
-				gui.Text(tostring(math.round(love.timer.getTime(),2)))
+				gui.TableSetColumnIndex(0); gui.Text(tostring(math.round(ms,2)))
+				gui.TableSetColumnIndex(1); gui.Text(tostring(frames))
+				gui.TableSetColumnIndex(2); gui.Text(tostring(math.round(love.timer.getTime(),2)))
 				if gui.BeginItemTooltip() then
 					local timer = love.timer.getTime()
 					gui.Text(math.floor(timer/3600).."h "..string.zeropad(math.floor(timer/60)%60, 2).."m "..string.zeropad(math.floor(timer)%60, 2).."s "..string.zeropad(math.floor(timer*100)%100, 2).."ms")
@@ -861,10 +859,8 @@ function imgui.window.main()
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0)
-				gui.Text(math.round(stats.texturememory/1024/1024,2).."MB")
-				gui.TableSetColumnIndex(1)
-				gui.Text(math.round(collectgarbage("count")/1024,2).."MB")
+				gui.TableSetColumnIndex(0); gui.Text(math.round(stats.texturememory/1024/1024,2).."MB")
+				gui.TableSetColumnIndex(1); gui.Text(math.round(collectgarbage("count")/1024,2).."MB")
 				
 				gui.EndTable()
 			end
@@ -875,16 +871,14 @@ function imgui.window.main()
 				local stats = love.graphics.getStats()
 				
 				if gui.BeginTable("performance_stats", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					gui.TableSetupColumn("2")
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
 					
 					for k,v in kpairs(stats) do
 						if k ~= "texturememory" then
 							gui.TableNextRow()
-							gui.TableSetColumnIndex(0)
-							gui.Text(k)
-							gui.TableSetColumnIndex(1)
-							gui.Text(tostring(v))
+							gui.TableSetColumnIndex(0); gui.Text(k)
+							gui.TableSetColumnIndex(1); gui.Text(tostring(v))
 						end
 					end
 					
@@ -898,15 +892,13 @@ function imgui.window.main()
 				local renderer = {}; renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 				
 				if gui.BeginTable("performance_renderer", 2, gui.love.TableFlags("RowBg", "BordersInnerV", "Resizable")) then
-					gui.TableSetupColumn("1")
-					gui.TableSetupColumn("2")
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
 					
 					for k,v in kpairs(renderer) do
 						gui.TableNextRow()
-						gui.TableSetColumnIndex(0)
-						gui.Text(k)
-						gui.TableSetColumnIndex(1)
-						gui.Text(tostring(v))
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
 					end
 					
 					gui.EndTable()
@@ -919,15 +911,13 @@ function imgui.window.main()
 				local limits = love.graphics.getSystemLimits()
 				
 				if gui.BeginTable("performance_limits", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("1")
-					gui.TableSetupColumn("2")
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
 					
 					for k,v in kpairs(limits) do
 						gui.TableNextRow()
-						gui.TableSetColumnIndex(0)
-						gui.Text(k)
-						gui.TableSetColumnIndex(1)
-						gui.Text(tostring(v))
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
 					end
 					
 					gui.EndTable()
@@ -941,24 +931,20 @@ function imgui.window.main()
 		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode.."###input") then
 			
 			-- mouse table
-			if gui.BeginTable("input_mouse", 3) then
+			if gui.BeginTable("input_mouse", 2) then
 				gui.TableSetupColumn("mouse x")
 				gui.TableSetupColumn("mouse y")
-				gui.TableSetupColumn("wheel")
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0)
-				gui.Text(tostring(mousex))
-				gui.TableSetColumnIndex(1)
-				gui.Text(tostring(mousey))
-				gui.TableSetColumnIndex(2)
-				gui.Text(tostring(input.mouse_wheel))
+				gui.TableSetColumnIndex(0); gui.Text(tostring(mousex))
+				gui.TableSetColumnIndex(1); gui.Text(tostring(mousey))
 				
 				gui.EndTable()
 			end
 			
 			-- current inputs table
+			gui.Separator()
 			if gui.BeginTable("input_keys", 3, gui.love.TableFlags("RowBg", "BordersInnerV")) then
 				gui.TableSetupColumn("")
 				gui.TableSetupColumn("pressed")
@@ -967,16 +953,14 @@ function imgui.window.main()
 				
 				for k,v in kpairs(config.input.keyboard) do
 					gui.TableNextRow()
-					gui.TableSetColumnIndex(0)
-					gui.Text(k)
+					gui.TableSetColumnIndex(0); gui.Text(k)
 					gui.TableSetColumnIndex(1)
 					if input[k] then
 						gui.TextColored(gui.ImVec4_Float(0,1,0,1),tostring(input[k]))
 					else
 						gui.TextColored(gui.ImVec4_Float(1,0,0,1),tostring(input[k]))
 					end
-					gui.TableSetColumnIndex(2)
-					gui.Text(tostring(input.time[k]))
+					gui.TableSetColumnIndex(2); gui.Text(tostring(input.time[k]))
 				end
 				
 				gui.EndTable()

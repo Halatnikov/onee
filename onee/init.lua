@@ -6,7 +6,7 @@ onee = {
 
 -- temp font storage
 fonts = {}
-fonts.proggy_clean = love.graphics.newFont("ProggyClean.ttf", 16, "mono", 2)
+fonts.proggy_clean = love.graphics.newFont("fonts/ProggyClean.ttf", 16, "mono", 2)
 fonts.proggy_clean:setFilter("nearest")
 
 -- init itself
@@ -43,14 +43,10 @@ do
 	
 	-- :)
 	print("LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version)
-	print(os.date())
-	scenes.set("init")
+	local date = os.date("*t")
+	print(date.year.."/"..string.zeropad(date.month,2).."/"..string.zeropad(date.day,2).." "..string.zeropad(date.hour,2)..":"..string.zeropad(date.min,2)..":"..string.zeropad(date.sec,2))
+	scene.set("init")
 end
-
--- misc
-_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
-jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
-jit.version_revision = string.left(jit.version_rolling, 2)
 
 ---------------------------------------------------------------- MAIN LOOP
 
@@ -71,7 +67,7 @@ function onee.update(dt_)
 		ms = (ms or 0) + dt
 		frames = (frames or 0) + 1
 		
-		scenes.update()
+		scene.update()
 		input.update()
 	end
 	
@@ -81,7 +77,7 @@ function onee.update(dt_)
 end
 
 function onee.draw()
-	scenes.draw()
+	scene.draw()
 	input.draw()
 	
 	debug.draw()
@@ -99,6 +95,10 @@ function onee.draw()
 end
 
 ---------------------------------------------------------------- MISC
+
+_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
+jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
+jit.version_revision = string.left(jit.version_rolling, 2)
 
 --TODO: make this support ... arguments and then just check if they're all strings or something
 -- don't print to console if it has a category maybe

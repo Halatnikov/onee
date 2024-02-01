@@ -1,6 +1,6 @@
 local object = {}
 
-function object.init(self)
+function object.init(self, scene)
 	asset.sprite("yorb")
 	self.sprite = sprite.init(self.sprite, "yorb")
 	
@@ -14,7 +14,7 @@ function object.init(self)
 	self.sprite.frame = ((self.sprite.x + self.sprite.y) % 6) + 1
 end
 
-function object.update(self)
+function object.update(self, scene)
 	sprite.update(self.sprite)
 	
 	if collision.check(self.collision, "player", "hitbox") then
@@ -28,8 +28,8 @@ function object.update(self)
 	
 end
 
-function object.draw(self)
-	sprite.draw(self.sprite)
+function object.draw(self, scene)
+	sprite.draw(self.sprite, scene)
 end
 
 return object

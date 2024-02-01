@@ -84,9 +84,6 @@ function debug.draw()
 	if debug_profiler then
 		love.graphics.printf("PROFILING", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
-	if debug_testing then
-		love.graphics.printf("RUNNING TESTS", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*2), 128, "right")
-	end
 	love.graphics.reset()
 	
 	
@@ -113,14 +110,13 @@ function debug.draw()
 	
 end
 
---TODO: broke?
-function debug.keypressed(k)
+function debug.keypressed(k, scancode, isrepeat)
 	if not debug_mode then return end
 	--press l to learn
 	
 	if k == "f2" then love.event.quit("restart") end
 	
-	if k == "q" or k == "f3" then scenes.set("init") end
+	if k == "q" or k == "f3" then scene.set("init") end
 	 
 	if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
 	if k == "g" then log(string.random(150)) end

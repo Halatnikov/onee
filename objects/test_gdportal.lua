@@ -3,7 +3,7 @@ local object = {}
 local framex = 196/2
 local framey = 340/2
 
-function object.init(self)
+function object.init(self, scene)
 	
 	asset.sprite("test_gdportal")
 	
@@ -41,7 +41,7 @@ function object.init(self)
 	
 end
 
-function object.update(self)
+function object.update(self, scene)
 	local scalex = self.scalex or self.scale or 1
 	local scaley = self.scaley or self.scale or 1
 	
@@ -52,17 +52,17 @@ function object.update(self)
 	for k,v in pairs(self.sprites) do sprite.update(self.sprites[k]) end
 end
 
-function object.draw(self)	
+function object.draw(self, scene)	
 	
 	self.canvas.back:renderTo(function()
 		love.graphics.clear()
-		sprite.draw(self.sprites.back, false)
+		sprite.draw(self.sprites.back, scene, false)
 	end)
 	self.canvas.front:renderTo(function()
 		love.graphics.clear()
-		sprite.draw(self.sprites.front, false)
-		sprite.draw(self.sprites.detail, false)
-		sprite.draw(self.sprites.icon, false)
+		sprite.draw(self.sprites.front, scene, false)
+		sprite.draw(self.sprites.detail, scene, false)
+		sprite.draw(self.sprites.icon, scene, false)
 	end)
 	
 	local x = self.x or 0
@@ -76,7 +76,7 @@ function object.draw(self)
 	local pwidth, pheight = 32*scalex, 128*scaley
 	local px, py = point.rotate((x - 64 - pwidth - (pwidth/2)), y, math.deg(angle), x, y)
 	
-	queue.add(scenes.drawlist, -1, function()
+	queue.add(scene.drawlist, -1, function()
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		love.graphics.draw(self.canvas.back, x, y, angle, scalex, scaley, framex, framey)
 		
@@ -84,7 +84,7 @@ function object.draw(self)
 		love.graphics.draw(self.particles, px, py, angle)
 		love.graphics.reset()
 	end)
-	queue.add(scenes.drawlist, 2, function()
+	queue.add(scene.drawlist, 2, function()
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		love.graphics.draw(self.canvas.front, x, y, angle, scalex, scaley, framex, framey)
 		love.graphics.reset()

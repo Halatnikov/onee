@@ -1,6 +1,6 @@
 local object = {}
 
-function object.init(self)
+function object.init(self, scene)
 	
 	asset.sprite("earless")
 	asset.sprite("example_tiled")
@@ -45,7 +45,7 @@ function object.init(self)
 	
 end
 
-function object.update(self)
+function object.update(self, scene)
 	
 	self.aaa = (self.aaa or math.random(0,10)) + 1
 	self.sprite4.angle = (self.sprite4.angle or math.random(0,360)) + 2
@@ -59,14 +59,14 @@ function object.update(self)
 	
 end
 
-function object.draw(self)
+function object.draw(self, scene)
 	
-	sprite.draw(self.sprite)
-	sprite.draw(self.sprite2)
-	sprite.draw(self.sprite3)
-	sprite.draw(self.sprite4)
+	sprite.draw(self.sprite, scene)
+	sprite.draw(self.sprite2, scene)
+	sprite.draw(self.sprite3, scene)
+	sprite.draw(self.sprite4, scene)
 	
-	model.draw(self.model)
+	model.draw(self.model, scene)
 	
 end
 

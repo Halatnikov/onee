@@ -207,7 +207,6 @@ function love.joystickremoved()
 end
 
 -- mouse wheel input
--- TODO: broke?
 function input.wheelmoved(x,y) 
 	input.mouse_wheel = y
 end

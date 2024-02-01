@@ -67,9 +67,9 @@ function Checkbox:draw()
     love.graphics.setColor(c.fg)
     if self.checked then
         love.graphics.setLineStyle('smooth')
-        love.graphics.setLineWidth(5)
-        love.graphics.setLineJoin('bevel')
-        love.graphics.line(x+h*.2,y+h*.55, x+h*.45,y+h*.75, x+h*.8,y+h*.2)
+        love.graphics.setLineWidth(3)
+        --love.graphics.setLineJoin('bevel')
+        love.graphics.line(x+h*0.2,y+h*0.55, x+h*0.45,y+h*0.75, x+h*0.8,y+h*0.2)
     end
 
     -- Most checkboxes have no text, so test for performance

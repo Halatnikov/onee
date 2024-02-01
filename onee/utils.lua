@@ -237,10 +237,15 @@ function table.append(a, b)
 	return a
 end
 
-function table.find(arg, result)
-    for k,v in pairs(arg) do
-        if v == result then return k end
-    end
+function table.find(arg, result, result2)
+	if result2 then
+		for k,v in pairs(arg) do
+			if type(arg[k]) == "table" and arg[k][result] and arg[k][result] == result2 then return k end
+		end
+	end
+	for k,v in pairs(arg) do
+		if v == result then return k end
+	end
 end
 
 function table.length(arg)
@@ -290,12 +295,12 @@ function table.protect(arg, blacklist)
 	return proxy
 end
 
-local _pairs = pairs
+pairs_ = pairs
 function pairs(arg)
 	local mt = getmetatable(arg)
 	if mt and mt.protected then arg = mt.__index end
 	
-	return _pairs(arg)
+	return pairs_(arg)
 end
 
 function kpairs(arg, v)
@@ -394,4 +399,24 @@ end
 
 function unrequire(arg)
 	package.loaded[arg] = nil
+end
+
+---------------------------------------------------------------- MISC
+
+os.date_ = os.date
+function os.date(format, time)
+	if format == "*t" then
+		local t = os.date_("*t",time)
+		-- default fields: year, month, day, hour, min, sec, wday, yday, isdst
+		t.wdayname = string.tokenize("Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday",",",t.wday)
+		t.wdayshort = string.left(t.wdayname,3)
+		t.monthname = string.tokenize("January,February,March,April,May,June,July,August,September,October,November,December",",",t.month)
+		t.monthshort = string.left(t.monthname,3)
+		t.hour12 = tonumber(os.date_("%I",time))
+		t.period = os.date_("%p",time)
+		t.week = tonumber(os.date_("%W",time))
+		t.yearshort = tonumber(os.date_("%y",time))
+		return t
+	end
+	return os.date_(format, time)
 end

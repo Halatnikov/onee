@@ -1,12 +1,12 @@
 local object = {}
 
-function object.init(self)
+function object.init(self, scene)
 	self.collision = collision.init(self.collision, "collision",
 		{x = self.x or 0, y = self.y or 0, rect = {width = self.width or 32, height = self.height or 32}}
 	)
 end
 
-function object.update(self)
+function object.update(self, scene)
 	local check_down, col_down = collision.check(self.collision, "player", "collider_down")
 	local check_left, col_left = collision.check(self.collision, "player", "collider_left")
 	local check_right, col_right = collision.check(self.collision, "player", "collider_right")
@@ -35,7 +35,7 @@ function object.update(self)
 	
 end
 
-function object.draw(self)
+function object.draw(self, scene)
 	love.graphics.rectangle("fill", self.collision.x, self.collision.y, self.collision.rect.width, self.collision.rect.height)
 end
 

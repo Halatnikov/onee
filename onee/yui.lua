@@ -96,7 +96,7 @@ function yui.new.debug()
 				gui.Button {
 					text = "Reset scene",
 					onHit = function()
-						scenes.set("init")
+						scene.set("init")
 					end,
 				},
 			},

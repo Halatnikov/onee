@@ -1,15 +1,8 @@
+local scene_ = scene
 local scene = {}
 
-function scene.init()
-	scenes.set("test")
-end
-
-function scene.update()
-	
-end
-
-function scene.draw()
-	
+function scene.init(self)
+	scene_.set("test")
 end
 
 return scene

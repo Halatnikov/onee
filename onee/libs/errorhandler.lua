@@ -112,14 +112,11 @@ function errorhandler.draw(msg, mode, notraceback)
 		"So, what brings you here?",
 		"things are happening",
 		"Catastrophic failure",
+		"FUCK!!",
 	}
 
 	local err = {}
 	table.insert(err, titles[love.math.random(#titles)].."\n")
-	
-	if mode == "lurker" then
-		table.insert(err, "[lurker] - If you fix the problem and update the file, the program will try to resume\n")
-	end
 	
 	table.insert(err, sanitizedmsg)
 	if #sanitizedmsg ~= #msg then
@@ -143,6 +140,10 @@ function errorhandler.draw(msg, mode, notraceback)
 	err = err.."\nPress Ctrl+C to copy to clipboard"
 	err = err.."\nPress Esc to quit or Space to restart"
 	err = err.."\n"
+	
+	if mode == "lurker" then
+		err = err.."\n[lurker]   If you fix the problem and update the file, the program will attempt to resume"
+	end
 
 	local fullErrorText = err
 	local function copyToClipboard()
