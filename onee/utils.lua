@@ -275,6 +275,24 @@ end
 function table.maxv(arg) return table.maxn(arg, true) end -- alias
 table.maxk = table.maxn -- alias
 
+function table.minn(arg, v)
+	local minn
+	if not v then -- keys
+		for k,v in pairs(arg) do
+			minn = minn or k
+			minn = k < minn and k or minn
+		end
+	else -- values
+		for k,v in pairs(arg) do
+			minn = minn or v
+			minn = v < minn and v or minn
+		end
+	end
+	return minn
+end
+function table.minv(arg) return table.minn(arg, true) end -- alias
+table.mink = table.minn -- alias
+
 function table.reverse(arg)
 	table.sort(arg, function(a,b) return a > b end)
 end
@@ -316,6 +334,25 @@ function table.mostcommon(arg)
 	end
 	
 	return current, count
+end
+
+function table.unflatten(arg)
+	arg = copy(arg)
+	local keys, node, tree = {}, {}, {}
+	
+	for i=1, #arg do keys[arg[i].id] = i end
+	for i=1, #arg do
+		node = arg[i]
+		if node.parent and keys[node.parent] then
+			local parent = keys[node.parent]
+			arg[parent].children = arg[parent].children or {}
+			table.insert(arg[parent].children, node)
+		else
+			table.insert(tree, node)
+		end
+	end
+  
+	return tree
 end
 
 function table.protect(arg, blacklist)
@@ -439,10 +476,6 @@ function dofile(path, env)
 end
 
 ---------------------------------------------------------------- MISC
-
-function every(sec, func)
-	if ms % sec == 0 then func() end
-end
 
 function unrequire(arg)
 	package.loaded[arg] = nil

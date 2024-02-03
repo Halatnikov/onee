@@ -48,7 +48,7 @@ function scene.update() -- SCENES UPDATE LOOP --
 		local scene = scenes[id]
 		_prof.push(scene.name)
 		if scene.active then
-			_prof.push("scene update")
+			_prof.push("scene")
 			if scene.update then scene.update(scene) end -- scene
 			_prof.pop()
 			
@@ -73,7 +73,7 @@ function scene.draw() -- SCENES DRAW LOOP --
 		_prof.push(scene.name)
 		scene.drawlist = {} -- new frame
 		if scene.visible then
-			_prof.push("scene draw")
+			_prof.push("scene")
 			if scene.draw then scene.draw(scene) end -- scene
 			_prof.pop()
 			

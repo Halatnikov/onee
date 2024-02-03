@@ -96,6 +96,10 @@ local function _bool(arg, default) -- bool* pointer
 	return _convert(arg, default, "bool")
 end
 
+local function _int(arg, default) -- int* pointer
+	return _convert(arg, default, "int")
+end
+
 local function _float(arg, default) -- float* pointer
 	return _convert(arg, default, "float")
 end
@@ -683,7 +687,7 @@ function imgui.window.overlay()
 end
 
 ---------------------------------------------------------------- MAIN WINDOW
-local graph_fps, graph_dt, graph_ram = table.fill(0, 30), table.fill(0, 30), table.fill(0, 100)
+local graph_fps, graph_dt, graph_ram = table.fill(0, 60), table.fill(0, 60), table.fill(0, 100)
 local graph_update = true
 
 function imgui.window.main()
@@ -1345,8 +1349,9 @@ end
 
 ---------------------------------------------------------------- PROFILER
 
+local report, deep_report = {}, {}
+local frame, root = 1
 local sorting, sortkey, sortdescending = "Time", "timer", true
-local deep_report, clipper = {}, {}
 
 function imgui.window.profiler()
 	local open = _bool(imgui.open.profiler)
@@ -1355,31 +1360,132 @@ function imgui.window.profiler()
 		if gui.BeginTabBar("", gui.love.TabBarFlags("Reorderable")) then
 			
 			local flags = debug_profiler and gui.love.TabItemFlags("UnsavedDocument") or nil
-			if gui.BeginTabItem("Regular", nil, flags) then
+			if gui.BeginTabItem("Graph", nil, flags) then
 				local text = debug_profiler and "Stop" or "Record"
 				if gui.Button(text) then
 					debug_profiler = not debug_profiler
 					debug.profiler_enable(debug_profiler)
+					frame = 1
 				end
 				
-				if #_prof.data == 0 then
+				if not debug_profiler and #_prof.data_pretty == 0 then
 					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -")
 				end
 				if debug_profiler then
 					gui.SameLine(); gui.Text("Recording...")
 				end
-				if not debug_profiler and #_prof.data ~= 0 then
+				if not debug_profiler and #_prof.data_pretty ~= 0 then
 					gui.SameLine()
 					gui.Text("Time spent: "..math.round(_prof.stop - _prof.start, 2))
 					gui.SameLine()
 					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..math.round(_prof.start, 2).." to "..math.round(_prof.stop, 2)..")")
+					
+					report_raw = _prof.data
+					report = _prof.data_pretty
+					
+					gui.Separator()
+					if gui.Button("<-") then root = report[frame] end
+					gui.SameLine(); gui.Text("...")
+					
+					gui.SetNextWindowBgAlpha(1)
+					if gui.BeginChild_Str("frame", gui.ImVec2_Float(-1,-120), gui.love.ChildFlags("Border")) then
+						root = root or report[frame]
+						local rootstop = root.stop or _prof.stop
+						
+						local maxx = gui.GetContentRegionMax().x + 10
+						
+						local root_sorted = {}
+						for i=root.id, #report_raw do
+							if i > root.id and report_raw[i].level <= root.level then break end
+							table.insert(root_sorted, report_raw[i])
+						end
+						table.sortby(root_sorted, "level", true)
+						local max_level = root_sorted[1].level
+						
+						for i=1, max_level do
+							gui.Text("")
+							for j=root.id, #report_raw do
+								if j > root.id and report_raw[j].level <= root.level then break end
+								if report_raw[j].level == i then
+									local node = report_raw[j]
+									
+									local stop = node.stop or _prof.stop
+									local ramstop = node.ramstop or node.ramstart
+						
+									local time = math.round((stop - node.start)*1000, 4)
+									local ram = math.round((ramstop - node.ramstart)/1024, 4)
+									ram = ram >= 0 and "+"..ram or ram
+									local label = node.name.." ("..time.."ms "..ram.."MB)"
+									
+									local maxx = gui.GetContentRegionMax().x + 10
+									
+									local w = math.map(stop, root.start, rootstop, -tick, maxx)
+									local x = math.map(node.start, root.start, rootstop, -tick, maxx)
+									w = w - x
+									if w < 1.5 then w = 1.5 end
+									
+									gui.SameLine(maxx*(x/maxx))
+									if gui.Button(node.name, gui.ImVec2_Float(maxx*(w/maxx),20)) then
+										root = node
+									end
+									
+								end
+							end
+						end
+						
+						gui.EndChild()
+					end
+					
+					if gui.BeginTabBar("frame graphs") then
+						if gui.BeginTabItem("dt") then
+							local graph = {}
+							for i=1, #report do
+								local stop = report[i].stop or _prof.stop
+								table.insert(graph, math.round((stop - report[i].start)*1000, 3))
+							end
+							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
+								"min: "..table.minv(graph).."ms"..
+								newline.."max: "..table.maxv(graph).."ms"..
+								newline.."avg: "..math.round(math.average(graph),3).."ms",
+							nil, nil, gui.ImVec2_Float(-1,64))
+						gui.EndTabItem()
+						end
+						if gui.BeginTabItem("RAM") then
+							local graph = {}
+							for i=1, #report do
+								local ramstop = report[i].ramstop or report[i].ramstart
+								table.insert(graph, math.round(ramstop/1024, 3))
+							end
+							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
+								"min: "..table.minv(graph).."MB"..
+								newline.."max: "..table.maxv(graph).."MB"..
+								newline.."avg: "..math.round(math.average(graph),3).."MB",
+							nil, nil, gui.ImVec2_Float(-1,64))
+						gui.EndTabItem()
+						end
+					gui.EndTabBar()
+					end
+					
+					gui.SetNextItemWidth(-48)
+					local _v = _int(frame)
+					gui.SliderInt("", _v, 1, #report, "frame "..frame.."/"..#report)
+					if gui.IsItemEdited() then
+						frame = _v[0]
+						root = report[frame]
+					end
+					gui.SameLine(); if gui.Button("<") then 
+						if frame > 1 then frame = frame - 1 end; root = report[frame]
+					end
+					gui.SameLine(); if gui.Button(">") then
+						if frame < #report then frame = frame + 1 end; root = report[frame]
+					end
 				end
 				
 				gui.EndTabItem()
 			end
 			
 			local flags = debug_profiler_deep and gui.love.TabItemFlags("UnsavedDocument") or nil
-			if gui.BeginTabItem("Deep", nil, flags) then
+			if gui.BeginTabItem("Trace", nil, flags) then
 				local text = debug_profiler_deep and "Stop" or "Record"
 				if gui.Button(text) then
 					debug_profiler_deep = not debug_profiler_deep
@@ -1413,7 +1519,6 @@ function imgui.window.profiler()
 						if gui.Selectable_Bool("Called") then sorting = "Called"; sortkey = "count" end
 						gui.EndCombo()
 					end
-					
 					gui.SameLine()
 					local _v = _bool(sortdescending, true)
 					gui.Checkbox("Descending", _v)
@@ -1456,13 +1561,9 @@ function imgui.window.profiler()
 							gui.TableSetColumnIndex(3); gui.Text(string.zeropad(relative,0.2).."%%")
 							gui.TableSetColumnIndex(4); gui.Text(tostring(report.count))
 						end
-
-						
 						gui.EndTable()
 					end
-					
 				end
-				
 				gui.EndTabItem()
 			end
 			

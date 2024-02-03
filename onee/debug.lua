@@ -294,7 +294,6 @@ _prof = {
 }
 
 local function push(name, data)
-	local ram = collectgarbage("count")
 	_prof.level = _prof.level + 1
 	
 	local parent
@@ -306,6 +305,7 @@ local function push(name, data)
 		end
 	end
 	
+	local ram = collectgarbage("count")
 	local event = {
 		type = "event",
 		id = #_prof.data + 1,
@@ -322,9 +322,8 @@ local function push(name, data)
 end
 
 local function pop(name)
-	local ram = collectgarbage("count")
-	local previous
 	
+	local previous
 	for k,v in ripairs(_prof.data) do
 		local current = _prof.data[k]
 		if current.level == _prof.level then
@@ -338,38 +337,14 @@ local function pop(name)
 		end
 	end
 	
+	local ram = collectgarbage("count")
 	if previous then 
 		previous.stop = love.timer.getTime()
 		previous.ramstop = ram - _prof.ram
 	end
 	
-	_prof.level = _prof.level - 1
 	_prof.ram = _prof.ram + (collectgarbage("count") - ram)
-end
-
-function table.unflatten(arg)
-	arg = copy(arg)
-	local map = {}
-	local node
-	local roots = {}
-	
-	for i = 1, #arg do
-		map[arg[i].id] = i
-		arg[i].children = {}
-	end
-	
-	for i = 1, #arg do
-		node = arg[i]
-		if node.parent ~= nil then
-			if map[node.parent] then
-				table.insert(arg[map[node.parent]].children, node)
-			end
-		else
-			table.insert(roots, node)
-		end
-	end
-  
-	return roots
+	_prof.level = _prof.level - 1
 end
 
 function _prof.enable(enabled)
