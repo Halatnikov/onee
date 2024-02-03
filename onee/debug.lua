@@ -1,60 +1,61 @@
-if debug_mode then
-	love.setDeprecationOutput(true)
-	love.window.setTitle(love.config.window.title.." (debug)")
-	
-	debug_draw_collisions = true
-	debug_draw_sprites = false
-	debug_hotswap = true
-	debug_profiler = false
-	debug_profiler_deep = false
-	
-	lurker.interval = 1
-	
-	-- TODO: functions on disabling/reenabling debug mode, maybe unrequire lurker completely
-	-- TODO: init imgui here
-	-- TODO: on debug_mode disable, close all the ui
-	-- TODO: shortcut ` or f1 to open/close the debug window
-	
-	-- monitor global variables :eyes:
-	debug.globals = {}
-	setmetatable(_G, {
-		__newindex = function (t, k, v)
-			table.insert(debug.globals, k)
-			if v == nil then table.remove(debug.globals, table.find(k)) end
-			rawset(t, k, v)
-		end
-	})
-	
-end
-
-function debug.update()
-	if not debug_mode then debug.enable(false) return end
-	
-	if debug_hotswap then lurker.update() end
-	if debug_profiler_deep then profi:checkMemory(0.1) end
-end
-
 function debug.enable(enabled)
 	debug_mode = enabled
 	if enabled then
-	
+		
+		-- libraries (debug)
+		require("onee/libs/lurker")
+		--require("onee/libs/jprof")
+		require("onee/libs/profi")
+		require("onee/libs/df-serialize")
+		
+		-- gui (debug)
+		require("onee/imgui")
+		
+		love.setDeprecationOutput(true)
+		love.window.setTitle(love.config.window.title.." (debug)")
+		
+		debug_draw_collisions = true
+		debug_draw_sprites = false
+		debug_hotswap = true
+		debug.profiler_enable(false)
+		debug.profiler_deep_enable(false)
+		
+		lurker.interval = 1
+		
+		-- TODO: functions on disabling/reenabling debug mode, maybe unrequire lurker completely
+		-- TODO: init imgui here
+		-- TODO: on debug_mode disable, close all the ui
+		-- TODO: shortcut ` or f1 to open/close the debug window
+		
+		-- monitor global variables :eyes:
+		debug.globals = {}
+		setmetatable(_G, {
+			__newindex = function (t, k, v)
+				table.insert(debug.globals, k)
+				if v == nil then table.remove(debug.globals, table.find(k)) end
+				rawset(t, k, v)
+			end
+		})
+		
 	else
+		
 		love.window.setTitle(love.config.window.title)
+		
+		_prof = {}
+		_prof.push = noop
+		_prof.pop = noop
+		_prof.popAll = noop
+		
 	end
 end
 
 function debug.profiler_enable(enabled)
 	debug_profiler = enabled
 	if enabled then
-		table.clear(_prof.profdata)
-		_prof.enabled(true)
+		_prof.enable(true)
 	else
-		_prof.popAll()
-		_prof.write("jprof.mpack")
-		_prof.enabled(false)
-		
+		_prof.enable(false)
 		debug.profiler_deep_enable(false)
-		collectgarbage()
 	end
 end
 
@@ -64,11 +65,21 @@ function debug.profiler_deep_enable(enabled)
 		profi:reset()
 		profi:setGetTimeMethod(love.timer.getTime)
 		profi:start()
-	else
+	elseif profi.has_started then
 		profi:stop()
-		profi:writeReport("ProFi.txt")
 		collectgarbage()
 	end
+end
+
+----------------------------------------------------------------
+
+function debug.update()
+	if not debug_mode then return end
+	
+	if debug_hotswap then lurker.update() end
+	if debug_profiler_deep then profi:checkMemory(0.1) end
+	
+	imgui.update()
 end
 
 a = {{0,0}, {100,10}, {50,100}, {60,30}}
@@ -115,6 +126,8 @@ function debug.draw()
 	end
 	queue.execute(debug.drawlist)
 	
+	imgui.draw()
+	
 	local h = math.loop(0, 1, 4)
 	love.graphics.setColor(color.hsl(h, 1, 0.5))
 	if debug_hotswap then
@@ -151,6 +164,8 @@ function debug.draw()
 	
 end
 
+----------------------------------------------------------------
+
 function debug.keypressed(k, scancode, isrepeat)
 	if not debug_mode then return end
 	--press l to learn
@@ -168,6 +183,7 @@ function debug.table(arg, mode, indent)
 	print(serialize.pack(arg, indent or 1, mode or "lax"))
 end
 
+----------------------------------------------------------------
 function debug.test(arg)
 	debug_testing = true
 	local path = "onee/_tests/"..arg..".lua"
@@ -265,4 +281,115 @@ function debug.test(arg)
 	debug_testing = nil
 	
 	return success, summary, passes, errors, took
+end
+
+----------------------------------------------------------------
+_prof = {
+	enabled = false,
+	data = {},
+	ram = 0,
+	level = 2,
+	start = 0,
+	stop = 0,
+}
+
+local function push(name, data)
+	local ram = collectgarbage("count")
+	_prof.level = _prof.level + 1
+	
+	local parent
+	for k,v in ripairs(_prof.data) do
+		local current = _prof.data[k]
+		if current.level == _prof.level - 1 then
+			parent = current.id
+			break
+		end
+	end
+	
+	local event = {
+		type = "event",
+		id = #_prof.data + 1,
+		parent = parent,
+		level = _prof.level,
+		name = name,
+		data = data,
+		start = love.timer.getTime(),
+		ramstart = ram - _prof.ram,
+	}
+	
+	table.insert(_prof.data, event)
+	_prof.ram = _prof.ram + (collectgarbage("count") - ram)
+end
+
+local function pop(name)
+	local ram = collectgarbage("count")
+	local previous
+	
+	for k,v in ripairs(_prof.data) do
+		local current = _prof.data[k]
+		if current.level == _prof.level then
+			if not name then
+				previous = current
+				break
+			elseif name and current.name == name then
+				previous = current
+				break
+			end
+		end
+	end
+	
+	if previous then 
+		previous.stop = love.timer.getTime()
+		previous.ramstop = ram - _prof.ram
+	end
+	
+	_prof.level = _prof.level - 1
+	_prof.ram = _prof.ram + (collectgarbage("count") - ram)
+end
+
+function table.unflatten(arg)
+	arg = copy(arg)
+	local map = {}
+	local node
+	local roots = {}
+	
+	for i = 1, #arg do
+		map[arg[i].id] = i
+		arg[i].children = {}
+	end
+	
+	for i = 1, #arg do
+		node = arg[i]
+		if node.parent ~= nil then
+			if map[node.parent] then
+				table.insert(arg[map[node.parent]].children, node)
+			end
+		else
+			table.insert(roots, node)
+		end
+	end
+  
+	return roots
+end
+
+function _prof.enable(enabled)
+	_prof.enabled = enabled
+	if enabled then
+		_prof.push = push
+		_prof.pop = pop
+		
+		_prof.start = love.timer.getTime()
+		_prof.stop = 0
+		_prof.ram = 0
+		_prof.data = {}
+		_prof.data_pretty = {}
+	else
+		_prof.push = noop
+		_prof.pop = noop
+		
+		_prof.stop = love.timer.getTime()
+		_prof.ram = 0
+		_prof.data_pretty = table.unflatten(_prof.data)
+	end
+	collectgarbage()
 end

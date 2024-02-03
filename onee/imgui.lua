@@ -448,6 +448,7 @@ function imgui.window.menubar()
 			-- toggle debug mode
 			if gui.MenuItem_Bool("Debug mode", nil, debug_mode) then
 				debug_mode = not debug_mode
+				debug.enable(debug_mode)
 			end
 			-- toggle mobile mode
 			if gui.MenuItem_Bool("Mobile mode", nil, mobile) then
@@ -511,6 +512,10 @@ function imgui.window.menubar()
 			-- open tests runner window
 			if gui.MenuItem_Bool("Test suite", nil, imgui.open.tests) then
 				imgui.open.tests = not imgui.open.tests
+			end
+			-- open profiler window
+			if gui.MenuItem_Bool("Profiler", nil, imgui.open.profiler) then
+				imgui.open.profiler = not imgui.open.profiler
 			end
 			
 			gui.Separator()
@@ -1341,7 +1346,7 @@ end
 ---------------------------------------------------------------- PROFILER
 
 local sorting, sortkey, sortdescending = "Time", "timer", true
-local deep_report = {}
+local deep_report, clipper = {}, {}
 
 function imgui.window.profiler()
 	local open = _bool(imgui.open.profiler)
@@ -1356,6 +1361,20 @@ function imgui.window.profiler()
 					debug_profiler = not debug_profiler
 					debug.profiler_enable(debug_profiler)
 				end
+				
+				if #_prof.data == 0 then
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -")
+				end
+				if debug_profiler then
+					gui.SameLine(); gui.Text("Recording...")
+				end
+				if not debug_profiler and #_prof.data ~= 0 then
+					gui.SameLine()
+					gui.Text("Time spent: "..math.round(_prof.stop - _prof.start, 2))
+					gui.SameLine()
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..math.round(_prof.start, 2).." to "..math.round(_prof.stop, 2)..")")
+				end
+				
 				gui.EndTabItem()
 			end
 			
@@ -1375,6 +1394,9 @@ function imgui.window.profiler()
 				end
 				if not debug_profiler_deep and #profi.reports ~= 0 then
 					gui.SameLine()
+					if gui.Button("Dump") then profi:writeReport("ProFi.txt") end
+					
+					gui.SameLine()
 					gui.Text("Time spent: "..math.round(profi.stopTime - profi.startTime, 2))
 					gui.SameLine()
 					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..math.round(profi.startTime, 2).." to "..math.round(profi.stopTime, 2)..")")
@@ -1387,7 +1409,7 @@ function imgui.window.profiler()
 						if gui.Selectable_Bool("File") then sorting = "File"; sortkey = "source" end
 						if gui.Selectable_Bool("Function") then sorting = "Function"; sortkey = "name" end
 						if gui.Selectable_Bool("Time") then sorting = "Time"; sortkey = "timer" end
-						if gui.Selectable_Bool("Relative") then sorting = "Relative"; sortkey = "relative" end
+						--if gui.Selectable_Bool("Relative") then sorting = "Relative"; sortkey = "relative" end
 						if gui.Selectable_Bool("Called") then sorting = "Called"; sortkey = "count" end
 						gui.EndCombo()
 					end
@@ -1400,44 +1422,45 @@ function imgui.window.profiler()
 					deep_report = copy(profi.reports)
 					table.sortby(deep_report, sortkey, sortdescending)
 					
-					if gui.BeginChild_Str("profiling_deep") then
-						if gui.BeginTable("profiling_deep", 5, gui.love.TableFlags("BordersInnerV", "Resizable", "ScrollX", "Reorderable")) then
-							gui.TableSetupColumn("File")
-							gui.TableSetupColumn("Function")
-							gui.TableSetupColumn("Time")
-							gui.TableSetupColumn("Relative")
-							gui.TableSetupColumn("Called")
-							gui.TableHeadersRow()
+					gui.SetNextWindowBgAlpha(1)
+					if gui.BeginTable("profiling_deep", 5, gui.love.TableFlags("BordersInnerV", "Resizable", "ScrollY", "ScrollX", "Reorderable")) then
+						gui.TableSetupColumn("File")
+						gui.TableSetupColumn("Function")
+						gui.TableSetupColumn("Time")
+						gui.TableSetupColumn("Relative")
+						gui.TableSetupColumn("Called")
+						gui.TableHeadersRow()
+
+						for i=1, #deep_report do
+							local report = deep_report[i]
 							
-							for i=1, #deep_report do
-								local report = deep_report[i]
-								
-								local file = report.source or "unknown"
-								local line = (report.linedefined and report.linedefined ~= -1) and ":"..report.linedefined or ""
-								local name = report.name or "unknown"
-								
-								gui.TableNextRow()
-								gui.TableSetColumnIndex(0)
-								if file == "unknown" or file == "[C]" or string.find(file, "builtin") then
-									gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), file..line)
-								else
-									gui.Text(file..line)
-								end
-								gui.TableSetColumnIndex(1)
-								if name == "anonymous" or name == "unknown" or name == "(for generator)" then
-									gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), name)
-								else
-									gui.Text(name)
-								end
-								gui.TableSetColumnIndex(2); gui.Text(string.zeropad(math.round(report.timer*1000,4),0.4).."ms")
-								gui.TableSetColumnIndex(3); gui.Text(string.zeropad(report.relative,0.2).."%%")
-								gui.TableSetColumnIndex(4); gui.Text(tostring(report.count))
+							local file = report.source or "unknown"
+							local line = (report.linedefined and report.linedefined ~= -1) and ":"..report.linedefined or ""
+							local name = report.name or "unknown"
+							local relative = report.relative or 0
+							
+							gui.TableNextRow()
+							gui.TableSetColumnIndex(0)
+							if file == "unknown" or file == "[C]" or string.find(file, "builtin") then
+								gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), file..line)
+							else
+								gui.Text(file..line)
 							end
-							
-							gui.EndTable()
+							gui.TableSetColumnIndex(1)
+							if name == "anonymous" or name == "unknown" or name == "(for generator)" then
+								gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), name)
+							else
+								gui.Text(name)
+							end
+							gui.TableSetColumnIndex(2); gui.Text(string.zeropad(math.round(report.timer*1000,4),0.4).."ms")
+							gui.TableSetColumnIndex(3); gui.Text(string.zeropad(relative,0.2).."%%")
+							gui.TableSetColumnIndex(4); gui.Text(tostring(report.count))
 						end
-						gui.EndChild()
+
+						
+						gui.EndTable()
 					end
+					
 				end
 				
 				gui.EndTabItem()

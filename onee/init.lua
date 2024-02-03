@@ -13,13 +13,7 @@ do
 	require("conf")
 	require("onee/libs/errorhandler")
 
-	-- libraries
-	-- (debug)
-	require("onee/libs/lurker")
-	require("onee/libs/jprof")
-	require("onee/libs/profi")
-	require("onee/libs/df-serialize")
-	-- (user)
+	-- libraries (user)
 	require("onee/libs/json")
 	require("onee/libs/gifload")
 	require("onee/libs/gltf")
@@ -32,13 +26,14 @@ do
 	require("onee/scenes")
 	require("onee/debug")
 
-	-- gui libraries
+	-- gui (user)
 	require("onee/yui")
-	require("onee/imgui")
 	
 	tick = 1 / framerate
 	onee.time_start = os.time()
 	onee.allow_update = true
+	
+	debug.enable(debug_mode)
 	
 	love.graphics.setDefaultFilter("nearest", "nearest", 0)
 	love.graphics.setLineStyle("rough")
@@ -78,7 +73,6 @@ function onee.update(dt_)
 	end
 	
 	debug.update()
-	imgui.update()
 	
 	_prof.pop()
 end
@@ -90,7 +84,6 @@ function onee.draw()
 	input.draw()
 	
 	debug.draw()
-	imgui.draw()
 	yui.draw()
 	
 	-- reset the graphics state constantly

@@ -89,6 +89,11 @@ function ProFi:stop()
 	self.stopTime = getTime()
 	self:stopHooks()
 	self.has_finished = true
+	
+	local totalTime = self.stopTime - self.startTime
+	for i, funcReport in ipairs( self.reports ) do
+		funcReport.relative = (funcReport.timer / totalTime) * 100
+	end
 end
 
 function ProFi:checkMemory( interval, note )
@@ -267,7 +272,6 @@ function ProFi:writeProfilingReportsToFile( reports, file )
  	for i, funcReport in ipairs( reports ) do
 		local timer         = string.format(FORMAT_TIME, funcReport.timer)
 		local count         = string.format(FORMAT_COUNT, funcReport.count)
-		funcReport.relative = (funcReport.timer / totalTime) * 100
 		local relTime 		= string.format(FORMAT_RELATIVE, funcReport.relative )
 		local outputLine    = string.format(FORMAT_OUTPUT_LINE, funcReport.title, timer, relTime, count )
 		file:write( outputLine )
