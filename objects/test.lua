@@ -59,6 +59,7 @@ function object.update(self, scene)
 	
 end
 
+
 function object.draw(self, scene)
 	
 	sprite.draw(self.sprite, scene)

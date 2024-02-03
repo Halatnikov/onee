@@ -1,7 +1,6 @@
 mobile = (love._os == "Android" or love._os == "iOS")
 framerate = 60
 debug_mode = true
-debug_hotswap = true
 
 function love.conf(t)
 	t.window.title = "onee"
@@ -13,7 +12,7 @@ function love.conf(t)
 	t.window.fullscreen = mobile
 	t.gammacorrect = true
 	
-	t.identity = "savedata"
+	t.identity = "onee"
 	t.appendidentity = true
 	t.externalstorage = true
 	

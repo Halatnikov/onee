@@ -3,7 +3,7 @@ function love.load()
 end
 
 function love.quit()
-	
+	onee.quit()
 end
 
 -- main loop

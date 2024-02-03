@@ -1,6 +1,5 @@
-onee = {
-	version = "0.0.2-14",
-}
+onee = {}
+onee.version = "0.0.2-14"
 
 ---------------------------------------------------------------- INIT
 
@@ -15,8 +14,12 @@ do
 	require("onee/libs/errorhandler")
 
 	-- libraries
+	-- (debug)
 	require("onee/libs/lurker")
+	require("onee/libs/jprof")
+	require("onee/libs/profi")
 	require("onee/libs/df-serialize")
+	-- (user)
 	require("onee/libs/json")
 	require("onee/libs/gifload")
 	require("onee/libs/gltf")
@@ -51,6 +54,9 @@ end
 ---------------------------------------------------------------- MAIN LOOP
 
 function onee.update(dt_)
+	_prof.push("frame")
+	_prof.push("onee.update")
+	
 	-- fps limiter start
 	onee.before_update = (onee.before_update or 0) + tick
 	
@@ -74,9 +80,12 @@ function onee.update(dt_)
 	debug.update()
 	imgui.update()
 	
+	_prof.pop()
 end
 
 function onee.draw()
+	_prof.push("onee.draw")
+	
 	scene.draw()
 	input.draw()
 	
@@ -92,6 +101,13 @@ function onee.draw()
 	onee.after_draw = love.timer.getTime()
 	if onee.before_update <= onee.after_draw then onee.before_update = onee.after_draw end
 	love.timer.sleep(onee.before_update - onee.after_draw)
+	
+	_prof.pop()
+	_prof.pop("frame")
+end
+
+function onee.quit()
+	
 end
 
 ---------------------------------------------------------------- MISC

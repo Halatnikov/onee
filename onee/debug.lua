@@ -4,6 +4,9 @@ if debug_mode then
 	
 	debug_draw_collisions = true
 	debug_draw_sprites = false
+	debug_hotswap = true
+	debug_profiler = false
+	debug_profiler_deep = false
 	
 	lurker.interval = 1
 	
@@ -24,14 +27,48 @@ if debug_mode then
 	
 end
 
-function debug.disable()
-	love.window.setTitle(love.config.window.title)
-end
-
 function debug.update()
-	if not debug_mode then debug.disable() return end
+	if not debug_mode then debug.enable(false) return end
 	
 	if debug_hotswap then lurker.update() end
+	if debug_profiler_deep then profi:checkMemory(0.1) end
+end
+
+function debug.enable(enabled)
+	debug_mode = enabled
+	if enabled then
+	
+	else
+		love.window.setTitle(love.config.window.title)
+	end
+end
+
+function debug.profiler_enable(enabled)
+	debug_profiler = enabled
+	if enabled then
+		table.clear(_prof.profdata)
+		_prof.enabled(true)
+	else
+		_prof.popAll()
+		_prof.write("jprof.mpack")
+		_prof.enabled(false)
+		
+		debug.profiler_deep_enable(false)
+		collectgarbage()
+	end
+end
+
+function debug.profiler_deep_enable(enabled)
+	debug_profiler_deep = enabled
+	if enabled then
+		profi:reset()
+		profi:setGetTimeMethod(love.timer.getTime)
+		profi:start()
+	else
+		profi:stop()
+		profi:writeReport("ProFi.txt")
+		collectgarbage()
+	end
 end
 
 a = {{0,0}, {100,10}, {50,100}, {60,30}}
@@ -84,8 +121,9 @@ function debug.draw()
 		love.graphics.printf("HOTSWAP", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
 		--love.graphics.printf(math.loop(3, 2, -2), fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
-	if debug_profiler then
-		love.graphics.printf("PROFILING", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
+	if debug_profiler or debug_profiler_deep then
+		local text = debug_profiler_deep and "DEEP PROFILING" or "PROFILING"
+		love.graphics.printf(text, fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
 	love.graphics.reset()
 	

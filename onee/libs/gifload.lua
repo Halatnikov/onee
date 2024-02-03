@@ -86,7 +86,7 @@ local function gifdone(self)
 end
 
 local function giferr(self, msg)
-  print(msg)
+  error(msg)
 end
 
 -- Gif decoding aux functions

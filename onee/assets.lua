@@ -66,6 +66,7 @@ function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 	local name = string.tokenize(path, "/", -1)
 	if scene.assets[name] then return end -- already loaded
 	
+	print("loading sprite "..path)
 	local time_start = love.timer.getTime()
 	local sprite = require("sprites/"..path) -- init
 	scene.assets[name] = {}
@@ -73,6 +74,7 @@ function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 	-- first pass
 	for anim in pairs(sprite.animations) do
 		local animdef = sprite.animations[anim]
+		--print(anim)
 		
 		-- determine image types
 		if sprite.gif then animdef.gif = true end
@@ -374,7 +376,7 @@ function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 	end
 	assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
 	
-	local draw = function() end
+	local function draw() end
 	
 	-- finally drawing itself
 	if spritedef.tiled then -- TILED SPRITE
@@ -438,7 +440,6 @@ end
 function sprite.debug_draw(sprite, scene) -- DEBUG DRAW SPRITE --
 	if not sprite.active then return end 
 	if sprite.queued == false then return end
-	if sprite.tiled or sprite.nineslice then return end -- temp
 	
 	local spritedef = scene.sprites[sprite.name]
 	local animdef = spritedef.animations[sprite.animation]
@@ -454,12 +455,13 @@ function sprite.debug_draw(sprite, scene) -- DEBUG DRAW SPRITE --
 	local mode = sprite.debug.highlighted and "fill" or "line"
 	
 	love.graphics.setColor(sprite.debug.rgb[1]/255, sprite.debug.rgb[2]/255, sprite.debug.rgb[3]/255, 0.5)
-	love.graphics.setLineWidth(3)
+	love.graphics.setLineWidth(2.5)
 	
 	local x = sprite.x or 0 
 	local y = sprite.y or 0 
 	local scalex = sprite.scalex or sprite.scale or 1; scalex = math.abs(scalex)
 	local scaley = sprite.scaley or sprite.scale or 1; scaley = math.abs(scaley)
+	local angle = sprite.angle or 0
 	
 	local bbox_x = x - (framedef.x * scalex)
 	local bbox_y = y - (framedef.y * scaley)
@@ -467,11 +469,19 @@ function sprite.debug_draw(sprite, scene) -- DEBUG DRAW SPRITE --
 	local height = scaley * framedef.height
 	
 	-- bbox
-	if sprite.angle == 0 or not sprite.angle then
-		love.graphics.rectangle(mode, bbox_x, bbox_y, width, height)
+	if sprite.tiled then
+		local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
+		local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
+		
+		love.graphics.polygon(mode, poly.unpack(bbox))
+	elseif sprite.nineslice then
+		local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
+		local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
+		
+		love.graphics.polygon(mode, poly.unpack(bbox))
 	else
 		local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
-		local bbox = poly.rotate(bbox_old, sprite.angle, framedef.x * scalex, framedef.y * scaley)
+		local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
 		
 		love.graphics.polygon(mode, poly.unpack(bbox))
 	end
@@ -492,6 +502,8 @@ function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
 	local name = string.tokenize(path, "/", -1)
 	if scene.assets[name] then return end -- already loaded
 	
+	print("loading model "..path)
+	local time_start = love.timer.getTime()
 	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
 	local modeldef = {}
 	if files.exists("models/"..path..".lua") then modeldef = require("models/"..path) end
@@ -538,6 +550,9 @@ function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
 	
 	scene.models[name] = modeldef -- done
 	unrequire("models/"..path)
+	
+	local time_finish = love.timer.getTime()
+	print("took "..math.round(time_finish - time_start, 4))
 	
 end
 

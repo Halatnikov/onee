@@ -18,7 +18,9 @@ function spritesheet.add(path, frame, animdef, framedef, export)
 	end)
 	
 	export[frame] = love.graphics.newImage(canvas:newImageData())
-	canvas = nil
+	
+	canvas = nil -- clear from memory
+	collectgarbage()
 end
 
 function spritesheet.strip(path, animdef, export)

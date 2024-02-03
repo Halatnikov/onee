@@ -11,13 +11,12 @@ if (love._os == "Windows" or love._os == "Linix") and debug_mode then
 	
 	gui.love.Init()
 	gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
-	imgui_io = gui.GetIO()
 	
 	
 	imgui.open.menubar = true
 	imgui.open.main = true
 	
-	--imgui.open.tests = true
+	imgui.open.profiler = true
 	
 end
 
@@ -454,10 +453,6 @@ function imgui.window.menubar()
 			if gui.MenuItem_Bool("Mobile mode", nil, mobile) then
 				mobile = not mobile
 			end
-			-- toggle file hot reload
-			if gui.MenuItem_Bool("File hotswap", nil, debug_hotswap) then
-				debug_hotswap = not debug_hotswap
-			end
 			-- change target fps
 			gui.AlignTextToFramePadding()
 			gui.Text("Target framerate")
@@ -468,6 +463,21 @@ function imgui.window.menubar()
 			if gui.IsItemDeactivatedAfterEdit() then
 				framerate = tonumber(ffi.string(_v))
 				tick = 1 / framerate
+			end
+			
+			gui.Separator()
+			-- toggle file hot reload
+			if gui.MenuItem_Bool("File hotswap", nil, debug_hotswap) then
+				debug_hotswap = not debug_hotswap
+			end
+			-- toggle profiling
+			if gui.MenuItem_Bool("Profiling", nil, debug_profiler) then
+				debug_profiler = not debug_profiler
+				debug.profiler_enable(debug_profiler)
+			end
+			if gui.MenuItem_Bool("Deep profiling", nil, debug_profiler_deep) then
+				debug_profiler_deep = not debug_profiler_deep
+				debug.profiler_deep_enable(debug_profiler_deep)
 			end
 			
 			gui.Separator()
@@ -668,6 +678,8 @@ function imgui.window.overlay()
 end
 
 ---------------------------------------------------------------- MAIN WINDOW
+local graph_fps, graph_dt, graph_ram = table.fill(0, 30), table.fill(0, 30), table.fill(0, 100)
+local graph_update = true
 
 function imgui.window.main()
 	local open = _bool(imgui.open.main)
@@ -814,18 +826,53 @@ function imgui.window.main()
 		------------------------------------------------ PERFORMANCE HEADER
 		if gui.CollapsingHeader_BoolPtr("Performance") then
 			
+			local _v = _bool(graph_update, true)
+			gui.Checkbox("Update graphs", _v)
+			graph_update = _v[0]
+			
 			-- raw fps and dt table
+			if graph_update and onee.allow_update then
+				table.remove(graph_fps, 1); table.insert(graph_fps, fps)
+				table.remove(graph_dt, 1); table.insert(graph_dt, 1000*dt)
+			end
+			
 			if gui.BeginTable("performance_fps", 2) then
 				gui.TableSetupColumn("raw FPS")
 				gui.TableSetupColumn("raw dt")
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text(tostring(math.round(fps,2)))
-				gui.TableSetColumnIndex(1); gui.Text(math.round(1000*dt,2).."ms")
+				gui.TableSetColumnIndex(0)
+				gui.PlotLines_FloatPtr("", _float(graph_fps), #graph_fps, 0, tostring(math.round(fps,2)), framerate/2, framerate, gui.ImVec2_Float(-1,30))
+				gui.TableSetColumnIndex(1)
+				gui.PlotLines_FloatPtr("", _float(graph_dt), #graph_dt, 0, math.round(1000*dt,2).."ms", nil, nil, gui.ImVec2_Float(-1,30))
 				
 				gui.EndTable()
 			end
+			
+			-- ram table
+			local stats = love.graphics.getStats()
+			local texture = math.round(stats.texturememory/1024/1024,2)
+			local gc = math.round(collectgarbage("count")/1024,2)
+			local total = texture + gc
+			
+			if graph_update then
+				table.remove(graph_ram, 1); table.insert(graph_ram, total)
+			end
+			
+			if gui.BeginTable("performance_ram", 2) then
+				gui.TableSetupColumn("texture RAM")
+				gui.TableSetupColumn("GC")
+				gui.TableHeadersRow()
+				
+				gui.TableNextRow()
+				gui.TableSetColumnIndex(0); gui.Text(texture.."MB")
+				gui.TableSetColumnIndex(1); gui.Text(gc.."MB")
+				
+				gui.EndTable()
+			end
+			
+			gui.PlotLines_FloatPtr("", _float(graph_ram), #graph_ram, 0, "total: "..total.."MB", nil, nil, gui.ImVec2_Float(-1,30))
 			
 			-- timers table
 			if gui.BeginTable("performance_time", 3) then
@@ -850,26 +897,9 @@ function imgui.window.main()
 				gui.EndTable()
 			end
 			
-			-- ram and garbage collector table
-			if gui.BeginTable("performance_ram", 2) then
-				local stats = love.graphics.getStats()
-				
-				gui.TableSetupColumn("texture RAM")
-				gui.TableSetupColumn("GC")
-				gui.TableHeadersRow()
-				
-				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text(math.round(stats.texturememory/1024/1024,2).."MB")
-				gui.TableSetColumnIndex(1); gui.Text(math.round(collectgarbage("count")/1024,2).."MB")
-				
-				gui.EndTable()
-			end
-			
 			gui.Separator()
 			------------------------ love.graphics.getStats() tree
 			if gui.TreeNodeEx_Str("love.graphics.getStats()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				local stats = love.graphics.getStats()
-				
 				if gui.BeginTable("performance_stats", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
 					gui.TableSetupColumn("k")
 					gui.TableSetupColumn("v")
@@ -1233,7 +1263,7 @@ function imgui.window.tests()
 	local open = _bool(imgui.open.tests)
 	
 	if gui.Begin("Test suite", open) then
-		if gui.BeginTabBar("", gui.love.TabBarFlags("TabListPopupButton", "Reorderable")) then
+		if gui.BeginTabBar("", gui.love.TabBarFlags("Reorderable")) then
 			if gui.BeginTabItem("Tests runner") then
 				-- test selector
 				local tests = love.filesystem.getDirectoryItems("onee/_tests")
@@ -1268,12 +1298,12 @@ function imgui.window.tests()
 					gui.SameLine(); gui.Text("passes")
 					gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
 					gui.SameLine(); gui.Text("fails")
-					gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..tostring(math.round(test_took, 5))..")")
+					gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..math.round(test_took, 5)..")")
 					gui.Separator()
 				end
 				
 				-- test summary
-				if gui.BeginChild_Str("test summary", nil) and test_last then
+				if gui.BeginChild_Str("test summary") and test_last then
 					for i=1, #test_summary do
 						local test = test_summary[i]
 						if not test.error then
@@ -1306,6 +1336,119 @@ function imgui.window.tests()
 	end
 	
 	imgui.open.tests = open[0]
+end
+
+---------------------------------------------------------------- PROFILER
+
+local sorting, sortkey, sortdescending = "Time", "timer", true
+local deep_report = {}
+
+function imgui.window.profiler()
+	local open = _bool(imgui.open.profiler)
+	
+	if gui.Begin("Profiler", open) then
+		if gui.BeginTabBar("", gui.love.TabBarFlags("Reorderable")) then
+			
+			local flags = debug_profiler and gui.love.TabItemFlags("UnsavedDocument") or nil
+			if gui.BeginTabItem("Regular", nil, flags) then
+				local text = debug_profiler and "Stop" or "Record"
+				if gui.Button(text) then
+					debug_profiler = not debug_profiler
+					debug.profiler_enable(debug_profiler)
+				end
+				gui.EndTabItem()
+			end
+			
+			local flags = debug_profiler_deep and gui.love.TabItemFlags("UnsavedDocument") or nil
+			if gui.BeginTabItem("Deep", nil, flags) then
+				local text = debug_profiler_deep and "Stop" or "Record"
+				if gui.Button(text) then
+					debug_profiler_deep = not debug_profiler_deep
+					debug.profiler_deep_enable(debug_profiler_deep)
+				end
+				
+				if #profi.reports == 0 then
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :o -")
+				end
+				if debug_profiler_deep then
+					gui.SameLine(); gui.Text("Recording...")
+				end
+				if not debug_profiler_deep and #profi.reports ~= 0 then
+					gui.SameLine()
+					gui.Text("Time spent: "..math.round(profi.stopTime - profi.startTime, 2))
+					gui.SameLine()
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..math.round(profi.startTime, 2).." to "..math.round(profi.stopTime, 2)..")")
+					
+					gui.Separator()
+					
+					gui.AlignTextToFramePadding(); gui.Text("Sort by:")
+					gui.SameLine(); gui.SetNextItemWidth(100)
+					if gui.BeginCombo("##sort", sorting) then
+						if gui.Selectable_Bool("File") then sorting = "File"; sortkey = "source" end
+						if gui.Selectable_Bool("Function") then sorting = "Function"; sortkey = "name" end
+						if gui.Selectable_Bool("Time") then sorting = "Time"; sortkey = "timer" end
+						if gui.Selectable_Bool("Relative") then sorting = "Relative"; sortkey = "relative" end
+						if gui.Selectable_Bool("Called") then sorting = "Called"; sortkey = "count" end
+						gui.EndCombo()
+					end
+					
+					gui.SameLine()
+					local _v = _bool(sortdescending, true)
+					gui.Checkbox("Descending", _v)
+					sortdescending = _v[0]
+					
+					deep_report = copy(profi.reports)
+					table.sortby(deep_report, sortkey, sortdescending)
+					
+					if gui.BeginChild_Str("profiling_deep") then
+						if gui.BeginTable("profiling_deep", 5, gui.love.TableFlags("BordersInnerV", "Resizable", "ScrollX", "Reorderable")) then
+							gui.TableSetupColumn("File")
+							gui.TableSetupColumn("Function")
+							gui.TableSetupColumn("Time")
+							gui.TableSetupColumn("Relative")
+							gui.TableSetupColumn("Called")
+							gui.TableHeadersRow()
+							
+							for i=1, #deep_report do
+								local report = deep_report[i]
+								
+								local file = report.source or "unknown"
+								local line = (report.linedefined and report.linedefined ~= -1) and ":"..report.linedefined or ""
+								local name = report.name or "unknown"
+								
+								gui.TableNextRow()
+								gui.TableSetColumnIndex(0)
+								if file == "unknown" or file == "[C]" or string.find(file, "builtin") then
+									gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), file..line)
+								else
+									gui.Text(file..line)
+								end
+								gui.TableSetColumnIndex(1)
+								if name == "anonymous" or name == "unknown" or name == "(for generator)" then
+									gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), name)
+								else
+									gui.Text(name)
+								end
+								gui.TableSetColumnIndex(2); gui.Text(string.zeropad(math.round(report.timer*1000,4),0.4).."ms")
+								gui.TableSetColumnIndex(3); gui.Text(string.zeropad(report.relative,0.2).."%%")
+								gui.TableSetColumnIndex(4); gui.Text(tostring(report.count))
+							end
+							
+							gui.EndTable()
+						end
+						gui.EndChild()
+					end
+				end
+				
+				gui.EndTabItem()
+			end
+			
+			gui.EndTabBar()
+		end
+		gui.End()
+	end
+	
+	imgui.open.profiler = open[0]
 end
 
 ---------------------------------------------------------------- IMGUI DEMO

@@ -89,6 +89,7 @@ function gif.add(path, animdef, export)
 	end
 	
 	canvas = nil -- clear from memory
+	collectgarbage()
 end
 
 ----------------------------------------------------------------

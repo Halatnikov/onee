@@ -190,7 +190,6 @@ function string.version(arg)
 end
 
 ---------------------------------------------------------------- TABLES
---TODO: maxn
 
 function copy(arg)
     local ref = {}
@@ -219,6 +218,10 @@ function table.compare(a, b)
 		if b[k] ~= a[k] then return false end
 	end
 	return true
+end
+
+function table.clear(arg)
+	for k,v in pairs(arg) do arg[k] = nil end
 end
 
 function table.append(a, b)
@@ -254,11 +257,48 @@ function table.length(arg)
 	return i
 end
 
+function table.maxn(arg, v)
+	local maxn
+	if not v then -- keys
+		for k,v in pairs(arg) do
+			maxn = maxn or k
+			maxn = k > maxn and k or maxn
+		end
+	else -- values
+		for k,v in pairs(arg) do
+			maxn = maxn or v
+			maxn = v > maxn and v or maxn
+		end
+	end
+	return maxn
+end
+function table.maxv(arg) return table.maxn(arg, true) end -- alias
+table.maxk = table.maxn -- alias
+
 function table.reverse(arg)
 	table.sort(arg, function(a,b) return a > b end)
 end
-function table.sortby(arg, k)
-	table.sort(arg, function(a,b) return a[k] < b[k] end)
+function table.sortby(arg, k, descending)
+	if not descending then
+		table.sort(arg, function(a,b)
+			if not (a[k] and b[k]) then return end
+			if type(a) ~= type(b) then return tostring(a[k]) < tostring(b[k]) end
+			return a[k] < b[k]
+		end)
+	else
+		table.sort(arg, function(a,b)
+			if not (a[k] and b[k]) then return end
+			if type(a) ~= type(b) then return tostring(a[k]) > tostring(b[k]) end
+			return a[k] > b[k]
+		end)
+	end
+end
+
+function table.fill(v, min, max)
+	if not max then min, max = 1, min end
+	local t = {}
+	for i = min, max do table.insert(t, v) end
+	return t
 end
 
 function table.mostcommon(arg)
@@ -313,6 +353,7 @@ function kpairs(arg, v)
 		end)
 	else -- sort values
 		table.sort(keys, function(a,b)
+			if not (arg[k] and arg[k]) then return end
 			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
 			return arg[a] < arg[b]
 		end)
@@ -397,11 +438,17 @@ function dofile(path, env)
 	run()
 end
 
+---------------------------------------------------------------- MISC
+
+function every(sec, func)
+	if ms % sec == 0 then func() end
+end
+
 function unrequire(arg)
 	package.loaded[arg] = nil
 end
 
----------------------------------------------------------------- MISC
+function noop() end
 
 os.date_ = os.date
 function os.date(format, time)
@@ -413,7 +460,7 @@ function os.date(format, time)
 		t.monthname = string.tokenize("January,February,March,April,May,June,July,August,September,October,November,December",",",t.month)
 		t.monthshort = string.left(t.monthname,3)
 		t.hour12 = tonumber(os.date_("%I",time))
-		t.period = os.date_("%p",time)
+		t.period = os.date_("%p",time) -- am, pm
 		t.week = tonumber(os.date_("%W",time))
 		t.yearshort = tonumber(os.date_("%y",time))
 		return t

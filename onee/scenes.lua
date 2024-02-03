@@ -42,39 +42,57 @@ end
 
 function scene.update() -- SCENES UPDATE LOOP --
 	assert(table.length(scenes) > 0, "scene.update() | No scene initialized!")
+	_prof.push("scene.update")
 	
 	for id in kpairs(scenes) do
 		local scene = scenes[id]
+		_prof.push(scene.name)
 		if scene.active then
+			_prof.push("scene update")
 			if scene.update then scene.update(scene) end -- scene
+			_prof.pop()
 			
 			for id in pairs(scene.instances) do
 				local instance = scene.instances[id]
+				_prof.push(id)
 				if instance.active and instance.update then
 					instance.update(instance, scene) -- instances
 				end
+				_prof.pop()
 			end
 		end
+		_prof.pop()
 	end
+	_prof.pop()
 end
 
 function scene.draw() -- SCENES DRAW LOOP --
+	_prof.push("scene.draw")
 	for id in kpairs(scenes) do
 		local scene = scenes[id]
+		_prof.push(scene.name)
 		scene.drawlist = {} -- new frame
 		if scene.visible then
+			_prof.push("scene draw")
 			if scene.draw then scene.draw(scene) end -- scene
+			_prof.pop()
 			
 			for id in pairs(scene.instances) do
 				local instance = scene.instances[id]
+				_prof.push(id)
 				if instance.visible and instance.draw then
 					instance.draw(instance, scene) -- instances
 				end
+				_prof.pop()
 			end
 			
+			_prof.push("final scene draw")
 			queue.execute(scene.drawlist)
+			_prof.pop()
 		end
+		_prof.pop()
 	end
+	_prof.pop()
 end
 
 ---------------------------------------------------------------- OBJECTS

@@ -100,6 +100,7 @@ function nineslice.add(name, anim, frame, image, animdef, framedef, export)
 	end
 	
 	canvas = nil -- clear from memory
+	collectgarbage()
 	
 	if ninedef.left ~= TILE.STRETCH then
 		images[4]:setWrap(ninedef.left, ninedef.left)
