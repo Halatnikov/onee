@@ -91,6 +91,7 @@ function onee.draw()
 	love.graphics.setBackgroundColor(onee.bg[1], onee.bg[2], onee.bg[3])
 	
 	-- fps limiter end
+	_prof.mark("sleeping...")
 	onee.after_draw = love.timer.getTime()
 	if onee.before_update <= onee.after_draw then onee.before_update = onee.after_draw end
 	love.timer.sleep(onee.before_update - onee.after_draw)

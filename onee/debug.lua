@@ -4,7 +4,6 @@ function debug.enable(enabled)
 		
 		-- libraries (debug)
 		require("onee/libs/lurker")
-		--require("onee/libs/jprof")
 		require("onee/libs/profi")
 		require("onee/libs/df-serialize")
 		
@@ -41,10 +40,6 @@ function debug.enable(enabled)
 		
 		love.window.setTitle(love.config.window.title)
 		
-		_prof = {}
-		_prof.push = noop
-		_prof.pop = noop
-		_prof.popAll = noop
 		
 	end
 end
@@ -288,7 +283,7 @@ _prof = {
 	enabled = false,
 	data = {},
 	ram = 0,
-	level = 2,
+	level = 3,
 	start = 0,
 	stop = 0,
 }
@@ -321,8 +316,34 @@ local function push(name, data)
 	_prof.ram = _prof.ram + (collectgarbage("count") - ram)
 end
 
-local function pop(name)
+local function mark(name, data)
+	_prof.level = _prof.level + 1
 	
+	local parent
+	for k,v in ripairs(_prof.data) do
+		local current = _prof.data[k]
+		if current.level == _prof.level - 1 then
+			parent = current.id
+			break
+		end
+	end
+	
+	local mark = {
+		type = "mark",
+		id = #_prof.data + 1,
+		parent = parent,
+		level = _prof.level,
+		name = name,
+		data = data,
+		start = love.timer.getTime(),
+	}
+	
+	table.insert(_prof.data, mark)
+	
+	_prof.level = _prof.level - 1 
+end
+
+local function pop(name)
 	local previous
 	for k,v in ripairs(_prof.data) do
 		local current = _prof.data[k]
@@ -352,6 +373,7 @@ function _prof.enable(enabled)
 	if enabled then
 		_prof.push = push
 		_prof.pop = pop
+		_prof.mark = mark
 		
 		_prof.start = love.timer.getTime()
 		_prof.stop = 0
@@ -361,6 +383,7 @@ function _prof.enable(enabled)
 	else
 		_prof.push = noop
 		_prof.pop = noop
+		_prof.mark = noop
 		
 		_prof.stop = love.timer.getTime()
 		_prof.ram = 0

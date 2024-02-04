@@ -23,13 +23,16 @@ end
 -- main loop
 function imgui.update()
 	if not gui then return end
+	_prof.push("imgui.update()")
 	
 	gui.love.Update(tick)
     gui.NewFrame()
+	_prof.pop()
 end
 
 function imgui.draw()
 	if not gui then return end
+	_prof.push("imgui.draw()")
 	
 	for k,v in pairs(imgui.open) do
 		if imgui.open[k] then imgui.window[k]() end
@@ -37,6 +40,7 @@ function imgui.draw()
     
     gui.Render()
     gui.love.RenderDrawLists()
+	_prof.pop()
 end
 
 -- event redirection
@@ -1400,7 +1404,7 @@ function imgui.window.profiler()
 							table.insert(root_sorted, report_raw[i])
 						end
 						table.sortby(root_sorted, "level", true)
-						local max_level = root_sorted[1].level
+						local max_level = root_sorted[1] and root_sorted[1].level or 1
 						
 						for i=1, max_level do
 							gui.Text("")
@@ -1409,24 +1413,44 @@ function imgui.window.profiler()
 								if report_raw[j].level == i then
 									local node = report_raw[j]
 									
-									local stop = node.stop or _prof.stop
-									local ramstop = node.ramstop or node.ramstart
-						
-									local time = math.round((stop - node.start)*1000, 4)
-									local ram = math.round((ramstop - node.ramstart)/1024, 4)
-									ram = ram >= 0 and "+"..ram or ram
-									local label = node.name.." ("..time.."ms "..ram.."MB)"
-									
-									local maxx = gui.GetContentRegionMax().x + 10
-									
-									local w = math.map(stop, root.start, rootstop, -tick, maxx)
-									local x = math.map(node.start, root.start, rootstop, -tick, maxx)
-									w = w - x
-									if w < 1.5 then w = 1.5 end
-									
-									gui.SameLine(maxx*(x/maxx))
-									if gui.Button(node.name, gui.ImVec2_Float(maxx*(w/maxx),20)) then
-										root = node
+									if node.type == "event" then
+										local stop = node.stop or _prof.stop
+										local ramstop = node.ramstop or node.ramstart
+							
+										local time = math.round((stop - node.start)*1000, 4)
+										local ram = math.round((ramstop - node.ramstart)/1024, 4)
+										ram = ram >= 0 and "+"..ram or ram
+										local label = node.name.." ("..time.."ms "..ram.."MB)"
+										
+										local maxx = gui.GetContentRegionMax().x + 10
+										
+										local w = math.map(stop, root.start, rootstop, -tick, maxx)
+										local x = math.map(node.start, root.start, rootstop, -tick, maxx)
+										w = w - x
+										if w < 1.5 then w = 1.5 end
+										
+										gui.SameLine(maxx*(x/maxx))
+										if gui.Button(node.name, gui.ImVec2_Float(maxx*(w/maxx),20)) then
+											root = node
+										end
+										if gui.BeginItemTooltip() then
+											gui.Text(node.name)
+											gui.Separator()
+											
+											gui.EndTooltip()
+										end
+									end
+									if node.type == "mark" then
+										local x = math.map(node.start, root.start, rootstop, -tick, maxx)
+										gui.SameLine(maxx*(x/maxx))
+										gui.RadioButton_Bool("",true)
+										if gui.BeginItemTooltip() then
+											gui.Text(node.name)
+											gui.Separator()
+											gui.Text("at "..math.round(node.start,3))
+											
+											gui.EndTooltip()
+										end
 									end
 									
 								end
@@ -1441,7 +1465,9 @@ function imgui.window.profiler()
 							local graph = {}
 							for i=1, #report do
 								local stop = report[i].stop or _prof.stop
-								table.insert(graph, math.round((stop - report[i].start)*1000, 3))
+								if report[i].type == "event" then
+									table.insert(graph, math.round((stop - report[i].start)*1000, 3))
+								end
 							end
 							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
 								"min: "..table.minv(graph).."ms"..
@@ -1454,7 +1480,9 @@ function imgui.window.profiler()
 							local graph = {}
 							for i=1, #report do
 								local ramstop = report[i].ramstop or report[i].ramstart
-								table.insert(graph, math.round(ramstop/1024, 3))
+								if report[i].type == "event" then
+									table.insert(graph, math.round(ramstop/1024, 3))
+								end
 							end
 							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
 								"min: "..table.minv(graph).."MB"..
