@@ -20,11 +20,11 @@ do
 
 	-- onee modules
 	require("onee/utils")
+	require("onee/debug")
 	require("onee/input")
 	require("onee/collisions")
 	require("onee/assets")
 	require("onee/scenes")
-	require("onee/debug")
 
 	-- gui (user)
 	require("onee/yui")

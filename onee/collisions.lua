@@ -473,3 +473,10 @@ function poly.rotate(arg, angle, ox, oy)
 	angle = math.deg(angle)
 	return t, angle
 end
+
+_prof.hook("collision")
+_prof.hook("point")
+_prof.hook("line")
+_prof.hook("rect")
+_prof.hook("circ")
+_prof.hook("poly")

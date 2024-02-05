@@ -694,3 +694,10 @@ function model.draw(model, scene) -- DRAW 3D MODEL --
 	love.graphics.reset()
 end
 end--#endregion
+
+_prof.hook("asset")
+_prof.hook("sprite")
+_prof.hook(gif, "gif")
+_prof.hook(nineslice, "nineslice")
+_prof.hook(spritesheet, "spritesheet")
+_prof.hook("model")

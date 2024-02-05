@@ -201,6 +201,7 @@ end
 
 
 function lurker.hotswapfile(f)
+	lurker.swappedonce = true
   if lurker.state == "error" then
     lurker.print("Resuming to normal state")
     lurker.exiterrorstate()

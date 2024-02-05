@@ -21,6 +21,11 @@ function debug.enable(enabled)
 		
 		lurker.interval = 1
 		
+		_prof.hook("debug")
+		_prof.hook("lurker") 
+		_prof.hook("queue")
+		--_prof.hook("love.graphics.draw()")
+		
 		-- TODO: functions on disabling/reenabling debug mode, maybe unrequire lurker completely
 		-- TODO: init imgui here
 		-- TODO: on debug_mode disable, close all the ui
@@ -41,6 +46,12 @@ function debug.enable(enabled)
 		love.window.setTitle(love.config.window.title)
 		
 		_prof.hook = noop
+		
+		debug_draw_collisions = false
+		debug_draw_sprites = false
+		debug_hotswap = false
+		debug.profiler_enable(false)
+		debug.profiler_deep_enable(false)
 		
 	end
 end
@@ -76,7 +87,6 @@ function debug.update()
 	if not debug_mode then return end
 	
 	if debug_hotswap then lurker.update() end
-	if debug_profiler_deep then profi:checkMemory(0.1) end
 	
 	imgui.update()
 end
@@ -390,16 +400,22 @@ local function wrap(t, key, name)
 	end
 end
 
-local function process_hook(path)
-	local name = path
-	local path = string.tokenize(path, ".")
+function _prof.hook(path, name)
+	if debug_hotswap and lurker.swappedonce then return end
+	name = name or tostring(path)
 	
-	local root = _G[path[1]] and _G[path[1]]
-	root = root[path[2]] and root[path[2]] or root
+	local root
+	--if #path == 1 then root = _G
+	--elseif name == "_G" then root = _G; name = "" 
+	if type(path) == "table" then root = path
+	else
+		path = string.tokenize(path, ".")
+		root = _G[path[1]] and _G[path[1]]
+		root = root[path[2]] and root[path[2]] or root
+	end
 	
-	if name == "_G" then root = _G; name = "" end
 	
-	if string.right(path[#path],2) == "()" then
+	if type(path) == "string" and string.right(path[#path],2) == "()" then
 		wrap(root, string.remove(path[#path],"()"), string.remove(name,"()"))
 	else
 		local path = {name}
@@ -407,6 +423,7 @@ local function process_hook(path)
 			for k,v in pairs(arg) do
 				if type(arg[k]) == "table" and arg[k] ~= package.loaded then
 					table.insert(path, k)
+					if #path > 4 then break end
 					name = table.concat(path, ".")
 					recursive(arg[k])
 					table.remove(path, 2)
@@ -420,16 +437,11 @@ local function process_hook(path)
 	end
 end
 
-function _prof.hook(path)
-	table.insert(_prof.hooks, path)
-end
-
 function _prof.enable(enabled)
 	_prof.enabled = enabled
 	if enabled then
 		_prof.data = {}
 		_prof.data_pretty = {}
-		for i=1, #_prof.hooks do process_hook(_prof.hooks[i]); _prof.hooks[i] = nil end
 		
 		_prof.start = love.timer.getTime()
 		_prof.stop = 0
@@ -450,4 +462,3 @@ function _prof.enable(enabled)
 	end
 	collectgarbage()
 end
-

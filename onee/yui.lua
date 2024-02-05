@@ -119,3 +119,5 @@ function yui.new.debug()
 		},
 	}
 end
+
+_prof.hook("yui")

@@ -1383,6 +1383,15 @@ function imgui.window.profiler()
 					report_raw = _prof.data
 					report = _prof.data_pretty
 					
+					-- remove unfinished frames
+					for i=1, #report do
+						if report[i].name == "frame" then break end
+						table.remove(report, 1)
+					end
+					for i=#report, 1, -1 do
+						if report[i].name == "frame" and not report[i].stop then table.remove(report, i) break end
+					end
+					
 					gui.Separator()
 					if gui.Button("<-") then root = report[frame] end
 					gui.SameLine(); gui.Text("...")
