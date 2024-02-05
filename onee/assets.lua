@@ -238,7 +238,6 @@ function sprite.init(sprite, scene, name, data) -- INIT A NEW SPRITE INSTANCE --
 end
 
 function sprite.update(sprite, scene) -- UPDATE SPRITE --
-	
 	assert(sprite, "sprite.update() | not a valid sprite")
 	assert(sprite.sprite, "sprite.update() | not a valid sprite")
 	if not sprite.active then return end

@@ -13,7 +13,6 @@ do
 end
 
 function yui.draw()
-	_prof.push("yui.draw()")
 	-- individual UIs updates
 	if yui.debug_button then
 		yui.debug_button[1].x = windowwidth - 20 - 4
@@ -42,7 +41,6 @@ function yui.draw()
 			end
 		end
 	end
-	_prof.pop()
 end
 
 -- UIs

@@ -23,16 +23,13 @@ end
 -- main loop
 function imgui.update()
 	if not gui then return end
-	_prof.push("imgui.update()")
 	
 	gui.love.Update(tick)
     gui.NewFrame()
-	_prof.pop()
 end
 
 function imgui.draw()
 	if not gui then return end
-	_prof.push("imgui.draw()")
 	
 	for k,v in pairs(imgui.open) do
 		if imgui.open[k] then imgui.window[k]() end
@@ -40,7 +37,6 @@ function imgui.draw()
     
     gui.Render()
     gui.love.RenderDrawLists()
-	_prof.pop()
 end
 
 -- event redirection
@@ -1403,10 +1399,11 @@ function imgui.window.profiler()
 							if i > root.id and report_raw[i].level <= root.level then break end
 							table.insert(root_sorted, report_raw[i])
 						end
-						table.sortby(root_sorted, "level", true)
-						local max_level = root_sorted[1] and root_sorted[1].level or 1
+						table.sortby(root_sorted, "level")
+						local max_level = root_sorted[#root_sorted] and root_sorted[#root_sorted].level or 0
+						local min_level = root_sorted[1] and root_sorted[1].level or 0
 						
-						for i=1, max_level do
+						for i = min_level, max_level do
 							gui.Text("")
 							for j=root.id, #report_raw do
 								if j > root.id and report_raw[j].level <= root.level then break end
@@ -1612,3 +1609,5 @@ function imgui.window.demo()
 	
 	imgui.open.demo = open[0]
 end
+
+_prof.hook("imgui")

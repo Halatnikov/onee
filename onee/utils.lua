@@ -3,7 +3,7 @@
 bool = {}
 
 function bool.int(arg)
-	return arg and 1 or 0
+	return arg == true and 1 or 0
 end
 
 ---------------------------------------------------------------- MATH
@@ -121,6 +121,10 @@ function string.trim(arg)
    return string.gsub(arg, "^%s*(.-)%s*$", "%1")
 end
 
+function string.escape(arg)
+	return string.replace(arg, "[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
+end
+
 function string.left(arg, len) -- alias
 	return string.mid(arg, 1, len)
 end
@@ -153,7 +157,13 @@ function string.zeropad(arg, decimals)
 	end
 end
 
+string.find_ = string.find
+function string.find(arg, find, index) -- alias
+	return string.find_(arg, find, index, true)
+end
+
 function string.remove(arg, find) -- alias
+	find = string.escape(find)
 	return string.replace(arg, find, "")
 end
 
@@ -164,7 +174,7 @@ end
 function string.tokenize(arg, separator, index)
 	if index == -1 then index = #string.tokenize(arg, separator) end -- get last index
 	
-	local escaped = string.replace(separator, "[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
+	local escaped = string.escape(separator)
 	
 	local t = {}
 	for k in string.gmatch(arg..separator, "([^"..escaped.."]*)"..separator) do
@@ -477,11 +487,11 @@ end
 
 ---------------------------------------------------------------- MISC
 
+function noop() end
+
 function unrequire(arg)
 	package.loaded[arg] = nil
 end
-
-function noop() end
 
 os.date_ = os.date
 function os.date(format, time)

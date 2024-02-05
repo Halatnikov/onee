@@ -1,14 +1,3 @@
-test("conventions", function()
-	assert(bool.int(nil) == 0).pass("don't check for types")
-	assert(bool.int() == 0).pass()
-	assert(bool.int("string") == 1).pass()
-	
-	assert(function() math.sign("string") end).error("can error when passing a wrong type")
-	
-	local t = {1,2,3}
-	assert(math.choose(t)).pass("functions accepting ... also accept tables")
-end)
-
 group("bool library", function()
 	test("bool.int(arg)", function()
 		assert(bool.int(true) == 1).pass("true is 1")

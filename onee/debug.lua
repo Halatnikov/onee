@@ -40,6 +40,7 @@ function debug.enable(enabled)
 		
 		love.window.setTitle(love.config.window.title)
 		
+		_prof.hook = noop
 		
 	end
 end
@@ -59,8 +60,11 @@ function debug.profiler_deep_enable(enabled)
 	if enabled then
 		profi:reset()
 		profi:setGetTimeMethod(love.timer.getTime)
+		jit.off()
+		jit.flush()
 		profi:start()
 	elseif profi.has_started then
+		jit.on()
 		profi:stop()
 		collectgarbage()
 	end
@@ -171,6 +175,7 @@ function debug.keypressed(k, scancode, isrepeat)
 	 
 	if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
 	if k == "g" then log(string.random(150)) end
+	
 end
 love.keypressed = debug.keypressed
 
@@ -279,13 +284,15 @@ function debug.test(arg)
 end
 
 ----------------------------------------------------------------
+
 _prof = {
 	enabled = false,
 	data = {},
-	ram = 0,
-	level = 3,
+	hooks = {},
+	level = 1,
 	start = 0,
 	stop = 0,
+	ram = 0,
 }
 
 local function push(name, data)
@@ -368,26 +375,79 @@ local function pop(name)
 	_prof.level = _prof.level - 1
 end
 
+local function wrap(t, key, name)
+	local func = t[key]
+	
+	local function pop(...)
+		_prof.pop()
+		return ...
+	end
+		
+	t[key] = function(...)
+		if not _prof.enabled then return func(...) end
+		_prof.push(name)
+		return pop(func(...))
+	end
+end
+
+local function process_hook(path)
+	local name = path
+	local path = string.tokenize(path, ".")
+	
+	local root = _G[path[1]] and _G[path[1]]
+	root = root[path[2]] and root[path[2]] or root
+	
+	if name == "_G" then root = _G; name = "" end
+	
+	if string.right(path[#path],2) == "()" then
+		wrap(root, string.remove(path[#path],"()"), string.remove(name,"()"))
+	else
+		local path = {name}
+		local function recursive(arg)
+			for k,v in pairs(arg) do
+				if type(arg[k]) == "table" and arg[k] ~= package.loaded then
+					table.insert(path, k)
+					name = table.concat(path, ".")
+					recursive(arg[k])
+					table.remove(path, 2)
+				elseif type(arg[k]) == "function" then
+					name = table.concat(path, ".")
+					wrap(arg, k, name.."."..k)
+				end
+			end
+		end
+		recursive(root)
+	end
+end
+
+function _prof.hook(path)
+	table.insert(_prof.hooks, path)
+end
+
 function _prof.enable(enabled)
 	_prof.enabled = enabled
 	if enabled then
-		_prof.push = push
-		_prof.pop = pop
-		_prof.mark = mark
+		_prof.data = {}
+		_prof.data_pretty = {}
+		for i=1, #_prof.hooks do process_hook(_prof.hooks[i]); _prof.hooks[i] = nil end
 		
 		_prof.start = love.timer.getTime()
 		_prof.stop = 0
+		_prof.level = 1
 		_prof.ram = 0
-		_prof.data = {}
-		_prof.data_pretty = {}
+		
+		_prof.push = push
+		_prof.pop = pop
+		_prof.mark = mark
 	else
 		_prof.push = noop
 		_prof.pop = noop
 		_prof.mark = noop
 		
 		_prof.stop = love.timer.getTime()
-		_prof.ram = 0
+		
 		_prof.data_pretty = table.unflatten(_prof.data)
 	end
 	collectgarbage()
 end
+

@@ -225,9 +225,6 @@ function ProFi:getTitleFromFuncInfo( funcInfo )
 end
 
 function ProFi:createFuncReport( funcInfo )
-	local name = funcInfo.name or 'anonymous'
-	local source = funcInfo.source or 'C Func'
-	local linedefined = funcInfo.linedefined or 0
 	local funcReport = {
 		['title']         = self:getTitleFromFuncInfo( funcInfo );
 		['count'] = 0;
@@ -409,7 +406,7 @@ end
 function ProFi:onFunctionReturn( funcInfo )
 	local funcReport = ProFi:getFuncReport( funcInfo )
 	if funcReport.callTime then
-		funcReport.timer = getTime() - funcReport.callTime
+		funcReport.timer = funcReport.timer + (getTime() - funcReport.callTime)
 	end
 end
 
