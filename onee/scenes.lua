@@ -8,9 +8,9 @@ scenes = {} -- actual containers
 
 function scene.set(path, data, name) -- SWITCH CURRENT SCENE --
 	
-	if not name then name = string.tokenize(path, "/", -1) end
+	name = name or string.tokenize(path, "/", -1)
 	
-	local t = {
+	local t = { -- init
 		scene = true,
 		name = name,
 		id = 1,
@@ -27,7 +27,7 @@ function scene.set(path, data, name) -- SWITCH CURRENT SCENE --
 		drawlist = {},
 	}
 	
-	if files.exists("scenes/"..path..".lua") then table.append(t, require("scenes/"..path)) end
+	if files.exists("scenes/"..path..".lua") then table.append(t, dofile("scenes/"..path)) end
 	if data then table.append(t, data) end
 	
 	t = table.protect(t, {"scene", "name", "id"})
@@ -36,23 +36,19 @@ function scene.set(path, data, name) -- SWITCH CURRENT SCENE --
 	
 	if t.init then t.init(t) end
 	
-	unrequire("scenes/"..path)
-	
 end
 
 function scene.update() -- SCENES UPDATE LOOP --
 	assert(table.length(scenes) > 0, "scene.update() | No scene initialized!")
 	_prof.push("scene.update")
 	
-	for id in kpairs(scenes) do
-		local scene = scenes[id]
+	for id, scene in kpairs(scenes) do
 		_prof.push(scene.name)
 		if scene.active then
 			_prof.mark("scene")
 			if scene.update then scene.update(scene) end -- scene
 			
-			for id in pairs(scene.instances) do
-				local instance = scene.instances[id]
+			for id, instance in pairs(scene.instances) do
 				_prof.push(id)
 				if instance.active and instance.update then
 					instance.update(instance, scene) -- instances
@@ -67,16 +63,14 @@ end
 
 function scene.draw() -- SCENES DRAW LOOP --
 	_prof.push("scene.draw")
-	for id in kpairs(scenes) do
-		local scene = scenes[id]
+	for id, scene in kpairs(scenes) do
 		_prof.push(scene.name)
 		scene.drawlist = {} -- new frame
 		if scene.visible then
 			_prof.mark("scene")
 			if scene.draw then scene.draw(scene) end -- scene
 			
-			for id in pairs(scene.instances) do
-				local instance = scene.instances[id]
+			for id, instance in pairs(scene.instances) do
 				_prof.push(id)
 				if instance.visible and instance.draw then
 					instance.draw(instance, scene) -- instances
@@ -96,7 +90,7 @@ end
 
 function object.new(path, scene, data, name) -- CREATE NEW OBJECT --
 	
-	if not name then name = string.tokenize(path, "/", -1) end
+	name = name or string.tokenize(path, "/", -1)
 	if scene.objects[name] then return end
 	
 	local t = { -- init
@@ -107,20 +101,19 @@ function object.new(path, scene, data, name) -- CREATE NEW OBJECT --
 	}
 	
 	if files.exists("objects/"..path..".lua") then 
-		t.data = require("objects/"..path) -- add code to object, if it exists
+		t.data = dofile("objects/"..path) -- add code to object, if it exists
 	end
 	
 	if data then -- pass additional stuff to object through this table
-		if not t.data then t.data = {} end
+		t.data = t.data or {}
 		table.append(t.data, data)
 	end
 	
 	t = table.protect(t, {"object", "name", "scene"})
 	
 	scene.objects[name] = t -- done
-	unrequire("objects/"..path)
 	
-	return name
+	return t
 	
 end
 
@@ -135,8 +128,8 @@ function object.instances(name, scene) -- GET ALL INSTANCE IDs OF AN OBJECT --
 	if scene.objects[name].instances == 0 then return nil end
 	
 	local t = {}
-	for id in pairs(scene.instances) do
-		if scene.instances[id].object == name then table.insert(t,id) end
+	for id, instance in pairs(scene.instances) do
+		if instance.object == name then table.insert(t, id) end
 	end
 	
 	return t
@@ -177,7 +170,7 @@ function instance.new(name, scene, data) -- CREATE NEW INSTANCE --
 	
 	if t.init then t.init(t, scene) end
 	
-	return id
+	return t
 	
 end
 
@@ -190,7 +183,10 @@ function instance.delete(id, scene) -- DELETE INSTANCE --
 end
 
 function instance.clear(name, scene) -- CLEAR ALL INSTANCES OF OBJECT --
-	for id in pairs(scene.instances) do
-		if scene.instances[id].object == name then instance.delete(id, scene) end
+	for id, instance in pairs(scene.instances) do
+		if instance.object == name then instance.delete() end
 	end
 end
+
+_prof.hook("object")
+_prof.hook("instance")

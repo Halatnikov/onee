@@ -68,12 +68,13 @@ function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 	
 	print("loading sprite "..path)
 	local time_start = love.timer.getTime()
-	local sprite = require("sprites/"..path) -- init
+	
+	local sprite = dofile("sprites/"..path) -- init
 	scene.assets[name] = {}
+	sprite.cached_images = {}
 	
 	-- first pass
-	for anim in pairs(sprite.animations) do
-		local animdef = sprite.animations[anim]
+	for anim, animdef in pairs(sprite.animations) do
 		--print(anim)
 		
 		-- determine image types
@@ -91,23 +92,21 @@ function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 			
 			-- spritestrip (extension of spritesheet)
 			elseif animdef.strip then
-				spritesheet.strip("sprites/"..path.."/"..filename..".png", animdef, scene.assets[name][anim])
+				spritesheet.strip(sprite, "sprites/"..path.."/"..filename..".png", animdef, scene.assets[name][anim])
 				
 			-- look in framedef
 			elseif animdef.frames then
 				
-				for frame in pairs(animdef.frames) do
-					local framedef = animdef.frames[frame]
-					
+				for frame, framedef in pairs(animdef.frames) do
 					-- spritesheet
 					if framedef.sheet then
-						spritesheet.add("sprites/"..path.."/"..filename..".png", frame, animdef, framedef, scene.assets[name][anim])
+						spritesheet.add(sprite, "sprites/"..path.."/"..filename..".png", frame, animdef, framedef, scene.assets[name][anim])
 						
 					-- one image file per frame (default)
 					else
-						local imagepath = path.."/"..filename.."_"..(frame-1)
-						if framedef.filename then imagepath = path.."/"..framedef.filename end
-						local image = love.graphics.newImage("sprites/"..imagepath..".png")
+						local imagepath = filename.."_"..(frame-1)
+						if framedef.filename then imagepath = framedef.filename end
+						local image = love.graphics.newImage("sprites/"..path.."/"..imagepath..".png")
 						
 						scene.assets[name][anim][frame] = image -- new frame entry
 					end
@@ -126,9 +125,7 @@ function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 	end
 	
 	-- second pass
-	for anim in pairs(sprite.animations) do
-		local animdef = sprite.animations[anim]
-		
+	for anim, animdef in pairs(sprite.animations) do
 		asset.negative_frames(animdef)
 		
 		-- allow only one at a time
@@ -186,8 +183,8 @@ function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 		
 	end
 	
+	sprite.cached_images = nil
 	scene.sprites[name] = sprite -- done
-	unrequire("sprites/"..path)
 	
 	local time_finish = love.timer.getTime()
 	print("took "..math.round(time_finish - time_start, 4))
@@ -503,9 +500,10 @@ function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
 	
 	print("loading model "..path)
 	local time_start = love.timer.getTime()
+	
 	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
 	local modeldef = {}
-	if files.exists("models/"..path..".lua") then modeldef = require("models/"..path) end
+	if files.exists("models/"..path..".lua") then modeldef = dofile("models/"..path) end
 	
 	-- overwrite texture images
 	if model.images then
@@ -538,9 +536,9 @@ function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
 	
 	-- overwrite materials
 	if modeldef.materials then
-		for mat in pairs(modeldef.materials) do
-			model.materials[mat].alphaMode = modeldef.materials[mat].alphaMode or nil
-			model.materials[mat].doubleSided = modeldef.materials[mat].doubleSided or nil
+		for mat, matdef in pairs(modeldef.materials) do
+			model.materials[mat].alphaMode = matdef.alphaMode or nil
+			model.materials[mat].doubleSided = matdef.doubleSided or nil
 		end
 	end
 	
@@ -548,7 +546,6 @@ function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
 	scene.assets[name]:continueLoading(5)
 	
 	scene.models[name] = modeldef -- done
-	unrequire("models/"..path)
 	
 	local time_finish = love.timer.getTime()
 	print("took "..math.round(time_finish - time_start, 4))
@@ -618,7 +615,7 @@ function model.update(model, scene) -- UPDATE 3D MODEL --
 	-- TODO: add animation, remove animation, stop all, set animation (string or a table)
 	-- model.anim.state(model, {idle = {seek = 0.5, pause = true}})
 	local playing = model.instance.activePlayHeads
-	for i in pairs(playing) do
+	for i=1, #playing do
 		if not modeldef.animations then break end -- no animations
 		local animdef = modeldef.animations[modeldef.animationsref[i]]
 		

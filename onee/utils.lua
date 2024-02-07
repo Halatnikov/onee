@@ -9,7 +9,6 @@ end
 ---------------------------------------------------------------- MATH
 -- TODO: lerp (and pingpong), smoothstep, decay, closest to ^2, construct 2, vector 2?
 -- angle from x1 y1 to x2 y2
--- every x seconds
 
 math.random = love.math.random
 math.int = math.floor
@@ -100,8 +99,12 @@ function math.loop_pingpong(a, b, t)
 	return len - math.abs(t - len)
 end
 
+function math.every(arg)
+	local decimals = #tostring(arg) == 3 and 1 or 0
+	return math.round(love.timer.getTime(), decimals) % arg == 0 
+end
+
 ---------------------------------------------------------------- STRINGS
---TODO: string.join
 
 string.replace = string.gsub
 string.mid = string.sub
@@ -109,16 +112,8 @@ string.lowercase = string.lower
 string.uppercase = string.upper
 newline = "\n"
 
-function string.split(arg)
-	local t = {}
-	for i = 1, #arg do
-		table.insert(t, string.mid(arg, i, i))
-	end
-	return t
-end
-
 function string.trim(arg)
-   return string.gsub(arg, "^%s*(.-)%s*$", "%1")
+   return string.replace(arg, "^%s*(.-)%s*$", "%1")
 end
 
 function string.escape(arg)
@@ -134,8 +129,26 @@ function string.right(arg, len) --alias
 	return string.mid(arg, #arg - (len - 1), #arg)
 end
 
-function string.findcase(arg, find, i, plain) -- case insensitive alias
-	return string.find(string.lower(arg), string.lower(find), i, plain)
+string.find_ = string.find
+function string.find(arg, find, index) -- alias
+	return string.find_(arg, find, index, true)
+end
+
+function string.findcase(arg, find, i) -- case insensitive alias
+	return string.find(string.lower(arg), string.lower(find), i)
+end
+
+function string.remove(arg, find) -- alias
+	find = string.escape(find)
+	return string.replace(arg, find, "")
+end
+
+function string.split(arg)
+	local t = {}
+	for i=1, #arg do
+		table.insert(t, string.mid(arg, i, i))
+	end
+	return t
 end
 
 function string.random(length)
@@ -155,16 +168,6 @@ function string.zeropad(arg, decimals)
 		decimals = #tostring(decimals) == 3 and decimals * 10 or decimals * 100
 		return string.format("%."..decimals.."f", arg)
 	end
-end
-
-string.find_ = string.find
-function string.find(arg, find, index) -- alias
-	return string.find_(arg, find, index, true)
-end
-
-function string.remove(arg, find) -- alias
-	find = string.escape(find)
-	return string.replace(arg, find, "")
 end
 
 function string.md5(arg) -- alias
@@ -231,7 +234,7 @@ function table.compare(a, b)
 end
 
 function table.clear(arg)
-	for k,v in pairs(arg) do arg[k] = nil end
+	for k,v in pairs(arg) do v = nil end
 end
 
 function table.append(a, b)
@@ -253,7 +256,7 @@ end
 function table.find(arg, result, result2)
 	if result2 then
 		for k,v in pairs(arg) do
-			if type(arg[k]) == "table" and arg[k][result] and arg[k][result] == result2 then return k end
+			if type(v) == "table" and v[result] and v[result] == result2 then return k end
 		end
 	end
 	for k,v in pairs(arg) do
@@ -306,6 +309,7 @@ table.mink = table.minn -- alias
 function table.reverse(arg)
 	table.sort(arg, function(a,b) return a > b end)
 end
+
 function table.sortby(arg, k, descending)
 	if not descending then
 		table.sort(arg, function(a,b)
@@ -400,7 +404,7 @@ function kpairs(arg, v)
 		end)
 	else -- sort values
 		table.sort(keys, function(a,b)
-			if not (arg[k] and arg[k]) then return end
+			if not (arg[a] and arg[b]) then return end
 			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
 			return arg[a] < arg[b]
 		end)
@@ -480,9 +484,10 @@ files.exists = love.filesystem.getInfo
 
 dofile_ = dofile
 function dofile(path, env)
+	if string.right(path, 4) ~= ".lua" then path = path..".lua" end 
 	local run = assert(love.filesystem.load(path), path.." not found")
 	if env then setfenv(run, env) end
-	run()
+	return run()
 end
 
 ---------------------------------------------------------------- MISC
@@ -510,3 +515,4 @@ function os.date(format, time)
 	end
 	return os.date_(format, time)
 end
+

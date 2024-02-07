@@ -2,10 +2,11 @@ local spritesheet = {}
 
 ----------------------------------------------------------------
 
-function spritesheet.add(path, frame, animdef, framedef, export)
+function spritesheet.add(sprite, path, frame, animdef, framedef, export)
 	local sheetdef = framedef.sheet
 	
-	local image = love.graphics.newImage(path)
+	sprite.cached_images[path] = sprite.cached_images[path] or love.graphics.newImage(path)
+	local image = sprite.cached_images[path]
 	
 	if not sheetdef.x then sheetdef.x = animdef.sheet.x or 0 end
 	if not sheetdef.y then sheetdef.y = animdef.sheet.y or animdef.sheet.x or 0 end
@@ -23,11 +24,12 @@ function spritesheet.add(path, frame, animdef, framedef, export)
 	collectgarbage()
 end
 
-function spritesheet.strip(path, animdef, export)
+function spritesheet.strip(sprite, path, animdef, export)
 	local stripdef = animdef.strip
 	assert(stripdef.frames, "spritesheet.strip() | no frame count specified in spritestrip for \""..path.."\"")
 	
-	local image = love.graphics.newImage(path)
+	sprite.cached_images[path] = sprite.cached_images[path] or love.graphics.newImage(path)
+	local image = sprite.cached_images[path]
 	
 	if not stripdef.x then stripdef.x = 0 end
 	if not stripdef.y then stripdef.y = 0 end
@@ -47,7 +49,7 @@ function spritesheet.strip(path, animdef, export)
 			height = stripdef.height,
 		}
 		
-		spritesheet.add(path, i, animdef, framedef, export)
+		spritesheet.add(sprite, path, i, animdef, framedef, export)
 	end
 	
 end

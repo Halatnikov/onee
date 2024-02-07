@@ -7,40 +7,41 @@ input = {
 }
 
 -- initialize the table
-for key in pairs(config.input.keyboard) do 
-	input[key] = false
-	input.time[key] = 0
+for k in pairs(config.input.keyboard) do 
+	input[k] = false
+	input.time[k] = 0
 end
 
 ---------------------------------------------------------------- 
 
 function input.update() -- MAIN LOOP --
+	
 	-- begin loop
 	for key in pairs(input.time) do 
 		input[key] = false -- reset key states
 	end
 	
-	-- keyboard mode
-	for key in pairs(config.input.keyboard) do
+	-- keyboard and mouse mode
+	for key, entry in pairs(config.input.keyboard) do
 		-- keyboard keys
-		if config.input.keyboard[key].k then
-			if love.keyboard.isDown(config.input.keyboard[key].k) then 
+		if entry.k then
+			if love.keyboard.isDown(entry.k) then 
 				input.mode = "keyboard"
 				input[key] = true
 			end
 		end
 		-- mouse buttons
-		if config.input.keyboard[key].m then
-			if love.mouse.isDown(config.input.keyboard[key].m)
+		if entry.m then
+			if love.mouse.isDown(entry.m)
 			and not input.mouse_istouch[1] then -- prevent touch input
 				input.mode = "mouse"
 				input[key] = true
 			end
 		end
 		-- mouse wheel
-		if config.input.keyboard[key].mw then
+		if entry.mw then
 			if math.abs(input.mouse_wheel) > 0
-			and math.sign(input.mouse_wheel) == config.input.keyboard[key].mw then
+			and math.sign(input.mouse_wheel) == entry.mw then
 				input.mode = "mouse"
 				input[key] = true 
 			end
@@ -50,29 +51,29 @@ function input.update() -- MAIN LOOP --
 	-- gamepad mode
 	if input.gamepads then
 		for p=1,#input.gamepads do -- loop through all connected gamepads
-			for key in pairs(config.input.gamepad) do
+			for key, entry in pairs(config.input.gamepad) do
 				-- gamepad buttons
-				if config.input.gamepad[key].b then
-					if input.gamepads[p]:isGamepadDown(config.input.gamepad[key].b) then
+				if entry.b then
+					if input.gamepads[p]:isGamepadDown(entry.b) then
 						input.mode = "gamepad"
 						input[key] = true
 					end
 				end
 				-- gamepad hats (dpad)
-				if config.input.gamepad[key].hat then
-					for i in pairs(config.input.gamepad[key].hat) do
-						if string.match(input.gamepads[p]:getHat(1), config.input.gamepad[key].hat[i]) then
+				if entry.hat then
+					for i in pairs(entry.hat) do
+						if string.match(input.gamepads[p]:getHat(1), entry.hat[i]) then
 							input.mode = "gamepad"
 							input[key] = true
 						end
 					end
 				end
 				-- gamepad axis
-				if config.input.gamepad[key].axis then
-					for i in pairs(config.input.gamepad[key].axis) do
+				if entry.axis then
+					for i in pairs(entry.axis) do
 					
-						local axis = config.input.gamepad[key].axis[i][1]
-						local dir = config.input.gamepad[key].axis[i][2]	
+						local axis = entry.axis[i][1]
+						local dir = entry.axis[i][2]	
 					
 						if (math.abs(input.gamepads[p]:getGamepadAxis(axis)) > config.input.gamepad_deadzone)
 						and math.sign(input.gamepads[p]:getGamepadAxis(axis)) == dir then 
@@ -89,11 +90,10 @@ function input.update() -- MAIN LOOP --
 	if mobile then
 		local touches = love.touch.getTouches()
 		
-		for key in pairs(config.input.touch) do
-			for i in pairs(config.input.touch[key]) do
-				for j,id in ipairs(touches) do
+		for key, entry in pairs(config.input.touch) do
+			for i, shape in pairs(entry) do
+				for j, id in ipairs(touches) do
 					local touchx, touchy = love.touch.getPosition(id)
-					local shape = config.input.touch[key][i]
 					
 					if shape.circle then
 						local x = shape.circle[1]
@@ -131,7 +131,7 @@ function input.update() -- MAIN LOOP --
 	
 	-- end loop
 	for key in pairs(input.time) do 
-		if input[key] == true then 
+		if input[key] then 
 			input.time[key] = input.time[key] + 1	-- key is held, count time
 		else
 			input.time[key] = 0						-- key was released
@@ -144,12 +144,11 @@ end
 ---------------------------------------------------------------- 
 
 function input.draw() -- DRAW LOOP --
+	
 	-- draw touch screen buttons
 	if mobile then
-		for key in pairs(config.input.touch) do
-			for i in pairs(config.input.touch[key]) do
-				local shape = config.input.touch[key][i]
-				
+		for key, entry in pairs(config.input.touch) do
+			for i, shape in pairs(entry) do
 				if shape.circle then
 					local x = shape.circle[1]
 					local y = shape.circle[2]
@@ -194,6 +193,7 @@ function input.draw() -- DRAW LOOP --
 			end
 		end
 	end
+	
 end
 
 ---------------------------------------------------------------- 

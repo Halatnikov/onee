@@ -28,7 +28,6 @@ function debug.enable(enabled)
 		
 		-- TODO: functions on disabling/reenabling debug mode, maybe unrequire lurker completely
 		-- TODO: init imgui here
-		-- TODO: on debug_mode disable, close all the ui
 		-- TODO: shortcut ` or f1 to open/close the debug window
 		
 		-- monitor global variables :eyes:
@@ -53,6 +52,9 @@ function debug.enable(enabled)
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
 		
+		yui.open.debug = nil
+		yui.open.debug_button = nil
+		
 	end
 end
 
@@ -74,7 +76,7 @@ function debug.profiler_deep_enable(enabled)
 		jit.off()
 		jit.flush()
 		profi:start()
-	elseif profi.has_started then
+	elseif profi and profi.has_started then
 		jit.on()
 		profi:stop()
 		collectgarbage()
@@ -100,37 +102,37 @@ function debug.draw()
 	if not debug_mode then return end
 	
 	if mobile then
-		for i,id in ipairs(love.touch.getTouches()) do
-			local touchx, touchy = love.touch.getPosition(id)
+		local touches = love.touch.getTouches()
+		for i=1, #touches do
+			local touchx, touchy = love.touch.getPosition(touches[i])
 			love.graphics.line(touchx-12,touchy, touchx+12,touchy)
 			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
 		end
 	end
 	
 	debug.drawlist = {}
-	for id in kpairs(scenes) do
-		local scene = scenes[id]
-		for id in pairs(scene.instances) do
+	for id, scene in kpairs(scenes) do
+		for id, instance in pairs(scene.instances) do
 			local function draw_recursively(arg)
 				for k, v in pairs(arg) do
 					if type(v) == "table" then
-						if debug_draw_collisions and arg[k].collision == true then
+						if debug_draw_collisions and v.collision == true then
 							queue.add(debug.drawlist, 1, function()
-								collision.debug_draw(arg[k])
+								collision.debug_draw(v)
 							end)
-						elseif debug_draw_sprites and arg[k].sprite == true then
+						elseif debug_draw_sprites and v.sprite == true then
 							queue.add(debug.drawlist, 2, function()
-								sprite.debug_draw(arg[k], scene)
+								sprite.debug_draw(v, scene)
 							end)
 						-- skip 3d models, they cause a stack overflow
-						elseif arg[k].model ~= true then
-							draw_recursively(arg[k])
+						elseif v.model ~= true then
+							draw_recursively(v)
 						end
 					end
 				end
 			end
 			
-			draw_recursively(scene.instances[id])
+			draw_recursively(instance)
 		end
 	end
 	queue.execute(debug.drawlist)
@@ -153,12 +155,10 @@ function debug.draw()
 	local i = 0
 	for k, v in ripairs(qqueue) do
 		i = i + 1
-		local timestamp = qqueue[k].timestamp or 0
-		local text = qqueue[k].text
-		local width, wraps = fonts.proggy_clean:getWrap(text, windowwidth - 4)
+		v.timestamp = v.timestamp or 0
 		
-		love.graphics.printf(text, fonts.proggy_clean, 4, windowheight - 4 - ((13  * i)*#wraps), windowwidth - 4)
-		if ms - timestamp > 3 then table.remove(qqueue, k) end
+		love.graphics.print(v.text, fonts.proggy_clean, 4, windowheight - 4 - ((13  * i)))
+		if ms - v.timestamp > 3 then table.remove(qqueue, k) end
 	end
 	if #qqueue > 24 then table.remove(qqueue, 1) end
 	
@@ -187,17 +187,15 @@ function debug.keypressed(k, scancode, isrepeat)
 	if k == "g" then log(string.random(150)) end
 	
 end
-love.keypressed = debug.keypressed
+love.keypressed = debug.keypressed 
 
 function debug.table(arg, mode, indent)
 	print(serialize.pack(arg, indent or 1, mode or "lax"))
 end
 
 ----------------------------------------------------------------
+
 function debug.test(arg)
-	debug_testing = true
-	local path = "onee/_tests/"..arg..".lua"
-	
 	-- set up the test environment
 	local env = {}
 	env = copy(_G) -- add globals, techically isolated for that test only?
@@ -276,7 +274,7 @@ function debug.test(arg)
 	-- run test
 	local time_start = love.timer.getTime()
 	log("RUNNING TEST \""..arg.."\"")
-	dofile(path, env)
+	dofile("onee/_tests/"..arg, env)
 	
 	-- test finished
 	local success, summary, passes, errors = lust.success, lust.summary, lust.passes, lust.errors
@@ -288,7 +286,6 @@ function debug.test(arg)
 	log("PASSES: "..passes..", ERRORS: "..errors..", TOOK: "..took)
 	
 	unrequire("onee/libs/lust")
-	debug_testing = nil
 	
 	return success, summary, passes, errors, took
 end
@@ -310,9 +307,8 @@ local function push(name, data)
 	
 	local parent
 	for k,v in ripairs(_prof.data) do
-		local current = _prof.data[k]
-		if current.level == _prof.level - 1 then
-			parent = current.id
+		if v.level == _prof.level - 1 then
+			parent = v.id
 			break
 		end
 	end
@@ -338,9 +334,8 @@ local function mark(name, data)
 	
 	local parent
 	for k,v in ripairs(_prof.data) do
-		local current = _prof.data[k]
-		if current.level == _prof.level - 1 then
-			parent = current.id
+		if v.level == _prof.level - 1 then
+			parent = v.id
 			break
 		end
 	end
@@ -363,13 +358,12 @@ end
 local function pop(name)
 	local previous
 	for k,v in ripairs(_prof.data) do
-		local current = _prof.data[k]
-		if current.level == _prof.level then
+		if v.level == _prof.level then
 			if not name then
-				previous = current
+				previous = v
 				break
-			elseif name and current.name == name then
-				previous = current
+			elseif name and v.name == name then
+				previous = v
 				break
 			end
 		end
@@ -421,13 +415,13 @@ function _prof.hook(path, name)
 		local path = {name}
 		local function recursive(arg)
 			for k,v in pairs(arg) do
-				if type(arg[k]) == "table" and arg[k] ~= package.loaded then
+				if type(v) == "table" and v ~= package.loaded then
 					table.insert(path, k)
 					if #path > 4 then break end
 					name = table.concat(path, ".")
-					recursive(arg[k])
+					recursive(v)
 					table.remove(path, 2)
-				elseif type(arg[k]) == "function" then
+				elseif type(v) == "function" then
 					name = table.concat(path, ".")
 					wrap(arg, k, name.."."..k)
 				end
@@ -462,3 +456,95 @@ function _prof.enable(enabled)
 	end
 	collectgarbage()
 end
+
+text = love.filesystem.read("onee/debug.lua")
+text = string.tokenize(text, newline)
+for i=1, #text do text[i] = string.trim(text[i]) end
+
+docs = {}
+
+local function tag(arg)
+	local t = {}
+	if string.left(arg, 1) == "@" then
+		local split = string.tokenize(arg, " ")
+		t.tag = string.right(split[1], -1)
+		table.remove(split, 1)
+		
+		if t.tag == "function" then
+			local has_local = split[#split] == "(local)"
+			if has_local then 
+				t.localfunc = true
+				table.remove(split, #split)
+			end
+			
+			t.name = split[1]
+			table.remove(split, 1)
+		end
+		
+		if t.tag == "param" then
+			local has_type = (string.left(split[1],1) == "(" and string.right(split[1],1) == ")")
+			if has_type then 
+				split[1] = string.mid(split[1], 2, #split[1]-1)
+				local type = string.tokenize(split[1], "=")
+				
+				t.type = type[1]
+				if type[2] then
+					t.optional = true
+					t.default = #type[2] ~= 0 and type[2] or nil
+				end
+				
+				table.remove(split, 1)
+			end
+			
+			t.name = split[1]
+			table.remove(split, 1)
+			
+			if split[1] == "-" then table.remove(split, 1) end
+		end
+		
+		if t.tag == "returns" then
+			local has_type = (string.left(split[1],1) == "(" and string.right(split[1],1) == ")")
+			if has_type then 
+				t.type = string.mid(split[1], 2, #split[1]-1)
+				table.remove(split, 1)
+			end
+		end
+		
+		t.text = table.concat(split, " ")
+	end
+	return t
+end
+
+for i=1, #text do
+	if string.left(text[i],3) == "---" and string.mid(text[i],4,4) ~= "-" then 
+		local parent = {}
+		parent.text = string.trim(string.remove(text[i], "---"))
+		table.append(parent, tag(parent.text))
+		
+		for i = i+1, #text do
+			if string.left(text[i],2) ~= "--" then break end
+			parent.children = parent.children or {}
+			
+			local child = {}
+			child.text = string.trim(string.remove(text[i], "--"))
+			table.append(child, tag(child.text))
+			
+			if child.tag and #child.text == 0 then child.text = nil end
+			if (child.text or child.tag) then table.insert(parent.children, child) end
+		end
+		
+		if #parent.text == 0 then parent.text = nil end
+		if (parent.tag or parent.children) then table.insert(docs, parent) end
+	end
+end
+
+--- @function _prof.hook
+-- @param path
+-- @param name
+
+--- @function push (local)
+-- do the mario
+--
+-- @param (string) name
+-- @param (table={}) data - optional table
+-- @returns (an) donkey kong country

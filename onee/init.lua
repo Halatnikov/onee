@@ -1,5 +1,5 @@
 onee = {}
-onee.version = "0.0.2-14"
+onee.version = "0.0.2-15"
 
 ---------------------------------------------------------------- INIT
 
@@ -8,7 +8,6 @@ fonts = {}
 fonts.proggy_clean = love.graphics.newFont("fonts/ProggyClean.ttf", 16, "mono", 2)
 fonts.proggy_clean:setFilter("nearest")
 
--- init itself
 do
 	require("conf")
 	require("onee/libs/errorhandler")
@@ -43,6 +42,7 @@ do
 	print("LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version)
 	local date = os.date("*t")
 	print(date.year.."/"..string.zeropad(date.month,2).."/"..string.zeropad(date.day,2).." "..string.zeropad(date.hour,2)..":"..string.zeropad(date.min,2)..":"..string.zeropad(date.sec,2))
+	
 	scene.set("init")
 end
 

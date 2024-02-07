@@ -611,20 +611,20 @@ function imgui.window.overlay()
 	local function collisions_recursively(arg, id, object)
 		for k, v in pairs(arg) do
 			if type(v) == "table" then
-				if arg[k].collision == true then
-					check, col = collision.check(self, object, arg[k].name)
+				if v.collision == true then
+					check, col = collision.check(self, object, v.name)
 					if check then collision_inspect[col.instance..col.name] = col end
 				-- skip 3d models, they cause a stack overflow
-				elseif arg[k].model ~= true then
-					collisions_recursively(arg[k], id, instances[id].object)
+				elseif v.model ~= true then
+					collisions_recursively(v, id, instances[id].object)
 				end
 			end
 		end
 	end
 	
 	-- TODO: maybe loop through objects instead?
-	for id in pairs(instances) do
-		collisions_recursively(instances[id], id, instances[id].object)
+	for id, instance in pairs(instances) do
+		collisions_recursively(instance, id, instance.object)
 	end
 	
 	-- the tooltip itself
@@ -632,12 +632,10 @@ function imgui.window.overlay()
 		
 		if gui.BeginTooltip() then
 			for k,v in pairs(collision_inspect) do
-				local col = collision_inspect[k]
-				
-				if col.collision == true then
-					gui.Text(col.instance)
+				if v.collision == true then
+					gui.Text(v.instance)
 					gui.SameLine()
-					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..col.name..")")
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..v.name..")")
 				end
 				
 			end
@@ -653,26 +651,24 @@ function imgui.window.overlay()
 	-- pop-up menu on right click
 	if gui.BeginPopup("inspect_popup") then
 		for k,v in pairs(inspect_popup) do
-			local col = inspect_popup[k]
-			
-			gui.SeparatorText(col.instance)
+			gui.SeparatorText(v.instance)
 			gui.SameLine()
-			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..col.name..")")
+			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..v.name..")")
 			
-			if gui.BeginTable("##"..string.md5(col), 1, gui.love.TableFlags("Borders")) then
+			if gui.BeginTable("##"..string.md5(v), 1, gui.love.TableFlags("Borders")) then
 				gui.TableSetupColumn("1")
 				gui.TableNextRow()
 				gui.TableSetColumnIndex(0)
-				gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "x, y: "..math.floor(col.x)..", "..math.floor(col.y))
+				gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "x, y: "..math.floor(v.x)..", "..math.floor(v.y))
 				gui.EndTable()
 			end
 			
 			if gui.MenuItem_Bool("Open inspector") then
-				instance_selected = col.instance
+				instance_selected = v.instance
 				imgui.open.inspector = true
 			end
 			if gui.MenuItem_Bool("Delete instance") then
-				instance.delete(col.instance)
+				instance.delete(v.instance)
 			end
 			
 		end
@@ -763,10 +759,10 @@ function imgui.window.main()
 					gui.TableSetupColumn("k")
 					gui.TableSetupColumn("count")
 					
-					for k in kpairs(objects) do
+					for k,v in kpairs(objects) do
 						gui.TableNextRow()
 						gui.TableSetColumnIndex(0); gui.Text(tostring(k))
-						gui.TableSetColumnIndex(1); gui.Text(tostring(objects[k].instances))
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v.instances))
 					end
 					
 					gui.EndTable()
@@ -1391,6 +1387,12 @@ function imgui.window.profiler()
 					for i=#report, 1, -1 do
 						if report[i].name == "frame" and not report[i].stop then table.remove(report, i) break end
 					end
+					for i=1, #report do
+						report[i].stop = report[i].stop or _prof.stop
+						report[i].ramstop = report[i].ramstop or report[i].ramstart
+					end
+					
+					root = root or report[frame]
 					
 					gui.Separator()
 					if gui.Button("<-") then root = report[frame] end
@@ -1398,10 +1400,6 @@ function imgui.window.profiler()
 					
 					gui.SetNextWindowBgAlpha(1)
 					if gui.BeginChild_Str("frame", gui.ImVec2_Float(-1,-120), gui.love.ChildFlags("Border")) then
-						root = root or report[frame]
-						local rootstop = root.stop or _prof.stop
-						
-						local maxx = gui.GetContentRegionMax().x + 10
 						
 						local root_sorted = {}
 						for i=root.id, #report_raw do
@@ -1412,6 +1410,8 @@ function imgui.window.profiler()
 						local max_level = root_sorted[#root_sorted] and root_sorted[#root_sorted].level or 0
 						local min_level = root_sorted[1] and root_sorted[1].level or 0
 						
+						local maxx = gui.GetContentRegionMax().x + 10
+						
 						for i = min_level, max_level do
 							gui.Text("")
 							for j=root.id, #report_raw do
@@ -1420,18 +1420,15 @@ function imgui.window.profiler()
 									local node = report_raw[j]
 									
 									if node.type == "event" then
-										local stop = node.stop or _prof.stop
-										local ramstop = node.ramstop or node.ramstart
-							
-										local time = math.round((stop - node.start)*1000, 4)
-										local ram = math.round((ramstop - node.ramstart)/1024, 4)
+										local time = math.round((node.stop - node.start)*1000, 4)
+										local ram = math.round((node.ramstop - node.ramstart)/1024, 4)
 										ram = ram >= 0 and "+"..ram or ram
 										local label = node.name.." ("..time.."ms "..ram.."MB)"
 										
 										local maxx = gui.GetContentRegionMax().x + 10
 										
-										local w = math.map(stop, root.start, rootstop, -tick, maxx)
-										local x = math.map(node.start, root.start, rootstop, -tick, maxx)
+										local w = math.map(node.stop, root.start, root.stop, -tick, maxx)
+										local x = math.map(node.start, root.start, root.stop, -tick, maxx)
 										w = w - x
 										if w < 1.5 then w = 1.5 end
 										
@@ -1447,7 +1444,7 @@ function imgui.window.profiler()
 										end
 									end
 									if node.type == "mark" then
-										local x = math.map(node.start, root.start, rootstop, -tick, maxx)
+										local x = math.map(node.start, root.start, root.stop, -tick, maxx)
 										gui.SameLine(maxx*(x/maxx))
 										gui.RadioButton_Bool("",true)
 										if gui.BeginItemTooltip() then
@@ -1470,9 +1467,8 @@ function imgui.window.profiler()
 						if gui.BeginTabItem("dt") then
 							local graph = {}
 							for i=1, #report do
-								local stop = report[i].stop or _prof.stop
 								if report[i].type == "event" then
-									table.insert(graph, math.round((stop - report[i].start)*1000, 3))
+									table.insert(graph, math.round((report[i].stop - report[i].start)*1000, 3))
 								end
 							end
 							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
@@ -1485,9 +1481,8 @@ function imgui.window.profiler()
 						if gui.BeginTabItem("RAM") then
 							local graph = {}
 							for i=1, #report do
-								local ramstop = report[i].ramstop or report[i].ramstart
 								if report[i].type == "event" then
-									table.insert(graph, math.round(ramstop/1024, 3))
+									table.insert(graph, math.round(report[i].ramstop/1024, 3))
 								end
 							end
 							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
@@ -1533,9 +1528,6 @@ function imgui.window.profiler()
 					gui.SameLine(); gui.Text("Recording...")
 				end
 				if not debug_profiler_deep and #profi.reports ~= 0 then
-					gui.SameLine()
-					if gui.Button("Dump") then profi:writeReport("ProFi.txt") end
-					
 					gui.SameLine()
 					gui.Text("Time spent: "..math.round(profi.stopTime - profi.startTime, 2))
 					gui.SameLine()

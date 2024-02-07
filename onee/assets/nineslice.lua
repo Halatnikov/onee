@@ -33,7 +33,7 @@ function nineslice.add(name, anim, frame, image, animdef, framedef, export)
 	export._nineslices[anim][frame] = {}
 	
 	local images = export._nineslices[anim][frame]
-	local canvas = {}
+	local slices = {}
 	
 	-- split into 9 images
 	for i = 1, 9 do
@@ -91,15 +91,15 @@ function nineslice.add(name, anim, frame, image, animdef, framedef, export)
 			height = ninedef.y2
 		end
 		
-		canvas[i] = love.graphics.newCanvas(width, height)
-		canvas[i]:renderTo(function()
+		slices[i] = love.graphics.newCanvas(width, height)
+		slices[i]:renderTo(function()
 			love.graphics.draw(image, -x, -y)
 		end)
 		
-		images[i] = love.graphics.newImage(canvas[i]:newImageData())
+		images[i] = love.graphics.newImage(slices[i]:newImageData())
 	end
 	
-	canvas = nil -- clear from memory
+	slices = nil -- clear from memory
 	collectgarbage()
 	
 	if ninedef.left ~= TILE.STRETCH then
