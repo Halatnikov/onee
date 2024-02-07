@@ -1,11 +1,14 @@
+---------------------------------------------------------------- DEBUG INIT
+
 function debug.enable(enabled)
 	debug_mode = enabled
 	if enabled then
 		
 		-- libraries (debug)
+		require("onee/libs/df-serialize")
 		require("onee/libs/lurker")
 		require("onee/libs/profi")
-		require("onee/libs/df-serialize")
+		require "onee/libs/docroc"
 		
 		-- gui (debug)
 		require("onee/imgui")
@@ -39,6 +42,8 @@ function debug.enable(enabled)
 				rawset(t, k, v)
 			end
 		})
+		
+		docs = docroc.process("onee/debug.lua")   
 		
 	else
 		
@@ -83,7 +88,7 @@ function debug.profiler_deep_enable(enabled)
 	end
 end
 
-----------------------------------------------------------------
+---------------------------------------------------------------- DEBUG MAIN LOOP
 
 function debug.update()
 	if not debug_mode then return end
@@ -173,7 +178,7 @@ function debug.draw()
 	
 end
 
-----------------------------------------------------------------
+---------------------------------------------------------------- MISC
 
 function debug.keypressed(k, scancode, isrepeat)
 	if not debug_mode then return end
@@ -193,7 +198,7 @@ function debug.table(arg, mode, indent)
 	print(serialize.pack(arg, indent or 1, mode or "lax"))
 end
 
-----------------------------------------------------------------
+---------------------------------------------------------------- TESTS
 
 function debug.test(arg)
 	-- set up the test environment
@@ -290,7 +295,7 @@ function debug.test(arg)
 	return success, summary, passes, errors, took
 end
 
-----------------------------------------------------------------
+---------------------------------------------------------------- PROFILER
 
 _prof = {
 	enabled = false,
@@ -302,6 +307,9 @@ _prof = {
 	ram = 0,
 }
 
+--! @func _prof.push --
+-- start a new profiling zone, works like a tree structure
+-- @param (table=) data
 local function push(name, data)
 	_prof.level = _prof.level + 1
 	
@@ -329,6 +337,9 @@ local function push(name, data)
 	_prof.ram = _prof.ram + (collectgarbage("count") - ram)
 end
 
+--! @func _prof.mark --
+-- leave a marker without an end time
+-- @param (table=) data
 local function mark(name, data)
 	_prof.level = _prof.level + 1
 	
@@ -355,6 +366,9 @@ local function mark(name, data)
 	_prof.level = _prof.level - 1 
 end
 
+--! @func _prof.pop --
+-- required to end a profiling zone
+-- @param (=) name -- specify name, otherwise defaults to last found
 local function pop(name)
 	local previous
 	for k,v in ripairs(_prof.data) do
@@ -379,6 +393,11 @@ local function pop(name)
 	_prof.level = _prof.level - 1
 end
 
+--! wraps the original function to allow profiling it
+-- @param (table) t -- parent table of the function
+-- @param (string) key -- function key
+-- @param name -- zone name
+-- @local
 local function wrap(t, key, name)
 	local func = t[key]
 	
@@ -394,6 +413,9 @@ local function wrap(t, key, name)
 	end
 end
 
+--! attach a function or a table containing functions (recursively) for profiling
+-- @param (string|table) path -- syntax: "a.func()", "a.b" or a table directly
+-- @param (=) name -- optional zone name
 function _prof.hook(path, name)
 	if debug_hotswap and lurker.swappedonce then return end
 	name = name or tostring(path)
@@ -431,6 +453,7 @@ function _prof.hook(path, name)
 	end
 end
 
+--! toggle profiler
 function _prof.enable(enabled)
 	_prof.enabled = enabled
 	if enabled then
@@ -456,95 +479,4 @@ function _prof.enable(enabled)
 	end
 	collectgarbage()
 end
-
-text = love.filesystem.read("onee/debug.lua")
-text = string.tokenize(text, newline)
-for i=1, #text do text[i] = string.trim(text[i]) end
-
-docs = {}
-
-local function tag(arg)
-	local t = {}
-	if string.left(arg, 1) == "@" then
-		local split = string.tokenize(arg, " ")
-		t.tag = string.right(split[1], -1)
-		table.remove(split, 1)
-		
-		if t.tag == "function" then
-			local has_local = split[#split] == "(local)"
-			if has_local then 
-				t.localfunc = true
-				table.remove(split, #split)
-			end
-			
-			t.name = split[1]
-			table.remove(split, 1)
-		end
-		
-		if t.tag == "param" then
-			local has_type = (string.left(split[1],1) == "(" and string.right(split[1],1) == ")")
-			if has_type then 
-				split[1] = string.mid(split[1], 2, #split[1]-1)
-				local type = string.tokenize(split[1], "=")
-				
-				t.type = type[1]
-				if type[2] then
-					t.optional = true
-					t.default = #type[2] ~= 0 and type[2] or nil
-				end
-				
-				table.remove(split, 1)
-			end
-			
-			t.name = split[1]
-			table.remove(split, 1)
-			
-			if split[1] == "-" then table.remove(split, 1) end
-		end
-		
-		if t.tag == "returns" then
-			local has_type = (string.left(split[1],1) == "(" and string.right(split[1],1) == ")")
-			if has_type then 
-				t.type = string.mid(split[1], 2, #split[1]-1)
-				table.remove(split, 1)
-			end
-		end
-		
-		t.text = table.concat(split, " ")
-	end
-	return t
-end
-
-for i=1, #text do
-	if string.left(text[i],3) == "---" and string.mid(text[i],4,4) ~= "-" then 
-		local parent = {}
-		parent.text = string.trim(string.remove(text[i], "---"))
-		table.append(parent, tag(parent.text))
-		
-		for i = i+1, #text do
-			if string.left(text[i],2) ~= "--" then break end
-			parent.children = parent.children or {}
-			
-			local child = {}
-			child.text = string.trim(string.remove(text[i], "--"))
-			table.append(child, tag(child.text))
-			
-			if child.tag and #child.text == 0 then child.text = nil end
-			if (child.text or child.tag) then table.insert(parent.children, child) end
-		end
-		
-		if #parent.text == 0 then parent.text = nil end
-		if (parent.tag or parent.children) then table.insert(docs, parent) end
-	end
-end
-
---- @function _prof.hook
--- @param path
--- @param name
-
---- @function push (local)
--- do the mario
---
--- @param (string) name
--- @param (table={}) data - optional table
--- @returns (an) donkey kong country
+ 

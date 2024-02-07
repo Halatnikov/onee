@@ -2,74 +2,120 @@
 -- https://github.com/bjornbytes/docroc
 -- License - MIT, see LICENSE for details.
 
-local docroc = {}
+docroc = {}
 
 function docroc.process(filename)
-  local text = love.filesystem.read(filename)
+	local source = love.filesystem.read(filename)
+	
+	local comments = {}
+	source:gsub('%s*%-%-!(.-)\n([%s%w\n][^\n%-]*)', function(chunk, context)
+		chunk = chunk:gsub('^%s*%-*%s*', ''):gsub('\n%s*%-*%s*', ' ')
+		chunk = chunk:gsub('^[^@]', '@raw %1')
+		context = context:match('[^\n]+')
 
-  local comments = {}
-  text:gsub('%s*%-%-%-(.-)\n([%w\n][^\n%-]*)', function(chunk, context)
-    --local a,b = string.find(chunk, "---")
-	--print(string.sub(chunk, b, b+1))
-    chunk = chunk:gsub('^%s*%-*%s*', ''):gsub('\n%s*%-*%s*', ' ')
-    chunk = chunk:gsub('^[^@]', '@description %1')
-    context = context:match('[^\n]+')
+		local tags = {}
+		chunk:gsub('@(%w+)%s?([^@]*)', function(name, body)
+			body = body:gsub('(%s+)$', '')
+			local processor = docroc.processors[name]
+			local tag = processor and processor(body) or {}
+			body = body:gsub('%-%-%s*(.*)$', '')
+			tag.tag = name
+			tag._raw = body
+			tags[name] = tags[name] or {}
+			table.insert(tags[name], tag)
+		end)
+		
+		-- auto document a function 
+		context:gsub("function ([%w%p][^(]*)(%b())", function(name, params)
+			local t = {}
+			params:sub(2,-2):gsub("([%w%p][^%,]*)%,?", function(param)
+				table.insert(t, param)
+			end)
+			
+			if not tags["func"] then
+				if context:find("local ") then tags["local"] = {[1] = {tag = "local"}} end
+				
+				tags["func"] = {}
+				local tag = {tag = "func", name = name,}
+				if tags["raw"] then
+					tag.description =  tags["raw"][1]._raw
+					tags["raw"] = nil
+				end
+				table.insert(tags["func"], tag)
+			end
+			
+			tags["param"] = tags["param"] or {}
+			for i=1, #t do
+				local exists = table.find(tags["param"], "name", t[i])
+				if not exists then
+					local tag = {tag = "param", name = t[i], _order = i}
+					table.insert(tags["param"], tag)
+				else
+					tags["param"][exists]._order = i
+				end
+			end
+			table.sortby(tags["param"], "_order")
+		end)
+		
+		-- comment "block" done
+		table.insert(comments, {
+			tags = tags,
+			context = context,
+		})
+	end)
 
-    local tags = {}
-    chunk:gsub('@(%w+)%s?([^@]*)', function(name, body)
-      body = body:gsub('(%s+)$', '')
-      local processor = docroc.processors[name]
-      local tag = processor and processor(body) or {}
-      tag.tag = name
-      tag.text = body
-      tags[name] = tags[name] or {}
-      table.insert(tags[name], tag)
-      table.insert(tags, tag)
-    end)
-
-    table.insert(comments, {
-      tags = tags,
-      context = context
-    })
-  end)
-
-  return comments
+	return comments
 end
 
-docroc.processors = {
-  arg = function(body)
-    local name = body:match('^%s*(%w+)') or body:match('^%s*%b{}%s*(%w+)')
-    local description = body:match('%-%s*(.*)$')
-    local optional, default
-    local type = body:match('^%s*(%b{})'):sub(2, -2):gsub('(%=)(.*)', function(_, value)
-      optional = true
-      default = value
-      if #default == 0 then default = nil end
-      return ''
-    end)
+docroc.processors = {}
+local processor = docroc.processors
 
-    return {
-      type = type,
-      name = name,
-      description = description,
-      optional = optional,
-      default = default
-    }
-  end,
+processor["func"] = function(body)
+	local name = body:match("^%s*([%w%p]+)")
+	local description = body:match('%-%-%s*(.*)$')
+	
+	return {
+		name = name,
+		description = description,
+	}
+end
 
-  returns = function(body)
-    local type
-    body:gsub('^%s*(%b{})', function(match)
-      type = match:sub(2, -2)
-      return ''
-    end)
-    local description = body:match('^%s*(.*)')
+processor["param"] = function(body)
+	local name = body:match('^%s*(%w+)') or body:match('^%s*%b()%s*(%w+)')
+	local description = body:match('%-%-%s*(.*)$')
+	local type, optional, default
+	body:gsub('^%s*(%b())', function(match)
+		type = match:sub(2, -2):gsub('(%=)(.*)', function(_, value)
+			optional = true
+			default = #value ~= 0 and value or nil
+			return ''
+		end)
+		return ''
+	end)
+	
+	return {
+		name = name,
+		description = description,
+		type = type,
+		optional = optional,
+		default = default,
+	}
+end
 
-    return {
-      type = type,
-      description = description
-    }
-  end
-}
+processor["returns"] = function(body)
+	local name = body:match('^%s*(%w+)') or body:match('^%s*%b()%s*(%w+)')
+	local description = body:match('%-%-%s*(.*)$')
+	local type
+	body:gsub('^%s*(%b())', function(match)
+		type = match:sub(2, -2)
+		return ''
+	end)
+	
+	return {
+		name = name,
+		description = description,
+		type = type,
+	}
+end
 
 return docroc
