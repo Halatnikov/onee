@@ -32,16 +32,16 @@ function docroc.process(filename)
 				table.insert(t, param)
 			end)
 			
-			if not tags["func"] then
+			if not tags["function"] then
 				if context:find("local ") then tags["local"] = {[1] = {tag = "local"}} end
 				
-				tags["func"] = {}
-				local tag = {tag = "func", name = name,}
+				tags["function"] = {}
+				local tag = {tag = "function", name = name,}
 				if tags["raw"] then
 					tag.description =  tags["raw"][1]._raw
 					tags["raw"] = nil
 				end
-				table.insert(tags["func"], tag)
+				table.insert(tags["function"], tag)
 			end
 			
 			tags["param"] = tags["param"] or {}
@@ -70,7 +70,7 @@ end
 docroc.processors = {}
 local processor = docroc.processors
 
-processor["func"] = function(body)
+processor["function"] = function(body)
 	local name = body:match("^%s*([%w%p]+)")
 	local description = body:match('%-%-%s*(.*)$')
 	

@@ -16,7 +16,8 @@ if (love._os == "Windows" or love._os == "Linix") and debug_mode then
 	imgui.open.menubar = true
 	imgui.open.main = true
 	
-	imgui.open.profiler = true
+	--imgui.open.profiler = true
+	imgui.open.docs = true
 	
 end
 
@@ -520,6 +521,10 @@ function imgui.window.menubar()
 			-- open profiler window
 			if gui.MenuItem_Bool("Profiler", nil, imgui.open.profiler) then
 				imgui.open.profiler = not imgui.open.profiler
+			end
+			-- open docs window
+			if gui.MenuItem_Bool("Documentation", nil, imgui.open.docs) then
+				imgui.open.docs = not imgui.open.docs
 			end
 			
 			gui.Separator()
@@ -1341,6 +1346,90 @@ function imgui.window.tests()
 	end
 	
 	imgui.open.tests = open[0]
+end
+
+---------------------------------------------------------------- DOCUMENTATION VIEWER
+
+function imgui.window.docs()
+	local open = _bool(imgui.open.docs)
+	
+	if gui.Begin("Documentation", open) then
+		
+		if gui.Button("Generate") then
+			docs = docroc.process("onee/debug.lua")
+		end
+		
+		if gui.BeginChild_Str("debug") then
+			
+			for k,v in kpairs(docs) do
+				
+				local current = v.tags
+				if current["function"] then
+					local func = current["function"][1]
+					local params = current["param"]
+					local returns = current["returns"]
+					
+					local label = func.name
+					label = current["local"] and label.."  [local function]" or label.."  [function]"
+					if gui.CollapsingHeader_BoolPtr(label) then
+						local label = ""
+						if #params ~= 0 then
+							label = label.."("
+							for i=1, #params do
+								local param = params[i]
+								label = param.optional and label.."[" or label
+								label = label..param.name
+								label = param.optional and label.."]" or label
+								if i ~= #params then label = label..", " end
+							end
+							label = label..")"
+						end
+						if #label ~= 0 then gui.SeparatorText(label) end
+						
+						if (params and #params ~= 0) and gui.TreeNodeEx_Str("Parameters##"..func.name, gui.love.TreeNodeFlags("SpanAvailWidth")) then
+							for i=1, #params do
+								local param = params[i]
+								local label = param.name
+								label = (param.type and #param.type ~= 0) and label.."  ("..param.type..")" or label
+								label = (param.optional and not param.default) and label.."  [optional]" or label
+								label = (param.optional and param.default) and label.."  [optional : "..param.default.."]" or label
+								
+								gui.Bullet()
+								gui.Text(label)
+								if param.description then gui.TextWrapped(param.description) end
+							end
+							gui.Separator()
+							gui.TreePop()
+						end
+						
+						if (returns and #returns ~= 0) and gui.TreeNodeEx_Str("Returns##"..func.name, gui.love.TreeNodeFlags("SpanAvailWidth")) then
+							for i=1, #returns do
+								local ret = returns[i]
+								local label = ret.name
+								label = (ret.type and #ret.type ~= 0) and label.."  ("..ret.type..")" or label
+								
+								gui.Bullet()
+								gui.Text(label)
+								if ret.description then gui.TextWrapped(ret.description) end
+							end
+							gui.Separator()
+							gui.TreePop()
+						end
+						
+						if func.description then gui.TextWrapped(func.description) end
+						
+					end
+				end
+				
+			end
+			
+			gui.EndChild()
+		end
+		
+		gui.End()
+	end
+	
+	imgui.open.docs = open[0]
 end
 
 ---------------------------------------------------------------- PROFILER

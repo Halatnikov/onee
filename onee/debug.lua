@@ -43,7 +43,7 @@ function debug.enable(enabled)
 			end
 		})
 		
-		docs = docroc.process("onee/debug.lua")   
+		docs = docroc.process("onee/debug.lua")
 		
 	else
 		
@@ -307,7 +307,7 @@ _prof = {
 	ram = 0,
 }
 
---! @func _prof.push --
+--! @function _prof.push --
 -- start a new profiling zone, works like a tree structure
 -- @param (table=) data
 local function push(name, data)
@@ -337,7 +337,7 @@ local function push(name, data)
 	_prof.ram = _prof.ram + (collectgarbage("count") - ram)
 end
 
---! @func _prof.mark --
+--! @function _prof.mark --
 -- leave a marker without an end time
 -- @param (table=) data
 local function mark(name, data)
@@ -366,7 +366,7 @@ local function mark(name, data)
 	_prof.level = _prof.level - 1 
 end
 
---! @func _prof.pop --
+--! @function _prof.pop --
 -- required to end a profiling zone
 -- @param (=) name -- specify name, otherwise defaults to last found
 local function pop(name)
