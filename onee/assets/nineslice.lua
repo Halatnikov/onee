@@ -135,6 +135,8 @@ function nineslice.draw(sprite, scene, anim, frame, animdef, framedef)
 	local nx, ny, qref_width, qref_height, qwidth, qheight
 	
 	canvas:renderTo(function()
+		love.graphics.clear()
+		
 		-- top left
 		nx = 0
 		ny = 0

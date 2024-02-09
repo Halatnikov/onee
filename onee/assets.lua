@@ -455,7 +455,7 @@ function sprite.debug_draw(sprite, scene)
 	local mode = sprite.debug.highlighted and "fill" or "line"
 	
 	love.graphics.setColor(sprite.debug.rgb[1]/255, sprite.debug.rgb[2]/255, sprite.debug.rgb[3]/255, 0.5)
-	love.graphics.setLineWidth(2.5)
+	love.graphics.setLineWidth(3)
 	
 	local x = sprite.x or 0 
 	local y = sprite.y or 0 

@@ -64,6 +64,7 @@ do
 	print(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	
 	-- off we go
+	resolution.update()
 	scene.set("init")
 end
 
@@ -103,16 +104,19 @@ end
 function onee.draw()
 	_prof.push("onee.draw")
 	
+	resolution.push()
 	-- main loop
-	scene.draw()
-	input.draw()
-	yui.draw()
-	
+		scene.draw()
+		input.draw()
+		yui.draw()
+	resolution.pop()
+		
 	debug.draw()
 	--
 	
 	-- reset the graphics state constantly
-	love.graphics.reset()
+	love.graphics.reset(true)
+	love.graphics.setDefaultFilter("nearest", "nearest", 0)
 	love.graphics.setLineStyle("rough")
 	love.graphics.setBackgroundColor(onee.bg[1], onee.bg[2], onee.bg[3])
 	
@@ -127,7 +131,7 @@ function onee.draw()
 end
 
 function onee.resize(width, height)
-	
+	resolution.update(width, height)
 end
 love.resize = onee.resize
 

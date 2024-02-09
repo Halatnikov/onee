@@ -72,9 +72,7 @@ function gif.add(path, animdef, export)
 				love.graphics.clear()
 				if animdef.gif_transparent == false then -- fill with background color
 					local bg = gif.background
-					love.graphics.setColor(bg[1]/255, bg[2]/255, bg[3]/255)
-					love.graphics.rectangle("fill", 0, 0, gif.width, gif.height)
-					love.graphics.setColor(1, 1, 1)
+					love.graphics.clear(bg[1]/255, bg[2]/255, bg[3]/255)
 				end
 				love.graphics.draw(image, x, y)
 			elseif dispose == DISPOSE.PREVIOUS then
