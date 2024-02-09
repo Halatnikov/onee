@@ -6,7 +6,8 @@ scenes = {} -- actual containers
 
 ---------------------------------------------------------------- SCENE
 
-function scene.set(path, data, name) -- SWITCH CURRENT SCENE --
+--! SWITCH CURRENT SCENE
+function scene.set(path, data, name)
 	
 	name = name or string.tokenize(path, "/", -1)
 	
@@ -38,7 +39,8 @@ function scene.set(path, data, name) -- SWITCH CURRENT SCENE --
 	
 end
 
-function scene.update() -- SCENES UPDATE LOOP --
+--! SCENES UPDATE LOOP
+function scene.update()
 	assert(table.length(scenes) > 0, "scene.update() | No scene initialized!")
 	_prof.push("scene.update")
 	
@@ -61,7 +63,8 @@ function scene.update() -- SCENES UPDATE LOOP --
 	_prof.pop()
 end
 
-function scene.draw() -- SCENES DRAW LOOP --
+--! SCENES DRAW LOOP
+function scene.draw()
 	_prof.push("scene.draw")
 	for id, scene in kpairs(scenes) do
 		_prof.push(scene.name)
@@ -88,7 +91,8 @@ end
 
 ---------------------------------------------------------------- OBJECTS
 
-function object.new(path, scene, data, name) -- CREATE NEW OBJECT --
+--! CREATE NEW OBJECT
+function object.new(path, scene, data, name)
 	
 	name = name or string.tokenize(path, "/", -1)
 	if scene.objects[name] then return end
@@ -117,13 +121,15 @@ function object.new(path, scene, data, name) -- CREATE NEW OBJECT --
 	
 end
 
-function object.delete(name, scene) -- DELETE OBJECT --
+--! DELETE OBJECT
+function object.delete(name, scene)
 	if not scene.objects[name] then return end
 	instance.clear(name, scene)
 	scene.objects[name] = nil
 end
 
-function object.instances(name, scene) -- GET ALL INSTANCE IDs OF AN OBJECT --
+--! GET ALL INSTANCE IDs OF AN OBJECT
+function object.instances(name, scene)
 	if not scene.objects[name] then return nil end
 	if scene.objects[name].instances == 0 then return nil end
 	
@@ -137,7 +143,8 @@ end
 
 ---------------------------------------------------------------- INSTANCES
 
-function instance.new(name, scene, data) -- CREATE NEW INSTANCE --
+--! CREATE NEW INSTANCE
+function instance.new(name, scene, data) -- string, table, table=
 
 	assert(scene.objects[name], "instance.new() | can't create instance, object \""..name.."\" doesn't exist!")
 	
@@ -174,7 +181,8 @@ function instance.new(name, scene, data) -- CREATE NEW INSTANCE --
 	
 end
 
-function instance.delete(id, scene) -- DELETE INSTANCE --
+--! DELETE INSTANCE
+function instance.delete(id, scene)
 	if not scene.instances[id] then return end
 	local name = scene.instances[id].object
 	scene.objects[name].instances = scene.objects[name].instances - 1
@@ -182,7 +190,8 @@ function instance.delete(id, scene) -- DELETE INSTANCE --
 	scene.instances[id] = nil
 end
 
-function instance.clear(name, scene) -- CLEAR ALL INSTANCES OF OBJECT --
+--! CLEAR ALL INSTANCES OF OBJECT
+function instance.clear(name, scene)
 	for id, instance in pairs(scene.instances) do
 		if instance.object == name then instance.delete() end
 	end

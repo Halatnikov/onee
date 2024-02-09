@@ -1,7 +1,7 @@
 asset = {} -- functions
 sprite = {}
 model = {
-	anim = {}
+	anim = {},
 }
 
 -- constants
@@ -20,13 +20,15 @@ DISPOSE = {
 	PREVIOUS = 3, -- revert 1 frame back
 }
 
+-- sub-types
 local gif = require("onee/assets/gif")
 local spritesheet = require("onee/assets/spritesheet")
 local nineslice = require("onee/assets/nineslice")
 
 ---------------------------------------------------------------- AUXILLARY
 
-function asset.delete(name, scene) -- UNLOAD ASSET
+--! UNLOAD ASSET
+function asset.delete(name, scene)
 	scene.assets[name] = nil
 	
 	scene.sprites[name] = nil
@@ -35,7 +37,8 @@ function asset.delete(name, scene) -- UNLOAD ASSET
 	collectgarbage()
 end
 
-function asset.add_frames(count, x,y,length) -- helper for adding frames to sprite def
+--! helper for adding frames to sprite def
+function asset.add_frames(count, x,y,length)
 	local t = {}
 	for i=1, count do
 		t[i] = {
@@ -47,7 +50,8 @@ function asset.add_frames(count, x,y,length) -- helper for adding frames to spri
 	return t
 end
 
-function asset.negative_frames(animdef) -- helper for handling negative frame declarations
+--! helper for handling negative frame declarations
+function asset.negative_frames(animdef)
 	for frame in pairs(animdef.frames) do
 		if frame < 0 then -- if your frame is -1, that means the last frame, -2 second to last and so on
 			local i = (#animdef.frames+1) + frame
@@ -61,8 +65,8 @@ end
 ---------------------------------------------------------------- SPRITES
 
 do--#region SPRITES
-function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
-	
+--! LOAD NEW SPRITE ASSET
+function asset.sprite(path, scene)
 	local name = string.tokenize(path, "/", -1)
 	if scene.assets[name] then return end -- already loaded
 	
@@ -188,10 +192,10 @@ function asset.sprite(path, scene) -- LOAD NEW SPRITE ASSET --
 	
 	local time_finish = love.timer.getTime()
 	print("took "..math.round(time_finish - time_start, 4))
-	
 end
 
-function sprite.init(sprite, scene, name, data) -- INIT A NEW SPRITE INSTANCE --
+--! INIT A NEW SPRITE INSTANCE
+function sprite.init(sprite, scene, name, data)
 	assert(scene.sprites[name], "sprite.init() | \""..name.."\" is not a valid sprite!")
 	
 	local t = {
@@ -231,16 +235,18 @@ function sprite.init(sprite, scene, name, data) -- INIT A NEW SPRITE INSTANCE --
 	t = table.protect(t, {"sprite", "name"})
 	
 	return table.append(sprite, t)
-	
 end
 
-function sprite.update(sprite, scene) -- UPDATE SPRITE --
-	assert(sprite, "sprite.update() | not a valid sprite")
-	assert(sprite.sprite, "sprite.update() | not a valid sprite")
+--! UPDATE SPRITE
+function sprite.update(sprite, scene)
+	assert((sprite and sprite.sprite), "sprite.update() | not a valid sprite")
+	
 	if not sprite.active then return end
 	
-	assert(scene.sprites[sprite.name], "sprite.update() | not a valid sprite")
-	local animdef = scene.sprites[sprite.name].animations[sprite.animation]
+	local spritedef = scene.sprites[sprite.name]
+	assert(spritedef, "sprite.update() | no such sprite \""..sprite.name.."\"")
+	
+	local animdef = spritedef.animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	
 	-- update animations
@@ -306,21 +312,19 @@ function sprite.update(sprite, scene) -- UPDATE SPRITE --
 			sprite.nineslice.canvas = love.graphics.newCanvas(nwidth, nheight)
 		end
 	end
-	
 end
 
-function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
-	if queued == nil then queued = true end
-
-	assert(sprite, "sprite.draw() | not a valid sprite")
-	assert(sprite.sprite, "sprite.draw() | not a valid sprite")
-	
-	if queued == false then sprite.queued = false end
+--! DRAW SPRITE
+function sprite.draw(sprite, scene, queued)
+	assert((sprite and sprite.sprite), "sprite.draw() | not a valid sprite")
 	
 	if not sprite.visible then return end
 	
 	local spritedef = scene.sprites[sprite.name]
 	assert(spritedef, "sprite.draw() | no such sprite \""..sprite.name.."\"")
+	
+	if queued == nil then queued = true end
+	if queued == false then sprite.queued = false end
 	
 	-- basics
 	local x = sprite.x or 0; x = math.round(x)
@@ -372,9 +376,9 @@ function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 	end
 	assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
 	
+	-- finally drawing itself
 	local function draw() end
 	
-	-- finally drawing itself
 	if spritedef.tiled then -- TILED SPRITE
 		
 		assert(sprite.tiled, "sprite.draw() | no tiled instance in \""..sprite.name.."\"")
@@ -430,10 +434,10 @@ function sprite.draw(sprite, scene, queued) -- DRAW SPRITE --
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		draw()
 	end
-	
 end
 
-function sprite.debug_draw(sprite, scene) -- DEBUG DRAW SPRITE --
+--! DEBUG DRAW SPRITE
+function sprite.debug_draw(sprite, scene)
 	if not sprite.active then return end 
 	if sprite.queued == false then return end
 	
@@ -493,8 +497,8 @@ end--#endregion
 ---------------------------------------------------------------- 3D MODELS
 
 do--#region 3D MODELS
-function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
-	
+--! LOAD NEW 3D MODEL ASSET
+function asset.model(path, scene)
 	local name = string.tokenize(path, "/", -1)
 	if scene.assets[name] then return end -- already loaded
 	
@@ -549,13 +553,13 @@ function asset.model(path, scene) -- LOAD NEW 3D MODEL ASSET --
 	
 	local time_finish = love.timer.getTime()
 	print("took "..math.round(time_finish - time_start, 4))
-	
 end
 
 local vec3 = require "onee/libs/gltf/cpml.modules.vec3"
 local mat4 = require "onee/libs/gltf/cpml.modules.mat4"
 
-function model.init(model, scene, name, data) -- INIT A NEW 3D MODEL INSTANCE --
+--! INIT A NEW 3D MODEL INSTANCE
+function model.init(model, scene, name, data)
 	assert(scene.models[name], "model.init() | \""..name.."\" is not a valid 3d model!")
 	
 	local t = {
@@ -586,13 +590,14 @@ function model.init(model, scene, name, data) -- INIT A NEW 3D MODEL INSTANCE --
 	return table.append(model, t)
 end
 
-function model.update(model, scene) -- UPDATE 3D MODEL --
-	assert(model, "model.update() | not a valid 3d model")
-	assert(model.model, "model.update() | not a valid 3d model")
+--! UPDATE 3D MODEL
+function model.update(model, scene)
+	assert((model and model.model), "model.update() | not a valid 3d model")
+	
 	if not model.active then return end
-	assert(scene.models[model.name], "model.update() | not a valid 3d model")
 	
 	local modeldef = scene.models[model.name]
+	assert(modeldef, "model.update() | no such model \""..model.name.."\"")
 	
 	local width = model.canvas.width or windowwidth
 	local height = model.canvas.height or windowheight
@@ -655,12 +660,12 @@ function model.update(model, scene) -- UPDATE 3D MODEL --
 	transform:rotate(transform, anglez, vec3.new(0, 0, 1)) -- z
 	
 	model.projection:setViewMatrix(transform)
-	
 end
 
-function model.draw(model, scene) -- DRAW 3D MODEL --
-	assert(model, "model.draw() | not a valid 3d model")
-	assert(model.model, "model.draw() | not a valid 3d model")
+--! DRAW 3D MODEL
+function model.draw(model, scene)
+	assert((model and model.model), "model.draw() | not a valid 3d model")
+	
 	if not model.visible then return end
 	
 	-- the model itself
@@ -682,13 +687,12 @@ function model.draw(model, scene) -- DRAW 3D MODEL --
 	-- opacity and tinting
 	local rgb = model.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
 	local opacity = model.opacity or 100; opacity = opacity/100
-	love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 	
 	queue.add(scene.drawlist, z, function()
+		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		love.graphics.draw(model.canvas.main, x, y, angle, scalex, scaley, xoffset, yoffset, skewx, skewy)
+		love.graphics.reset()
 	end)
-	
-	love.graphics.reset()
 end
 end--#endregion
 

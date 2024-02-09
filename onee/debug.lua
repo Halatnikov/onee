@@ -1,5 +1,6 @@
 ---------------------------------------------------------------- DEBUG INIT
 
+--!
 function debug.enable(enabled)
 	debug_mode = enabled
 	if enabled then
@@ -8,13 +9,13 @@ function debug.enable(enabled)
 		require("onee/libs/df-serialize")
 		require("onee/libs/lurker")
 		require("onee/libs/profi")
-		require "onee/libs/docroc"
+		require("onee/libs/docroc")
 		
 		-- gui (debug)
-		require("onee/imgui")
+		require("onee/gui/imgui")
 		
 		love.setDeprecationOutput(true)
-		love.window.setTitle(love.config.window.title.." (debug)")
+		love.window.setTitle(love.config.title.." (debug)")
 		
 		debug_draw_collisions = true
 		debug_draw_sprites = false
@@ -38,16 +39,14 @@ function debug.enable(enabled)
 		setmetatable(_G, {
 			__newindex = function (t, k, v)
 				table.insert(debug.globals, k)
-				if v == nil then table.remove(debug.globals, table.find(k)) end
+				if v == nil then table.remove(debug.globals, table.find(k)) end -- TODO
 				rawset(t, k, v)
 			end
 		})
 		
-		docs = docroc.process("onee/debug.lua")
-		
 	else
 		
-		love.window.setTitle(love.config.window.title)
+		love.window.setTitle(love.config.title)
 		
 		_prof.hook = noop
 		
@@ -57,12 +56,12 @@ function debug.enable(enabled)
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
 		
-		yui.open.debug = nil
-		yui.open.debug_button = nil
+		yui.open = {}
 		
 	end
 end
 
+--!
 function debug.profiler_enable(enabled)
 	debug_profiler = enabled
 	if enabled then
@@ -73,6 +72,7 @@ function debug.profiler_enable(enabled)
 	end
 end
 
+--!
 function debug.profiler_deep_enable(enabled)
 	debug_profiler_deep = enabled
 	if enabled then
@@ -148,10 +148,9 @@ function debug.draw()
 	love.graphics.setColor(color.hsl(h, 1, 0.5))
 	if debug_hotswap then
 		love.graphics.printf("HOTSWAP", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
-		--love.graphics.printf(math.loop(3, 2, -2), fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
 	if debug_profiler or debug_profiler_deep then
-		local text = debug_profiler_deep and "DEEP PROFILING" or "PROFILING"
+		local text = debug_profiler_deep and "TRACING" or "PROFILING"
 		love.graphics.printf(text, fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
 	love.graphics.reset()
@@ -194,12 +193,29 @@ function debug.keypressed(k, scancode, isrepeat)
 end
 love.keypressed = debug.keypressed 
 
+--!
 function debug.table(arg, mode, indent)
 	print(serialize.pack(arg, indent or 1, mode or "lax"))
 end
 
+--TODO: make this support ... arguments and then just check if they're all strings or something
+-- don't print to console if it has a category maybe
+
+-- maybe i should just make a log() function, this doesn't seem like a good idea
+--print_ = print
+function log(arg)
+	--debug.table(debug.getinfo(2)) --get name of the function that called this somehow
+	--io.write(tostring(arg), newline)
+	print(arg)
+	-- use kinda sparingly, because this is laggy
+	table.insert(qqueue, {text = {{1,1,1,1},tostring(arg)}, timestamp = ms})
+end
+-- /!\ [AssetLoading] asset.sprite() | asset "name" already loaded!
+log("test")
+
 ---------------------------------------------------------------- TESTS
 
+--!
 function debug.test(arg)
 	-- set up the test environment
 	local env = {}
@@ -221,6 +237,13 @@ function debug.test(arg)
 		error("Forcefully failed"..newline..lust.indent(lust.level+1).."AT: "..msg, 2)
 	end
 	env.fail = lust.fail
+	
+	-- tests can have an output
+	function lust.output(data)
+		data = type(data) == "table" and data or {data}
+		lust.summary[#lust.summary].output = data
+	end
+	env.output = lust.output
 	
 	-- mock random
 	env.math.random = math.randomfake
@@ -309,8 +332,7 @@ _prof = {
 
 --! @function _prof.push --
 -- start a new profiling zone, works like a tree structure
--- @param (table=) data
-local function push(name, data)
+local function push(name, data) -- string, table=
 	_prof.level = _prof.level + 1
 	
 	local parent
@@ -339,8 +361,7 @@ end
 
 --! @function _prof.mark --
 -- leave a marker without an end time
--- @param (table=) data
-local function mark(name, data)
+local function mark(name, data) -- string, table=
 	_prof.level = _prof.level + 1
 	
 	local parent
@@ -397,7 +418,6 @@ end
 -- @param (table) t -- parent table of the function
 -- @param (string) key -- function key
 -- @param name -- zone name
--- @local
 local function wrap(t, key, name)
 	local func = t[key]
 	

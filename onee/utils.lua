@@ -326,6 +326,22 @@ function table.sortby(arg, k, descending)
 	end
 end
 
+function table.sortv(arg, descending)
+	if not descending then
+		table.sort(arg, function(a,b)
+			if not (arg[a] and arg[b]) then return end
+			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
+			return arg[a] < arg[b]
+		end)
+	else
+		table.sort(arg, function(a,b)
+			if not (arg[a] and arg[b]) then return end
+			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) > tostring(arg[b]) end
+			return arg[a] > arg[b]
+		end)
+	end
+end
+
 function table.fill(v, min, max)
 	if not max then min, max = 1, min end
 	local t = {}
@@ -477,10 +493,13 @@ function color.hsl(h, s, l, a)
 	return r + m, g + m, b + m, a
 end
 
----------------------------------------------------------------- FILES
-files = {}
+---------------------------------------------------------------- MISC
 
-files.exists = love.filesystem.getInfo
+function noop() end
+
+function unrequire(arg)
+	package.loaded[arg] = nil
+end
 
 dofile_ = dofile
 function dofile(path, env)
@@ -488,14 +507,6 @@ function dofile(path, env)
 	local run = assert(love.filesystem.load(path), path.." not found")
 	if env then setfenv(run, env) end
 	return run()
-end
-
----------------------------------------------------------------- MISC
-
-function noop() end
-
-function unrequire(arg)
-	package.loaded[arg] = nil
 end
 
 os.date_ = os.date
@@ -515,4 +526,3 @@ function os.date(format, time)
 	end
 	return os.date_(format, time)
 end
-

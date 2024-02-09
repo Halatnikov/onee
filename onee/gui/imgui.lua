@@ -6,7 +6,7 @@ imgui = {
 -- init
 local gui
 if (love._os == "Windows" or love._os == "Linix") and debug_mode then 
-	imgui_ = require("onee/libs/cimgui")
+	imgui_ = require("onee/libs/cimgui-love")
 	gui = imgui_ or nil
 	
 	gui.love.Init()
@@ -17,7 +17,7 @@ if (love._os == "Windows" or love._os == "Linix") and debug_mode then
 	imgui.open.main = true
 	
 	--imgui.open.profiler = true
-	imgui.open.docs = true
+	--imgui.open.docs = true
 	
 end
 
@@ -114,6 +114,7 @@ end
 
 ---------------------------------------------------------------- table browser
 do--#region TABLE BROWSER
+--!
 function imgui.table(arg, name, settings, level)
 	local level = level or 0
 	local settings = settings or {
@@ -481,7 +482,7 @@ function imgui.window.menubar()
 				debug_profiler = not debug_profiler
 				debug.profiler_enable(debug_profiler)
 			end
-			if gui.MenuItem_Bool("Deep profiling", nil, debug_profiler_deep) then
+			if gui.MenuItem_Bool("Tracing (slow)", nil, debug_profiler_deep) then
 				debug_profiler_deep = not debug_profiler_deep
 				debug.profiler_deep_enable(debug_profiler_deep)
 			end
@@ -570,11 +571,11 @@ function imgui.window.menubar()
 		
 		------------------------------------------------ right corner fps and dt
 		gui.SameLine(windowwidth-120)
-		gui.Text(love.timer.getFPS().." FPS "..string.zeropad(math.round(1000*love.timer.getAverageDelta(),2), 0.2).."ms")
+		gui.Text(string.format("%02d FPS %02.2fms", love.timer.getFPS(), 1000*love.timer.getAverageDelta()))
 		if gui.BeginItemTooltip() then
-			gui.Text(string.zeropad(fps, 0.2).." FPS "..string.zeropad(math.round(1000*dt, 2), 0.2).."ms")
+			gui.Text(string.format("%02.2f FPS %02.2fms", fps, 1000*dt))
 			local date = os.date("*t")
-			gui.Text(date.year.."/"..string.zeropad(date.month,2).."/"..string.zeropad(date.day,2).." "..string.zeropad(date.hour,2)..":"..string.zeropad(date.min,2)..":"..string.zeropad(date.sec,2))
+			gui.Text(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 			
 			gui.EndTooltip()
 		end
@@ -897,7 +898,7 @@ function imgui.window.main()
 				gui.TableSetColumnIndex(2); gui.Text(tostring(math.round(love.timer.getTime(),2)))
 				if gui.BeginItemTooltip() then
 					local timer = love.timer.getTime()
-					gui.Text(math.floor(timer/3600).."h "..string.zeropad(math.floor(timer/60)%60, 2).."m "..string.zeropad(math.floor(timer)%60, 2).."s "..string.zeropad(math.floor(timer*100)%100, 2).."ms")
+					gui.Text(string.format("%dh %02dm %02ds %02dms", timer/3600, math.floor(timer/60)%60, math.floor(timer)%60, math.floor(timer*100)%100))
 					gui.Text(tostring(love.timer.getTime()))
 					gui.Text("unix timestamp: "..os.time())
 					gui.Text("os.clock(): "..os.clock())
@@ -1276,10 +1277,15 @@ function imgui.window.tests()
 		if gui.BeginTabBar("", gui.love.TabBarFlags("Reorderable")) then
 			if gui.BeginTabItem("Tests runner") then
 				-- test selector
-				local tests = love.filesystem.getDirectoryItems("onee/_tests")
-				if not test_current then test_current = string.remove(tests[1], ".lua") end
+				local tests = files.listdir("onee/_tests")
+				if not test_current then 
+					test_current = tests[1]
+					test_current = string.remove(test_current, "onee/_tests/")
+					test_current = string.remove(test_current, ".lua")
+				end
 				if gui.BeginCombo("##tests", test_current) then
 					for k, v in kpairs(tests) do
+						v = string.remove(v, "onee/_tests/")
 						v = string.remove(v, ".lua")
 						if gui.Selectable_Bool(v) then test_current = v end
 					end
@@ -1350,18 +1356,29 @@ end
 
 ---------------------------------------------------------------- DOCUMENTATION VIEWER
 
+local file_current
+
 function imgui.window.docs()
 	local open = _bool(imgui.open.docs)
 	
 	if gui.Begin("Documentation", open) then
 		
 		if gui.Button("Generate") then
-			docs = docroc.process("onee/debug.lua")
+			docroc.all()
 		end
 		
-		if gui.BeginChild_Str("debug") then
+		gui.SameLine()
+		if gui.BeginCombo("##tests", file_current) then
+			for k, v in kpairs(docs) do
+				if gui.Selectable_Bool(k) then file_current = k end
+			end
+			gui.EndCombo()
+		end
+		
+		gui.Separator()
+		if file_current and gui.BeginChild_Str("debug") then
 			
-			for k,v in kpairs(docs) do
+			for k,v in kpairs(docs[file_current]) do
 				
 				local current = v.tags
 				if current["function"] then
@@ -1373,13 +1390,11 @@ function imgui.window.docs()
 					label = current["local"] and label.."  [local function]" or label.."  [function]"
 					if gui.CollapsingHeader_BoolPtr(label) then
 						local label = ""
-						if #params ~= 0 then
+						if params and #params ~= 0 then
 							label = label.."("
 							for i=1, #params do
 								local param = params[i]
-								label = param.optional and label.."[" or label
-								label = label..param.name
-								label = param.optional and label.."]" or label
+								label = param.optional and label.."["..param.name.."]" or label..param.name
 								if i ~= #params then label = label..", " end
 							end
 							label = label..")"
@@ -1390,7 +1405,7 @@ function imgui.window.docs()
 							for i=1, #params do
 								local param = params[i]
 								local label = param.name
-								label = (param.type and #param.type ~= 0) and label.."  ("..param.type..")" or label
+								label = param.type and label.."  ("..param.type..")" or label
 								label = (param.optional and not param.default) and label.."  [optional]" or label
 								label = (param.optional and param.default) and label.."  [optional : "..param.default.."]" or label
 								
@@ -1418,7 +1433,15 @@ function imgui.window.docs()
 						
 						if func.description then gui.TextWrapped(func.description) end
 						
+						gui.Separator()
 					end
+				elseif current["raw"] then
+					local text = current["raw"]
+					
+					for i=1, #text do
+						gui.TextWrapped(text[i]._raw)
+					end
+					gui.Separator()
 				end
 				
 			end
@@ -1672,7 +1695,7 @@ function imgui.window.profiler()
 							else
 								gui.Text(name)
 							end
-							gui.TableSetColumnIndex(2); gui.Text(string.zeropad(math.round(report.timer*1000,4),0.4).."ms")
+							gui.TableSetColumnIndex(2); gui.Text(string.format("%04.4fms", report.timer*1000))
 							gui.TableSetColumnIndex(3); gui.Text(string.zeropad(relative,0.2).."%%")
 							gui.TableSetColumnIndex(4); gui.Text(tostring(report.count))
 						end

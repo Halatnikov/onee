@@ -11,38 +11,59 @@ fonts.proggy_clean:setFilter("nearest")
 do
 	require("conf")
 	require("onee/libs/errorhandler")
+	
+	-- love2d shenanigans
+	love.filesystem.setIdentity(love.filesystem.getIdentity(), true)
+	mobile = (love._os == "Android" or love._os == "iOS")
+	
+	if not (debug_hotswap and lurker.swappedonce) then
+		love.window.setMode(love.config.window.width, love.config.window.height, {
+			vsync = 0, resizable = true, fullscreen = mobile,
+			minwidth = love.config.window.width, minheight = love.config.window.height,
+		})
+	end
+	
+	love.graphics.setDefaultFilter("nearest", "nearest", 0)
+	love.graphics.setLineStyle("rough")
+	onee.bg = {8/255, 8/255, 8/255}
+	love.graphics.present() -- black screen
 
 	-- libraries (user)
+	require("onee/libs/urfs")
 	require("onee/libs/json")
 	require("onee/libs/gifload")
 	require("onee/libs/gltf")
 
 	-- onee modules
 	require("onee/utils")
+	require("onee/resolution")
+	require("onee/files")
 	require("onee/debug")
+	
 	require("onee/input")
 	require("onee/collisions")
 	require("onee/assets")
 	require("onee/scenes")
 
 	-- gui (user)
-	require("onee/yui")
+	require("onee/gui/yui")
 	
+	-- various сonstants
+	framerate = 60
 	tick = 1 / framerate
 	onee.time_start = os.time()
 	onee.allow_update = true
+	onee.width, onee.height = love.config.window.width, love.config.window.height
 	
+	-- :o
 	debug.enable(debug_mode)
-	
-	love.graphics.setDefaultFilter("nearest", "nearest", 0)
-	love.graphics.setLineStyle("rough")
-	onee.bg = {8/255, 8/255, 8/255}
 	
 	-- :)
 	print("LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version)
 	local date = os.date("*t")
-	print(date.year.."/"..string.zeropad(date.month,2).."/"..string.zeropad(date.day,2).." "..string.zeropad(date.hour,2)..":"..string.zeropad(date.min,2)..":"..string.zeropad(date.sec,2))
+	print(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	
+	-- off we go
 	scene.set("init")
 end
 
@@ -52,27 +73,29 @@ function onee.update(dt_)
 	_prof.push("frame")
 	_prof.push("onee.update")
 	
-	-- fps limiter start
+	-- frame limiter start
 	onee.before_update = (onee.before_update or 0) + tick
 	
-	-- various helper globals
+	-- various сonstants
 	windowwidth = love.graphics.getWidth()
 	windowheight = love.graphics.getHeight()
 	mousex = love.mouse.getX()
 	mousey = love.mouse.getY()
 	
 	if onee.allow_update then
-		-- helper globals that require the game running
+		-- various сonstants that require the game running
 		dt = love.timer.getDelta()
 		fps = 1 / dt
 		ms = (ms or 0) + dt
 		frames = (frames or 0) + 1
 		
+	-- main loop
 		scene.update()
 		input.update()
 	end
 	
 	debug.update()
+	--
 	
 	_prof.pop()
 end
@@ -80,17 +103,20 @@ end
 function onee.draw()
 	_prof.push("onee.draw")
 	
+	-- main loop
 	scene.draw()
 	input.draw()
+	yui.draw()
 	
 	debug.draw()
-	yui.draw()
+	--
 	
 	-- reset the graphics state constantly
 	love.graphics.reset()
+	love.graphics.setLineStyle("rough")
 	love.graphics.setBackgroundColor(onee.bg[1], onee.bg[2], onee.bg[3])
 	
-	-- fps limiter end
+	-- frame limiter end
 	_prof.mark("sleeping...")
 	onee.after_draw = love.timer.getTime()
 	if onee.before_update <= onee.after_draw then onee.before_update = onee.after_draw end
@@ -100,27 +126,18 @@ function onee.draw()
 	_prof.pop("frame")
 end
 
+function onee.resize(width, height)
+	
+end
+love.resize = onee.resize
+
 function onee.quit()
 	
 end
+love.quit = onee.quit
 
 ---------------------------------------------------------------- MISC
 
 _VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
 jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
 jit.version_revision = string.left(jit.version_rolling, 2)
-
---TODO: make this support ... arguments and then just check if they're all strings or something
--- don't print to console if it has a category maybe
-
--- maybe i should just make a log() function, this doesn't seem like a good idea
---print_ = print
-function log(arg)
-	--debug.table(debug.getinfo(2)) --get name of the function that called this somehow
-	--io.write(tostring(arg), newline)
-	print(arg)
-	-- use kinda sparingly, because this is laggy
-	table.insert(qqueue, {text = {{1,1,1,1},tostring(arg)}, timestamp = ms})
-end
--- /!\ [AssetLoading] asset.sprite() | asset "name" already loaded!
-log("test")

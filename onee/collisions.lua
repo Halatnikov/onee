@@ -9,7 +9,8 @@ poly = {}
 
 ---------------------------------------------------------------- INSTANCES
 
-function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE --
+--! INIT A NEW COLLISION INSTANCE
+function collision.init(collision, name, data)
 	assert(data, "collision.init() | no collision data passed!")
 	
 	local t = {
@@ -20,22 +21,22 @@ function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE 
 	}
 	table.append(t, data)
 	
-	-- POINT (and everything else) --
+	-- POINT (and everything else)
 	t.x = t.x or 0
 	t.y = t.y or t.x or 0
-	-- LINE --
+	-- LINE
 	if t.line then 
 		t.rect = nil; t.circ = nil
 		
 		t.line.x = t.line.x or 0
 		t.line.y = t.line.y or t.line.x or 0
-	-- RECTANGLE --
+	-- RECTANGLE
 	elseif t.rect then
 		t.line = nil; t.circ = nil
 		
 		t.rect.width = t.rect.width or 0
 		t.rect.height = t.rect.height or t.rect.width or 0
-	-- CIRCLE --
+	-- CIRCLE
 	elseif t.circ then 
 		t.line = nil; t.rect = nil
 		
@@ -47,7 +48,8 @@ function collision.init(collision, name, data) -- INIT A NEW COLLISION INSTANCE 
 	return table.append(collision, t)
 end
 
-function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
+--! DEBUG DRAW COLLISION
+function collision.debug_draw(collision)
 	if not collision.active then return end 
 	
 	if not collision.debug then
@@ -60,7 +62,7 @@ function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
 	local mode = collision.debug.highlighted and "fill" or "line"
 	
 	love.graphics.setColor(collision.debug.rgb[1]/255, collision.debug.rgb[2]/255, collision.debug.rgb[3]/255, 0.5)
-	-- LINE --
+	-- LINE
 	if collision.line then
 		love.graphics.line(collision.x, collision.y, collision.line.x, collision.line.y)
 		if collision.debug.highlighted and frames % 5 == 0 then
@@ -68,13 +70,13 @@ function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
 			love.graphics.setLineWidth(3)
 			love.graphics.line(collision.x, collision.y, collision.line.x, collision.line.y)
 		end
-	-- RECT --
+	-- RECT
 	elseif collision.rect then
 		love.graphics.rectangle(mode, collision.x, collision.y, collision.rect.width, collision.rect.height)
-	-- CIRCLE --
+	-- CIRCLE
 	elseif collision.circ then
 		love.graphics.circle(mode, collision.x, collision.y, collision.circ.radius)
-	-- POINT --
+	-- POINT
 	else
 		love.graphics.line(collision.x-4, collision.y, collision.x+4, collision.y)
 		love.graphics.line(collision.x, collision.y-4, collision.x, collision.y+4)
@@ -84,7 +86,8 @@ function collision.debug_draw(collision) -- DEBUG DRAW COLLISION --
 	
 end
 
-function collision.check(self, scene, objectname, collisionname) -- FIND COLLISION BETWEEN INSTANCES --
+--! FIND COLLISION BETWEEN INSTANCES
+function collision.check(self, scene, objectname, collisionname)
 	if not self then return end
 	if not self.active then return end
 	
@@ -125,94 +128,95 @@ function collision.check(self, scene, objectname, collisionname) -- FIND COLLISI
 	
 end
 
-function collision.resolve(self, other) -- CHECK TWO INDIVIDUAL COLLISION TYPES --
-	-- LINE --
+--! CHECK TWO INDIVIDUAL COLLISION TYPES
+function collision.resolve(self, other)
+	-- LINE
 	if self.line then
-		if other.line then -- LINE WITH LINE --
+		if other.line then -- LINE WITH LINE
 			return collision.line_line(
 				self.x, self.y, self.line.x, self.line.y,
 				other.x, other.y, other.line.x, other.line.y
 			)
-		elseif other.rect then -- LINE WITH RECT --
+		elseif other.rect then -- LINE WITH RECT
 			return collision.line_rect(
 				self.x, self.y, self.line.x, self.line.y,
 				other.x, other.y, other.rect.width, other.rect.height
 			)
-		elseif other.circ then -- LINE WITH CIRCLE --
+		elseif other.circ then -- LINE WITH CIRCLE
 			return collision.line_circ(
 				self.x, self.y, self.line.x, self.line.y,
 				other.x, other.y, other.circ.radius
 			)
-		else -- LINE WITH POINT --
+		else -- LINE WITH POINT
 			return collision.line_point(
 				self.x, self.y, self.line.x, self.line.y,
 				other.x, other.y
 			)
 		end
-	-- RECT --
+	-- RECT
 	elseif self.rect then
-		if other.line then -- RECT WITH LINE --
+		if other.line then -- RECT WITH LINE
 			return collision.rect_line(
 				self.x, self.y, self.rect.width, self.rect.height,
 				other.x, other.y, other.line.x, other.line.y
 			)
-		elseif other.rect then -- RECT WITH RECT --
+		elseif other.rect then -- RECT WITH RECT
 			return collision.rect_rect(
 				self.x, self.y, self.rect.width, self.rect.height,
 				other.x, other.y, other.rect.width, other.rect.height
 			)
-		elseif other.circ then -- RECT WITH CIRCLE --
+		elseif other.circ then -- RECT WITH CIRCLE
 			return collision.rect_circ(
 				self.x, self.y, self.rect.width, self.rect.height,
 				other.x, other.y, other.circ.radius
 			)
-		else -- RECT WITH POINT --
+		else -- RECT WITH POINT
 			return collision.rect_point(
 				self.x, self.y, self.rect.width, self.rect.height,
 				other.x, other.y
 			)
 		end
-	-- CIRCLE --
+	-- CIRCLE
 	elseif self.circ then
-		if other.line then -- CIRCLE WITH LINE --
+		if other.line then -- CIRCLE WITH LINE
 			return collision.circ_line(
 				self.x, self.y, self.circ.radius,
 				other.x, other.y, other.line.x, other.line.y
 			)
-		elseif other.rect then -- CIRCLE WITH RECT --
+		elseif other.rect then -- CIRCLE WITH RECT
 			return collision.circ_rect(
 				self.x, self.y, self.circ.radius,
 				other.x, other.y, other.rect.width, other.rect.height
 			)
-		elseif other.circ then -- CIRCLE WITH CIRCLE --
+		elseif other.circ then -- CIRCLE WITH CIRCLE
 			return collision.circ_circ(
 				self.x, self.y, self.circ.radius,
 				other.x, other.y, other.circ.radius
 			)
-		else -- CIRCLE WITH POINT --
+		else -- CIRCLE WITH POINT
 			return collision.circ_point(
 				self.x, self.y, self.circ.radius,
 				other.x, other.y
 			)
 		end
-	-- POINT --
+	-- POINT
 	else
-		if other.line then -- POINT WITH LINE --
+		if other.line then -- POINT WITH LINE
 			return collision.point_line(
 				self.x, self.y,
 				other.x, other.y, other.line.x, other.line.y
 			)
-		elseif other.rect then -- POINT WITH RECT --
+		elseif other.rect then -- POINT WITH RECT
 			return collision.point_rect(
 				self.x, self.y,
 				other.x, other.y, other.rect.width, other.rect.height
 			)
-		elseif other.circ then -- POINT WITH CIRCLE --
+		elseif other.circ then -- POINT WITH CIRCLE
 			return collision.point_circ(
 				self.x, self.y,
 				other.x, other.y, other.circ.radius
 			)
-		else -- POINT WITH POINT --
+		else -- POINT WITH POINT
 			return collision.point_point(
 				self.x, self.y,
 				other.x, other.y
@@ -227,12 +231,12 @@ end
 do--#region CALCULATIONS
 
 ---- points
--- POINT WITH POINT COLLISION --
+--! POINT WITH POINT COLLISION
 function collision.point_point(Ax, Ay, Bx, By)
 	return math.round(Ax) == math.round(Bx)
 	   and math.round(Ay) == math.round(By)
 end
--- POINT WITH LINE COLLISION --
+--! POINT WITH LINE COLLISION
 function collision.point_line(Ax, Ay, Bx1, By1, Bx2, By2)
 	local length = math.distance(Bx1, By1, Bx2, By2)
 	local distance1 = math.distance(Ax, Ay, Bx1, By1)
@@ -240,26 +244,26 @@ function collision.point_line(Ax, Ay, Bx1, By1, Bx2, By2)
 	
 	return math.between(length - 0.1, (distance1 + distance2), length + 0.1)
 end
--- POINT WITH RECTANGLE COLLISION --
+--! POINT WITH RECTANGLE COLLISION
 function collision.point_rect(Ax, Ay, Bx1, By1, Bx2, By2)
 	return math.between(Bx1, (Ax), Bx1 + Bx2)
 	   and math.between(By1, (Ay), By1 + By2)
 end
--- POINT WITH CIRCLE COLLISION --
+--! POINT WITH CIRCLE COLLISION
 function collision.point_circ(Ax, Ay, Bx, By, Bradius)
 	return math.distance(Ax, Ay, Bx, By) <= Bradius
 end
--- POINT WITH POLY COLLISION (alias) --
+-- (alias)
 function collision.point_poly(Ax, Ay, B)
 	return collision.poly_point(B, Ax, Ay)
 end
 
 ---- lines
--- LINE WITH POINT COLLISION (alias) --
+-- (alias)
 function collision.line_point(Ax1, Ay1, Ax2, Ay2, Bx, By)
 	return collision.point_line(Bx, By, Ax1, Ay1, Ax2, Ay2)
 end
--- LINE WITH LINE COLLISION --
+--! LINE WITH LINE COLLISION
 function collision.line_line(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 	local colA = ((Bx2 - Bx1) * (Ay1 - By1) - (By2 - By1) * (Ax1 - Bx1)) 
 			   / ((By2 - By1) * (Ax2 - Ax1) - (Bx2 - Bx1) * (Ay2 - Ay1))
@@ -269,7 +273,7 @@ function collision.line_line(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 	return math.between(0, colA, 1)
 	   and math.between(0, colB, 1)
 end
--- LINE WITH RECTANGLE COLLISION --
+--! LINE WITH RECTANGLE COLLISION
 function collision.line_rect(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 	local colA = collision.point_rect(Ax1, Ay1, Bx1, By1, Bx2, By2)
 	
@@ -281,7 +285,7 @@ function collision.line_rect(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 	return colA
 		or left or right or top or bottom
 end
--- LINE WITH CIRCLE COLLISION --
+--! LINE WITH CIRCLE COLLISION
 function collision.line_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
 	local result = false
 	
@@ -302,26 +306,26 @@ function collision.line_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
 	
 	return colA or result
 end
--- LINE WITH POLY COLLISION (alias) --
+-- (alias)
 function collision.line_poly(Ax1, Ay1, Ax2, Ay2, B)
 	return collision.poly_line(B, Ax1, Ay1, Ax2, Ay2)
 end
 
 ---- rectangles
--- RECTANGLE WITH POINT COLLISION (alias) --
+-- (alias)
 function collision.rect_point(Ax1, Ay1, Ax2, Ay2, Bx, By)
 	return collision.point_rect(Bx, By, Ax1, Ay1, Ax2, Ay2)
 end
--- RECTANGLE WITH LINE COLLISION (alias) --
+-- (alias)
 function collision.rect_line(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 	return collision.line_rect(Bx1, By1, Bx2, By2, Ax1, Ay1, Ax2, Ay2)
 end
--- RECTANGLE WITH RECTANGLE COLLISION --
+--! RECTANGLE WITH RECTANGLE COLLISION
 function collision.rect_rect(Ax1, Ay1, Ax2, Ay2, Bx1, By1, Bx2, By2)
 	return Ax1 <= Bx1 + Bx2 and Ay1 <= By1 + By2
 	   and Bx1 <= Ax1 + Ax2 and By1 <= Ay1 + Ay2
 end
--- RECTANGLE WITH CIRCLE COLLISION --
+--! RECTANGLE WITH CIRCLE COLLISION
 function collision.rect_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
 	local colx, coly = Bx, By
 	if Bx <= Ax1 	   then colx = Ax1       end
@@ -333,25 +337,25 @@ function collision.rect_circ(Ax1, Ay1, Ax2, Ay2, Bx, By, Bradius)
 end
 
 ---- circles
--- CIRCLE WITH POINT COLLISION (alias) --
+-- (alias)
 function collision.circ_point(Ax, Ay, Aradius, Bx, By)
 	return point_circ(Bx, By, Ax, Ay, Aradius)
 end
--- CIRCLE WITH LINE COLLISION (alias) --
+-- (alias)
 function collision.circ_line(Ax, Ay, Aradius, Bx1, By1, Bx2, By2)
 	return collision.line_circ(Bx1, By1, Bx2, By2, Ax, Ay, Aradius)
 end
--- CIRCLE WITH RECTANGLE COLLISION (alias) --
+-- (alias)
 function collision.circ_rect(Ax, Ay, Aradius, Bx1, By1, Bx2, By2)
 	return collision.rect_circ(Bx1, By1, Bx2, By2, Ax, Ay, Aradius)
 end
--- CIRCLE WITH CIRCLE COLLISION --
+--! CIRCLE WITH CIRCLE COLLISION
 function collision.circ_circ(Ax, Ay, Aradius, Bx, By, Bradius)
 	return math.distance(Ax, Ay, Bx, By) <= Aradius + Bradius
 end
 
 ---- polygons
--- POLY WITH POINT COLLISION --
+--! POLY WITH POINT COLLISION
 function collision.poly_point(A, Bx, By)
 	local wn = 0 -- winding number algorithm
 	
@@ -375,7 +379,7 @@ function collision.poly_point(A, Bx, By)
 	
 	return wn % 2 ~= 0 -- collision if odd
 end
--- POLY WITH LINE COLLISION --
+--! POLY WITH LINE COLLISION
 function collision.poly_line(A, Bx1, By1, Bx2, By2)
 	local result = false
 	
@@ -400,6 +404,7 @@ end--#endregion
 -- todo: width, height, bbox, move, rotate, scale
 
 -- POINTS
+--!
 function point.rotate(x, y, angle, ox, oy)
 	if angle == 0 then return x, y end
 	
@@ -412,6 +417,7 @@ function point.rotate(x, y, angle, ox, oy)
 end
 
 -- POLYGONS
+--!
 function poly.unpack(arg)
 	local t = {}
 	for i=1, #arg do
@@ -421,6 +427,7 @@ function poly.unpack(arg)
 	return t
 end
 
+--!
 function poly.pack(arg)
 	local t = {}
 	for i=1, #arg, 2 do
@@ -429,6 +436,7 @@ function poly.pack(arg)
 	return t
 end
 
+--!
 function poly.rect(x, y, width, height)
 	return {
 		{x, y},
@@ -438,6 +446,7 @@ function poly.rect(x, y, width, height)
 	}
 end
 
+--!
 function poly.move(arg, x, y, ox, oy)
 	local t = copy(arg)
 	
@@ -452,6 +461,7 @@ function poly.move(arg, x, y, ox, oy)
 	return t
 end
 
+--!
 function poly.rotate(arg, angle, ox, oy)
 	if angle == 0 then return arg, angle end
 	

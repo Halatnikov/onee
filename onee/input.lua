@@ -6,6 +6,8 @@ input = {
 	mouse_istouch = {},
 }
 
+love.joystick.loadGamepadMappings("onee/libs/gamecontrollerdb.txt")
+
 -- initialize the table
 for k in pairs(config.input.keyboard) do 
 	input[k] = false
@@ -14,7 +16,8 @@ end
 
 ---------------------------------------------------------------- 
 
-function input.update() -- MAIN LOOP --
+-- MAIN LOOP
+function input.update()
 	
 	-- begin loop
 	for key in pairs(input.time) do 
@@ -143,7 +146,8 @@ end
 
 ---------------------------------------------------------------- 
 
-function input.draw() -- DRAW LOOP --
+-- DRAW LOOP
+function input.draw()
 	
 	-- draw touch screen buttons
 	if mobile then
@@ -222,3 +226,5 @@ end
 love.mousepressed = input.mousepressed
 love.mousereleased = input.mousereleased
 love.wheelmoved = input.wheelmoved
+
+_prof.hook("input")

@@ -23,7 +23,7 @@ function yui.draw()
 		love.graphics.rectangle("fill", yui.debug.x, yui.debug.y, yui.debug.w, yui.debug.h, 4)
 		love.graphics.reset()
 		
-		yui.debug[1][2].text = love.timer.getFPS().." "..math.round(fps,2).." FPS "..math.round(1000*love.timer.getAverageDelta(),2).."ms"
+		yui.debug[1][2].text = string.format("%02d %02.2f FPS %02.2fms", love.timer.getFPS(), fps, 1000*love.timer.getAverageDelta())
 	end
 	
 	-- main loop
@@ -45,7 +45,7 @@ end
 
 -- UIs
 function yui.new.debug_button()
-	return gui.Ui:new {
+	local ui = {
 		x = windowwidth-20-4, y = 20+4,
 		gui.Rows {
 			-- open debug menu
@@ -59,13 +59,14 @@ function yui.new.debug_button()
 			},
 		},
 	}
+	
+	return gui.Ui:new(ui)
 end
 
 function yui.new.debug()
 	local width, height = 192, 20
 	local padding = 4
-	
-	return gui.Ui:new {
+	local ui = {
 		x = windowwidth-width-padding, y = height+padding,
 		gui.Rows {
 			-- close debug menu
@@ -118,6 +119,8 @@ function yui.new.debug()
 			},
 		},
 	}
+	
+	return gui.Ui:new(ui)
 end
 
 _prof.hook("yui")

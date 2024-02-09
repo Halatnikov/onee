@@ -2,7 +2,7 @@ errorhandler = {}
 local utf8 = require("utf8")
 
 local function error_printer(msg, layer)
-	print((debug.traceback("Error: " .. tostring(msg), 1+(layer or 1)):gsub("\n[^\n]+$", "")))
+	print(debug.traceback("Error: " .. tostring(msg), 1+(layer or 1)):gsub("\n[^\n]+$", ""))
 end
 
 function love.errorhandler(msg)
@@ -125,7 +125,7 @@ function errorhandler.draw(msg, mode, notraceback)
 	
 	table.insert(err, "\n")
 	for l in trace:gmatch("(.-)\n") do
-		if not l:match("boot.lua") then
+		if not (l:match("boot.lua") or l:match("errorhandler.lua") or l:match("lurker/init.lua")) then
 			l = l:gsub("stack traceback:", "Traceback\n")
 			table.insert(err, l)
 		end
