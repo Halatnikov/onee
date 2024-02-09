@@ -25,6 +25,12 @@ function debug.enable(enabled)
 		
 		lurker.interval = 1
 		
+		function lurker.postswap(f)
+			_prof.hook = noop
+			
+			resolution.update()
+		end
+		
 		_prof.hook("debug")
 		_prof.hook("lurker") 
 		_prof.hook("queue")
@@ -441,7 +447,6 @@ end
 -- @param (string|table) path -- syntax: "a.func()", "a.b" or a table directly
 -- @param (=) name -- optional zone name
 function _prof.hook(path, name)
-	if debug_hotswap and lurker.swappedonce then return end
 	name = name or tostring(path)
 	
 	local root

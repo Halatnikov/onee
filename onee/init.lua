@@ -148,7 +148,7 @@ function love.graphics.reset(ignore) -- bool=
 	love.graphics.setLineStyle("rough")
 	love.graphics.setBackgroundColor(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
 	
-	-- don't deactivate canvases, shaders, current font and scissors!
+	-- don't deactivate canvases, transformations, shaders, current font and scissors!
 	if not ignore then
 		love.graphics.setColor(1,1,1,1)
 		love.graphics.setBlendMode("alpha")
@@ -162,7 +162,6 @@ function love.graphics.reset(ignore) -- bool=
 		love.graphics.setWireframe(false)
 		love.graphics.setMeshCullMode("none")
 		love.graphics.setFrontFaceWinding("ccw")
-		--love.graphics.origin()
 	end
 end
 
