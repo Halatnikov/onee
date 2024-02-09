@@ -82,7 +82,7 @@ errorhandler.print = error_printer
 
 function errorhandler.draw(msg, mode, notraceback)
 	
-	love.graphics.reset()
+	love.graphics.reset(true)
 	local font = love.graphics.setNewFont(14)
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.origin()
@@ -157,7 +157,7 @@ function errorhandler.draw(msg, mode, notraceback)
 		local pos = 70
 		love.graphics.clear(89/255, 157/255, 220/255)
 		love.graphics.printf(err, font, pos, pos, love.graphics.getWidth() - pos)
-		love.graphics.reset()
+		love.graphics.reset(true)
 	end
 	
 	return draw, copyToClipboard

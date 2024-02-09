@@ -98,22 +98,8 @@ function debug.update()
 	imgui.update()
 end
 
-a = {{0,0}, {100,10}, {50,100}, {60,30}}
-local ox = 50
-local oy = 50
-
-qqueue = {}
 function debug.draw()
 	if not debug_mode then return end
-	
-	if mobile then
-		local touches = love.touch.getTouches()
-		for i=1, #touches do
-			local touchx, touchy = love.touch.getPosition(touches[i])
-			love.graphics.line(touchx-12,touchy, touchx+12,touchy)
-			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
-		end
-	end
 	
 	debug.drawlist = {}
 	for id, scene in kpairs(scenes) do
@@ -141,6 +127,25 @@ function debug.draw()
 		end
 	end
 	queue.execute(debug.drawlist)
+	
+end
+
+a = {{0,0}, {100,10}, {50,100}, {60,30}}
+local ox = 50
+local oy = 50
+
+qqueue = {}
+function debug.draw_post()
+	if not debug_mode then return end
+	
+	if mobile then
+		local touches = love.touch.getTouches()
+		for i=1, #touches do
+			local touchx, touchy = love.touch.getPosition(touches[i])
+			love.graphics.line(touchx-12,touchy, touchx+12,touchy)
+			love.graphics.line(touchx,touchy-12, touchx,touchy+12)
+		end
+	end
 	
 	imgui.draw()
 	
@@ -174,7 +179,6 @@ function debug.draw()
 	--love.graphics.line(mousex-16,mousey, mousex+24,mousey+32)
 	
 	--print(collision.poly_line(b, mousex-16,mousey, mousex+24,mousey+32))
-	
 end
 
 ---------------------------------------------------------------- MISC

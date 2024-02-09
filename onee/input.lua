@@ -210,7 +210,7 @@ function love.joystickremoved()
 	input.gamepads = love.joystick.getJoysticks()
 end
 
--- mouse wheel input
+-- mouse wheel input TODO
 function input.wheelmoved(x,y) 
 	input.mouse_wheel = y
 end

@@ -15,6 +15,11 @@ function love.conf(t)
 end
 
 config = {
+	graphics = {
+		scale = 1,
+		scale_internal = 1,
+		scale_mode = "",
+	},
 	input = {
 		keyboard = {
 			up = {k = {"up","w"}, mw = 1},

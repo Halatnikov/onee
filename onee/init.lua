@@ -1,5 +1,9 @@
 onee = {}
 onee.version = "0.0.2-15"
+onee.colors = {
+	bg = {8/255, 8/255, 8/255},
+	bg_deep = {16/255, 16/255, 16/255},
+}
 
 ---------------------------------------------------------------- INIT
 
@@ -24,8 +28,6 @@ do
 	end
 	
 	love.graphics.setDefaultFilter("nearest", "nearest", 0)
-	love.graphics.setLineStyle("rough")
-	onee.bg = {8/255, 8/255, 8/255}
 	love.graphics.present() -- black screen
 
 	-- libraries (user)
@@ -90,13 +92,11 @@ function onee.update(dt_)
 		ms = (ms or 0) + dt
 		frames = (frames or 0) + 1
 		
-	-- main loop
 		scene.update()
 		input.update()
 	end
 	
 	debug.update()
-	--
 	
 	_prof.pop()
 end
@@ -104,21 +104,17 @@ end
 function onee.draw()
 	_prof.push("onee.draw")
 	
-	resolution.push()
-	-- main loop
+	resolution.draw(function()
 		scene.draw()
 		input.draw()
 		yui.draw()
-	resolution.pop()
+		debug.draw()
+	end)
 		
-	debug.draw()
-	--
+	debug.draw_post()
 	
 	-- reset the graphics state constantly
 	love.graphics.reset(true)
-	love.graphics.setDefaultFilter("nearest", "nearest", 0)
-	love.graphics.setLineStyle("rough")
-	love.graphics.setBackgroundColor(onee.bg[1], onee.bg[2], onee.bg[3])
 	
 	-- frame limiter end
 	_prof.mark("sleeping...")
@@ -141,6 +137,34 @@ end
 love.quit = onee.quit
 
 ---------------------------------------------------------------- MISC
+
+love.graphics.reset_ = love.graphics.reset
+--! modified love.graphics.reset for my needs
+function love.graphics.reset(ignore) -- bool=
+	if ignore then love.graphics.reset_() end
+	
+	-- might as well use these here
+	love.graphics.setDefaultFilter("nearest", "nearest", 0)
+	love.graphics.setLineStyle("rough")
+	love.graphics.setBackgroundColor(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
+	
+	-- don't deactivate canvases, shaders, current font and scissors!
+	if not ignore then
+		love.graphics.setColor(1,1,1,1)
+		love.graphics.setBlendMode("alpha")
+		
+		love.graphics.setLineWidth(1)
+		love.graphics.setLineJoin("miter")
+		love.graphics.setPointSize(1)
+		love.graphics.setStencilTest()
+		love.graphics.setDepthMode()
+		love.graphics.setColorMask()
+		love.graphics.setWireframe(false)
+		love.graphics.setMeshCullMode("none")
+		love.graphics.setFrontFaceWinding("ccw")
+		--love.graphics.origin()
+	end
+end
 
 _VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
 jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))

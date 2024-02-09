@@ -329,7 +329,7 @@ function sprite.draw(sprite, scene, queued)
 	-- basics
 	local x = sprite.x or 0; x = math.round(x)
 	local y = sprite.y or 0; y = math.round(y)
-	local angle = sprite.angle or 0; angle = math.rad(angle)
+	local angle = sprite.angle or 0; angle = math.round(angle); angle = math.rad(angle)
 	local scalex = sprite.scalex or sprite.scale or 1
 	local scaley = sprite.scaley or sprite.scale or 1
 	local skewx = sprite.skewx or 0
@@ -431,8 +431,10 @@ function sprite.draw(sprite, scene, queued)
 			love.graphics.reset()
 		end)
 	else
+		resolution.pop()
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		draw()
+		resolution.push()
 	end
 end
 

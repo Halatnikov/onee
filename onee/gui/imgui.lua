@@ -527,6 +527,10 @@ function imgui.window.menubar()
 			if gui.MenuItem_Bool("Documentation", nil, imgui.open.docs) then
 				imgui.open.docs = not imgui.open.docs
 			end
+			-- open game canvas window
+			if gui.MenuItem_Bool("Game canvas", nil, imgui.open.game) then
+				imgui.open.game = not imgui.open.game
+			end
 			
 			gui.Separator()
 			-- open imgui demo
@@ -1711,6 +1715,21 @@ function imgui.window.profiler()
 	end
 	
 	imgui.open.profiler = open[0]
+end
+
+---------------------------------------------------------------- GAME CANVAS
+
+function imgui.window.game()
+	local open = _bool(imgui.open.game)
+	
+	if gui.Begin("the funny", open) then
+		
+		gui.Image(resolution.canvas, gui.ImVec2_Float(onee.width,onee.height))
+		
+		gui.End()
+	end
+	
+	imgui.open.game = open[0]
 end
 
 ---------------------------------------------------------------- IMGUI DEMO
