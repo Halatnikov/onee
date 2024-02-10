@@ -138,9 +138,12 @@ function string.findcase(arg, find, i) -- case insensitive alias
 	return string.find(string.lower(arg), string.lower(find), i)
 end
 
-function string.remove(arg, find) -- alias
-	find = string.escape(find)
-	return string.replace(arg, find, "")
+function string.remove(arg, ...)
+	local find = type(...) == "table" and ... or {...}
+	for i=1, #find do
+		arg = string.replace(arg, string.escape(find[i]), "")
+	end
+	return arg
 end
 
 function string.split(arg)
@@ -491,6 +494,33 @@ function color.hsl(h, s, l, a)
 	else r, g, b = c, 0, x
 	end 
 	return r + m, g + m, b + m, a
+end
+
+---------------------------------------------------------------- DRAWING
+
+function gradient(type, colors, x, y, r, w, h, ox, oy, kx, ky)
+	type = type or "horizontal"
+	r = math.rad(r or 0)
+	
+	if type == "horizontal" then
+		local vertices = {}
+		for i = 1, #colors do
+			local x = (i - 1) / (#colors - 1)
+			vertices[#vertices + 1] = {x, 1, x, 1, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
+			vertices[#vertices + 1] = {x, 0, x, 0, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
+		end
+		
+		love.graphics.draw(love.graphics.newMesh(vertices, "strip", "static"), x, y, r, w, h, ox, oy, kx, ky)
+	elseif type == "vertical" then
+		local vertices = {}
+		for i = 1, #colors do
+			local y = (i - 1) / (#colors - 1)
+			vertices[#vertices + 1] = {1, y, 1, y, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
+			vertices[#vertices + 1] = {0, y, 0, y, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
+		end
+		
+		love.graphics.draw(love.graphics.newMesh(vertices, "strip", "static"), x, y, r, w, h, ox, oy, kx, ky)
+	end
 end
 
 ---------------------------------------------------------------- MISC

@@ -134,7 +134,7 @@ function nineslice.draw(sprite, scene, anim, frame, animdef, framedef)
 	local nheight = sprite.nineslice.height or framedef.height
 	local nx, ny, qref_width, qref_height, qwidth, qheight
 	
-	resolution.pop()
+	window.pop()
 	canvas:renderTo(function()
 		love.graphics.clear()
 		
@@ -228,7 +228,7 @@ function nineslice.draw(sprite, scene, anim, frame, animdef, framedef)
 		ny = nheight - ninedef.y2
 		love.graphics.draw(slices[9], nx, ny)
 	end)
-	resolution.push()
+	window.push()
 	
 	return(canvas)
 end

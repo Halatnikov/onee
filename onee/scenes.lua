@@ -11,6 +11,10 @@ function scene.set(path, data, name)
 	
 	name = name or string.tokenize(path, "/", -1)
 	
+	if scenes[1] and scenes[1].close then scenes[1].close() end
+	scenes[1] = {}
+	collectgarbage()
+	
 	local t = { -- init
 		scene = true,
 		name = name,
@@ -130,8 +134,8 @@ end
 
 --! GET ALL INSTANCE IDs OF AN OBJECT
 function object.instances(name, scene)
-	if not scene.objects[name] then return nil end
-	if scene.objects[name].instances == 0 then return nil end
+	if not scene.objects[name] then return end
+	if scene.objects[name].instances == 0 then return end
 	
 	local t = {}
 	for id, instance in pairs(scene.instances) do

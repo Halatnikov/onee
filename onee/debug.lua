@@ -20,6 +20,7 @@ function debug.enable(enabled)
 		debug_draw_collisions = true
 		debug_draw_sprites = false
 		debug_hotswap = true
+		debug_mobile = true
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
 		
@@ -28,7 +29,7 @@ function debug.enable(enabled)
 		function lurker.postswap(f)
 			_prof.hook = noop
 			
-			resolution.update()
+			window.update()
 		end
 		
 		_prof.hook("debug")
@@ -59,6 +60,7 @@ function debug.enable(enabled)
 		debug_draw_collisions = false
 		debug_draw_sprites = false
 		debug_hotswap = false
+		debug_mobile = false
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
 		
@@ -158,11 +160,11 @@ function debug.draw_post()
 	local h = math.loop(0, 1, 4)
 	love.graphics.setColor(color.hsl(h, 1, 0.5))
 	if debug_hotswap then
-		love.graphics.printf("HOTSWAP", fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
+		love.graphics.printf("HOTSWAP", windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
 	end
 	if debug_profiler or debug_profiler_deep then
 		local text = debug_profiler_deep and "TRACING" or "PROFILING"
-		love.graphics.printf(text, fonts.proggy_clean, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
+		love.graphics.printf(text, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
 	love.graphics.reset()
 	
@@ -172,7 +174,7 @@ function debug.draw_post()
 		i = i + 1
 		v.timestamp = v.timestamp or 0
 		
-		love.graphics.print(v.text, fonts.proggy_clean, 4, windowheight - 4 - ((13  * i)))
+		love.graphics.print(v.text, 4, windowheight - 4 - ((13  * i)))
 		if ms - v.timestamp > 3 then table.remove(qqueue, k) end
 	end
 	if #qqueue > 24 then table.remove(qqueue, 1) end
@@ -201,9 +203,9 @@ function debug.keypressed(k, scancode, isrepeat)
 	if k == "g" then log(string.random(150)) end
 	
 end
-love.keypressed = debug.keypressed 
+onee.love("keypressed", debug.keypressed)
 
---!
+--! pretty print a table
 function debug.table(arg, mode, indent)
 	print(serialize.pack(arg, indent or 1, mode or "lax"))
 end
@@ -213,6 +215,7 @@ end
 
 -- maybe i should just make a log() function, this doesn't seem like a good idea
 --print_ = print
+--!
 function log(arg)
 	--debug.table(debug.getinfo(2)) --get name of the function that called this somehow
 	--io.write(tostring(arg), newline)
@@ -225,7 +228,7 @@ log("test")
 
 ---------------------------------------------------------------- TESTS
 
---!
+--! run a test
 function debug.test(arg)
 	-- set up the test environment
 	local env = {}
@@ -428,6 +431,7 @@ end
 -- @param (table) t -- parent table of the function
 -- @param (string) key -- function key
 -- @param name -- zone name
+-- @local
 local function wrap(t, key, name)
 	local func = t[key]
 	
@@ -446,6 +450,7 @@ end
 --! attach a function or a table containing functions (recursively) for profiling
 -- @param (string|table) path -- syntax: "a.func()", "a.b" or a table directly
 -- @param (=) name -- optional zone name
+-- TODO: attach function as a function too, like a.func
 function _prof.hook(path, name)
 	name = name or tostring(path)
 	
@@ -508,4 +513,4 @@ function _prof.enable(enabled)
 	end
 	collectgarbage()
 end
- 
+

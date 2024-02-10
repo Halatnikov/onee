@@ -23,7 +23,7 @@ function Device:snapshot()
     local snap = {}
 
     -- Mouse pointer
-    local px,py = love.mouse.getPosition()
+    local px,py = window.mouse()
     local clicking = love.mouse.isDown(1)
 
     snap.px,snap.py = px,py

@@ -14,10 +14,6 @@ end
 
 function yui.draw()
 	-- individual UIs updates
-	if yui.debug_button then
-		yui.debug_button[1].x = windowwidth - 20 - 4
-	end
-	
 	if yui.debug then
 		love.graphics.setColor(0.1, 0.1, 0.1, 0.9)
 		love.graphics.rectangle("fill", yui.debug.x, yui.debug.y, yui.debug.w, yui.debug.h, 4)
@@ -46,7 +42,7 @@ end
 -- UIs
 function yui.new.debug_button()
 	local ui = {
-		x = windowwidth-20-4, y = 20+4,
+		x = onee.width-20-4, y = 4,
 		gui.Rows {
 			-- open debug menu
 			gui.Button {
@@ -67,7 +63,7 @@ function yui.new.debug()
 	local width, height = 192, 20
 	local padding = 4
 	local ui = {
-		x = windowwidth-width-padding, y = height+padding,
+		x = onee.width-width-padding, y = padding,
 		gui.Rows {
 			-- close debug menu
 			gui.Button {
@@ -97,7 +93,7 @@ function yui.new.debug()
 				gui.Button {
 					text = "Reset scene",
 					onHit = function()
-						scene.set("init")
+						scene.set(scenes[1].name)
 					end,
 				},
 			},

@@ -92,11 +92,14 @@ function input.update()
 	-- touch screen mode
 	if mobile then
 		local touches = love.touch.getTouches()
+		if debug_mobile and love.mouse.isDown(1) then touches = {1} end
 		
 		for key, entry in pairs(config.input.touch) do
 			for i, shape in pairs(entry) do
 				for j, id in ipairs(touches) do
-					local touchx, touchy = love.touch.getPosition(id)
+					local touchx, touchy
+					if not debug_mobile then touchx, touchy = love.touch.getPosition(id) end
+					if debug_mobile then touchx, touchy = love.mouse.getPosition() end
 					
 					if shape.circle then
 						local x = shape.circle[1]
@@ -106,7 +109,7 @@ function input.update()
 						if math.sign(x) == -1 then x = windowwidth + x end
 						if math.sign(y) == -1 then y = windowheight + y end
 						
-						if collision.point_circle(touchx,touchy, x,y,radius) then
+						if collision.point_circ(touchx,touchy, x,y,radius) then
 							input.mode = "touch"
 							input[key] = true
 						end
@@ -143,8 +146,6 @@ function input.update()
 	input.mouse_wheel = 0 -- reset mouse wheel
 	
 end
-
----------------------------------------------------------------- 
 
 -- DRAW LOOP
 function input.draw()
@@ -210,7 +211,7 @@ function love.joystickremoved()
 	input.gamepads = love.joystick.getJoysticks()
 end
 
--- mouse wheel input TODO
+-- mouse wheel input
 function input.wheelmoved(x,y) 
 	input.mouse_wheel = y
 end
@@ -223,8 +224,8 @@ function input.mousereleased(x,y,button,istouch)
 	input.mouse_istouch[button] = nil
 end
 
-love.mousepressed = input.mousepressed
-love.mousereleased = input.mousereleased
-love.wheelmoved = input.wheelmoved
+onee.love("mousepressed", input.mousepressed)
+onee.love("mousereleased", input.mousereleased)
+onee.love("wheelmoved", input.wheelmoved)
 
 _prof.hook("input")

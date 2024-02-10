@@ -5,9 +5,9 @@ files.mount(love.filesystem.getSaveDirectory(), "savedata") -- TODO
 --! @function files.exists
 files.exists = love.filesystem.getInfo
 
---!
-function files.resetWriteDir()
-	urfs.setWriteDir(love.filesystem.getSaveDirectory())
+local setwritedir = urfs.setWriteDir
+function files.setWriteDir(arg)
+	setwritedir(arg or love.filesystem.getSaveDirectory())
 end
 
 --! recursively list a folder

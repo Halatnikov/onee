@@ -4,6 +4,9 @@ model = {
 	anim = {},
 }
 
+-- temp font storage
+fonts = {}
+
 -- constants
 TILE = {
 	TILE = "repeat",
@@ -70,8 +73,13 @@ function asset.sprite(path, scene)
 	local name = string.tokenize(path, "/", -1)
 	if scene.assets[name] then return end -- already loaded
 	
-	print("loading sprite "..path)
 	local time_start = love.timer.getTime()
+	love.graphics.reset(true)
+	window.draw(function()
+		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
+		love.graphics.printf("loading sprite "..path, onee.width/2-150, onee.height-16, 150*2, "center")
+	end)
+	love.graphics.present()
 	
 	local sprite = dofile("sprites/"..path) -- init
 	scene.assets[name] = {}
@@ -92,25 +100,46 @@ function asset.sprite(path, scene)
 			-- look in animdef
 			-- gif
 			if animdef.gif then
-				gif.add("sprites/"..path.."/"..filename..".gif", animdef, scene.assets[name][anim])
+				local imagepath = path.."/"..filename
+				if files.exists("sprites/"..string.remove(imagepath, path.."/")..".gif") then 
+					imagepath = string.remove(imagepath, path.."/")
+				end
+				
+				gif.add("sprites/"..imagepath..".gif", animdef, scene.assets[name][anim])
 			
 			-- spritestrip (extension of spritesheet)
 			elseif animdef.strip then
-				spritesheet.strip(sprite, "sprites/"..path.."/"..filename..".png", animdef, scene.assets[name][anim])
+				local imagepath = path.."/"..filename
+				if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
+					imagepath = string.remove(imagepath, path.."/")
+				end
+				
+				spritesheet.strip(sprite, "sprites/"..imagepath..".png", animdef, scene.assets[name][anim])
 				
 			-- look in framedef
 			elseif animdef.frames then
 				
 				for frame, framedef in pairs(animdef.frames) do
+					local filename = framedef.filename or filename
+					
 					-- spritesheet
 					if framedef.sheet then
-						spritesheet.add(sprite, "sprites/"..path.."/"..filename..".png", frame, animdef, framedef, scene.assets[name][anim])
+						local imagepath = path.."/"..filename
+						if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
+							imagepath = string.remove(imagepath, path.."/")
+						end
+						
+						spritesheet.add(sprite, "sprites/"..imagepath..".png", frame, animdef, framedef, scene.assets[name][anim])
 						
 					-- one image file per frame (default)
 					else
-						local imagepath = filename.."_"..(frame-1)
-						if framedef.filename then imagepath = framedef.filename end
-						local image = love.graphics.newImage("sprites/"..path.."/"..imagepath..".png")
+						local imagepath = path.."/"..filename.."_"..(frame-1)
+						if framedef.filename then imagepath = path.."/"..filename end
+						if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
+							imagepath = string.remove(imagepath, path.."/")
+						end
+						
+						local image = love.graphics.newImage("sprites/"..imagepath..".png")
 						
 						scene.assets[name][anim][frame] = image -- new frame entry
 					end
@@ -120,7 +149,13 @@ function asset.sprite(path, scene)
 			-- get single frame from filename if no frames defined
 			else
 				animdef.frames = {[1] = {}}
-				local image = love.graphics.newImage("sprites/"..path.."/"..filename..".png")
+				
+				local imagepath = path.."/"..filename
+				if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
+					imagepath = string.remove(imagepath, path.."/")
+				end
+				
+				local image = love.graphics.newImage("sprites/"..imagepath..".png")
 				
 				scene.assets[name][anim][1] = image -- new frame entry
 			end
@@ -191,7 +226,7 @@ function asset.sprite(path, scene)
 	scene.sprites[name] = sprite -- done
 	
 	local time_finish = love.timer.getTime()
-	print("took "..math.round(time_finish - time_start, 4))
+	print("sprite "..path.." took "..math.round(time_finish - time_start, 4))
 end
 
 --! INIT A NEW SPRITE INSTANCE
@@ -431,10 +466,10 @@ function sprite.draw(sprite, scene, queued)
 			love.graphics.reset()
 		end)
 	else
-		resolution.pop()
+		window.pop()
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		draw()
-		resolution.push()
+		window.push()
 	end
 end
 
@@ -504,8 +539,13 @@ function asset.model(path, scene)
 	local name = string.tokenize(path, "/", -1)
 	if scene.assets[name] then return end -- already loaded
 	
-	print("loading model "..path)
 	local time_start = love.timer.getTime()
+	love.graphics.reset(true)
+	window.draw(function()
+		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
+		love.graphics.printf("loading model "..path, onee.width/2-150, onee.height-16, 150*2, "center")
+	end)
+	love.graphics.present()
 	
 	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
 	local modeldef = {}
@@ -554,7 +594,7 @@ function asset.model(path, scene)
 	scene.models[name] = modeldef -- done
 	
 	local time_finish = love.timer.getTime()
-	print("took "..math.round(time_finish - time_start, 4))
+	print("model "..path.." took "..math.round(time_finish - time_start, 4))
 end
 
 local vec3 = require "onee/libs/gltf/cpml.modules.vec3"
@@ -574,8 +614,8 @@ function model.init(model, scene, name, data)
 		instance = scene.assets[name]:newInstance(1),
 		projection = gltf.newRenderer(),
 		canvas = {
-			main = love.graphics.newCanvas(windowwidth, windowheight),
-			depth = love.graphics.newCanvas(windowwidth, windowheight, {format = "depth32f"}),
+			main = love.graphics.newCanvas(onee.width, onee.height),
+			depth = love.graphics.newCanvas(onee.width, onee.height, {format = "depth32f"}),
 		},
 		viewport = {
 			pos = vec3.new(0, 0, -1),
@@ -601,8 +641,8 @@ function model.update(model, scene)
 	local modeldef = scene.models[model.name]
 	assert(modeldef, "model.update() | no such model \""..model.name.."\"")
 	
-	local width = model.canvas.width or windowwidth
-	local height = model.canvas.height or windowheight
+	local width = model.canvas.width or onee.width
+	local height = model.canvas.height or onee.height
 	local fov = model.fov or 45
 	local scale = model.scale or 1
 	local anglex = model.angle and model.angle.x or 0; anglex = math.rad(anglex)

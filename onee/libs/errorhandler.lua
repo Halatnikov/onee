@@ -101,7 +101,7 @@ function errorhandler.draw(msg, mode, notraceback)
 		"It's going to be okay",
 		"the",
 		"Guys, I just saw a dog!",
-		"That'll be four bucks baby you want fries with that?",
+		"That'll be four bucks, baby, you want fries with that?",
 		"Funfetti code injection exploit",
 		"Death",
 		"The New Technology",
@@ -136,6 +136,8 @@ function errorhandler.draw(msg, mode, notraceback)
 	err = err:gsub("\t", "")
 	err = err:gsub("%[string \"(.-)\"%]", "%1")
 	
+	err = err.."\n"
+	err = err.."\nonee v"..onee.version
 	err = err.."\n"
 	err = err.."\nPress Ctrl+C to copy to clipboard"
 	err = err.."\nPress Esc to quit or Space to restart"

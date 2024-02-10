@@ -70,13 +70,13 @@ function imgui.textinput(text)
 	gui.love.TextInput(text)
 end
 
-love.mousemoved = imgui.mousemoved
-love.mousepressed = imgui.mousepressed
-love.mousereleased = imgui.mousereleased
-love.wheelmoved = imgui.wheelmoved
-love.keypressed = imgui.keypressed
-love.keyreleased = imgui.keyreleased
-love.textinput = imgui.textinput
+onee.love("mousemoved", imgui.mousemoved)
+onee.love("mousepressed", imgui.mousepressed)
+onee.love("mousereleased", imgui.mousereleased)
+onee.love("wheelmoved", imgui.wheelmoved)
+onee.love("keypressed", imgui.keypressed)
+onee.love("keyreleased", imgui.keyreleased)
+onee.love("textinput", imgui.textinput)
 
 -- data types conversion
 local ffi = require("ffi")
@@ -415,7 +415,7 @@ function imgui.window.menubar()
 			end
 			-- reset scene shortcut
 			if gui.MenuItem_Bool("Reset scene", "`") then
-				scene.set("init")
+				scene.set(scenes[1].name)
 			end
 			-- advance frame controls shortcut
 			if gui.SmallButton(freeze and "|>" or "||") then
@@ -709,7 +709,7 @@ function imgui.window.main()
 		-- reset scene button
 		gui.SameLine()
 		if gui.Button("Reset scene") then
-			scene.set("init")
+			scene.set(scenes[1].name)
 		end
 		-- advance frame controls
 		gui.SameLine()
@@ -1724,7 +1724,7 @@ function imgui.window.game()
 	
 	if gui.Begin("the funny", open) then
 		
-		gui.Image(resolution.canvas, gui.ImVec2_Float(onee.width,onee.height))
+		gui.Image(window.canvas, gui.ImVec2_Float(onee.width,onee.height))
 		
 		gui.End()
 	end

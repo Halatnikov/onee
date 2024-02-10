@@ -7,12 +7,7 @@ onee.colors = {
 
 ---------------------------------------------------------------- INIT
 
--- temp font storage
-fonts = {}
-fonts.proggy_clean = love.graphics.newFont("fonts/ProggyClean.ttf", 16, "mono", 2)
-fonts.proggy_clean:setFilter("nearest")
-
-do
+function onee.init()
 	require("conf")
 	require("onee/libs/errorhandler")
 	
@@ -20,14 +15,14 @@ do
 	love.filesystem.setIdentity(love.filesystem.getIdentity(), true)
 	mobile = (love._os == "Android" or love._os == "iOS")
 	
-	if not (debug_hotswap and lurker.swappedonce) then
-		love.window.setMode(love.config.window.width, love.config.window.height, {
-			vsync = 0, resizable = true, fullscreen = mobile,
-			minwidth = love.config.window.width, minheight = love.config.window.height,
-		})
-	end
+	love.window.setMode(love.config.window.width, love.config.window.height, {
+		vsync = 0, resizable = true, fullscreen = mobile,
+		minwidth = love.config.window.width, minheight = love.config.window.height,
+	})
 	
 	love.graphics.setDefaultFilter("nearest", "nearest", 0)
+	love.graphics.setLineStyle("rough")
+	love.graphics.clear()
 	love.graphics.present() -- black screen
 
 	-- libraries (user)
@@ -38,7 +33,7 @@ do
 
 	-- onee modules
 	require("onee/utils")
-	require("onee/resolution")
+	require("onee/window")
 	require("onee/files")
 	require("onee/debug")
 	
@@ -56,6 +51,15 @@ do
 	onee.time_start = os.time()
 	onee.allow_update = true
 	onee.width, onee.height = love.config.window.width, love.config.window.height
+	windowwidth, windowheight = onee.width, onee.height
+	
+	_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
+	jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
+	jit.version_revision = string.left(jit.version_rolling, 2)
+	
+	-- love callbacks
+	onee.love("resize", onee.resize)
+	onee.love("quit", onee.quit)
 	
 	-- :o
 	debug.enable(debug_mode)
@@ -66,7 +70,6 @@ do
 	print(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	
 	-- off we go
-	resolution.update()
 	scene.set("init")
 end
 
@@ -79,14 +82,14 @@ function onee.update(dt_)
 	-- frame limiter start
 	onee.before_update = (onee.before_update or 0) + tick
 	
-	-- various сonstants
+	-- update сonstants
 	windowwidth = love.graphics.getWidth()
 	windowheight = love.graphics.getHeight()
 	mousex = love.mouse.getX()
 	mousey = love.mouse.getY()
 	
 	if onee.allow_update then
-		-- various сonstants that require the game running
+		-- update сonstants that require the game running
 		dt = love.timer.getDelta()
 		fps = 1 / dt
 		ms = (ms or 0) + dt
@@ -104,13 +107,13 @@ end
 function onee.draw()
 	_prof.push("onee.draw")
 	
-	resolution.draw(function()
+	window.draw(function()
 		scene.draw()
-		input.draw()
-		yui.draw()
 		debug.draw()
+		yui.draw()
 	end)
 		
+	input.draw()
 	debug.draw_post()
 	
 	-- reset the graphics state constantly
@@ -127,18 +130,36 @@ function onee.draw()
 end
 
 function onee.resize(width, height)
-	resolution.update(width, height)
+	window.update(width, height)
 end
-love.resize = onee.resize
 
 function onee.quit()
 	
 end
-love.quit = onee.quit
 
 ---------------------------------------------------------------- MISC
 
+onee.love_callbacks = {}
+
+--! hook love callbacks, so it can call multiple functions at once
+-- @param name -- if love.x, then put it as "x"
+function onee.love(name, func)
+	onee.love_callbacks[name] = onee.love_callbacks[name] or {}
+	
+	local new = onee.love_callbacks[name] == {} and true
+	if new then table.insert(onee.love_callbacks[name], love[name]) end
+	
+	table.insert(onee.love_callbacks[name], func)
+	
+	love[name] = function(...)
+		for i=1, #onee.love_callbacks[name] do
+			onee.love_callbacks[name][i](...)
+		end
+	end
+end
+
 love.graphics.reset_ = love.graphics.reset
+
 --! modified love.graphics.reset for my needs
 function love.graphics.reset(ignore) -- bool=
 	if ignore then love.graphics.reset_() end
@@ -147,9 +168,10 @@ function love.graphics.reset(ignore) -- bool=
 	love.graphics.setDefaultFilter("nearest", "nearest", 0)
 	love.graphics.setLineStyle("rough")
 	love.graphics.setBackgroundColor(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
+	love.graphics.setFont(onee.font or love.graphics.getFont())
 	
-	-- don't deactivate canvases, transformations, shaders, current font and scissors!
 	if not ignore then
+		-- don't deactivate canvases, transformations, shaders, current font and scissors!
 		love.graphics.setColor(1,1,1,1)
 		love.graphics.setBlendMode("alpha")
 		
@@ -165,6 +187,4 @@ function love.graphics.reset(ignore) -- bool=
 	end
 end
 
-_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
-jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
-jit.version_revision = string.left(jit.version_rolling, 2)
+return onee.init()
