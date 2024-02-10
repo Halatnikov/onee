@@ -121,6 +121,21 @@ function Input:keypressed(key, _, isrepeat)
     end
 end
 
+
+function Input:onActionInput(action)
+	
+    if action.up then
+        self.cursor = 1
+        self.ui:navigate("up")
+    end
+    if action.down then
+        self.cursor = 1
+		print("down")
+        self.ui:navigate("down")
+    end
+    
+end
+
 function Input:keyreleased(key)
     if self.candidate.length == 0 then
         local moveTo
@@ -130,7 +145,8 @@ function Input:keyreleased(key)
         elseif key == 'end' then
             self.cursor = utf8.len(self.text)+1
         elseif key == 'up' or key == 'down' then
-            moveTo = key
+			--moveTo = key
+			self:grabFocus()
         elseif key == 'tab' or key == 'return' then
             moveTo = 'right'
         elseif key == 'escape' then

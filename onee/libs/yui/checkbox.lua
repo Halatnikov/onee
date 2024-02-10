@@ -39,22 +39,27 @@ function Checkbox:new(args)
     self.align = self.align or 'left'
     self.valign = self.valign or 'center'
     self.checked = self.checked or false
+	self.active = false
     return self
+end
+
+local function hit(button)
+    if not button.active then
+        button.active = true
+        button.checked = not button.checked
+        button:onChange(button.checked)
+
+        button.ui.timer:after(0.15, function() button.active = false end)
+    end
 end
 
 function Checkbox:onPointerInput(_,_, clicked)
     self:grabFocus()
-    if clicked then
-        self.checked = not self.checked
-        self:onChange(self.checked)
-    end
+    if clicked then hit(self) end
 end
 
 function Checkbox:onActionInput(action)
-    if action.confirm then
-        self.checked = not self.checked
-        self:onChange(self.checked)
-    end
+    if action.confirm then hit(self) end
 end
 
 function Checkbox:draw()
@@ -66,7 +71,7 @@ function Checkbox:draw()
     core.drawBox(x+h/10,y+h/10,h*.8,h*.8, c, cornerRadius)
     love.graphics.setColor(c.fg)
     if self.checked then
-        love.graphics.setLineStyle('smooth')
+        --love.graphics.setLineStyle('smooth')
         love.graphics.setLineWidth(3)
         --love.graphics.setLineJoin('bevel')
         love.graphics.line(x+h*0.2,y+h*0.55, x+h*0.45,y+h*0.75, x+h*0.8,y+h*0.2)

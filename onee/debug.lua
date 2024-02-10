@@ -64,8 +64,6 @@ function debug.enable(enabled)
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
 		
-		yui.open = {}
-		
 	end
 end
 

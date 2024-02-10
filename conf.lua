@@ -4,8 +4,8 @@ function love.conf(t)
 	t.identity = "onee" -- savedata folder
 	t.version = "11.3" -- minimum love2d version
 	
-	t.window.width = 800
-    t.window.height = 600
+	t.window.width = 640
+    t.window.height = 360
 	t.gammacorrect = true
 	
 	t.externalstorage = true -- android

@@ -172,7 +172,7 @@ end
 local function eventpropagate(ui, snap)
     -- Ignore event flags, in case focused widget requires direct input
     local dropPointer = ui.focused and ui.focused.grabpointer
-    local dropAction = ui.focused and ui.focused.grabkeyboard
+    --local dropAction = ui.focused and ui.focused.grabkeyboard
 
     -- 1. Pointer events
     if snap.pointer and not dropPointer then

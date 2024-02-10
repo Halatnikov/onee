@@ -74,6 +74,14 @@ function Choice:checkIndex()
     end
 end
 
+local function hit(button)
+    if not button.active then
+        button.active = true
+
+        button.ui.timer:after(0.15, function() button.active = false end)
+    end
+end
+
 function Choice:onActionInput(action)
     local oldindex = self.index
     local handled = false
@@ -97,6 +105,7 @@ function Choice:onActionInput(action)
     -- Fire event if necessary
     if oldindex ~= self.index then
         self:onChange(self.choices[self.index])
+		hit(self)
     end
     return true
 end
@@ -121,6 +130,7 @@ function Choice:onPointerInput(px,_, clicked)
     self:checkIndex()
     if oldindex ~= self.index then
         self:onChange(self.choices[self.index])
+		hit(self)
     end
 end
 
@@ -135,17 +145,17 @@ function Choice:draw()
         -- draw < and > arrows, desaturate color if arrow is disabled
         local cc = color.hovered
 
-        love.graphics.setLineStyle('smooth')
+        --love.graphics.setLineStyle('smooth')
         love.graphics.setLineWidth(3)
-        love.graphics.setLineJoin('bevel')
+        --love.graphics.setLineJoin('bevel')
 
         local r, g, b = cc.fg[1], cc.fg[2], cc.fg[3]
-        local a = (self.nowrap and self.index == 1) and 0.4 or 1
+        local a = (self.nowrap and self.index == 1) and 0 or 1
 
         love.graphics.setColor(r,g,b,a)
         love.graphics.line(x+h*.8,y+h*.2, x+h*.5,y+h*.5, x+h*.8,y+h*.8)
 
-        a = (self.nowrap and self.index == #self.choices) and 0.4 or 1
+        a = (self.nowrap and self.index == #self.choices) and 0 or 1
 
         love.graphics.setColor(r,g,b,a)
         love.graphics.line(x+w-h*.8,y+h*.2, x+w-h*.5,y+h*.5, x+w-h*.8,y+h*.8)

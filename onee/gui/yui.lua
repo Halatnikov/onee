@@ -12,6 +12,42 @@ do
 	if mobile and debug_mode then yui.open.debug_button = true end
 end
 
+-- event redirection
+function yui.keypressed(key, scan, isrepeat)
+	for k,v in pairs(yui) do
+		if type(yui[k]) == "table" and yui[k].yui == true then
+			yui[k]:keypressed(key, scan, isrepeat)
+		end
+	end
+end
+function yui.keyreleased(key, scan)
+	for k,v in pairs(yui) do
+		if type(yui[k]) == "table" and yui[k].yui == true then
+			yui[k]:keyreleased(key, scan)
+		end
+	end
+end
+function yui.textinput(text)
+	for k,v in pairs(yui) do
+		if type(yui[k]) == "table" and yui[k].yui == true then
+			yui[k]:textinput(text)
+		end
+	end
+end
+function yui.textedited(text, start, len)
+	for k,v in pairs(yui) do
+		if type(yui[k]) == "table" and yui[k].yui == true then
+			yui[k]:textedited(text, start, len)
+		end
+	end
+end
+
+onee.love("keypressed", yui.keypressed)
+onee.love("keyreleased", yui.keyreleased)
+onee.love("textinput", yui.textinput)
+onee.love("textedited", yui.textedited)
+
+-- main loop
 function yui.draw()
 	-- individual UIs updates
 	if yui.debug then

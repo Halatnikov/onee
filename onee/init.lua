@@ -7,7 +7,7 @@ onee.colors = {
 
 ---------------------------------------------------------------- INIT
 
-function onee.init()
+do
 	require("conf")
 	require("onee/libs/errorhandler")
 	
@@ -33,6 +33,7 @@ function onee.init()
 
 	-- onee modules
 	require("onee/utils")
+	require("onee/misc")
 	require("onee/window")
 	require("onee/files")
 	require("onee/debug")
@@ -56,10 +57,6 @@ function onee.init()
 	_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
 	jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
 	jit.version_revision = string.left(jit.version_rolling, 2)
-	
-	-- love callbacks
-	onee.love("resize", onee.resize)
-	onee.love("quit", onee.quit)
 	
 	-- :o
 	debug.enable(debug_mode)
@@ -132,59 +129,9 @@ end
 function onee.resize(width, height)
 	window.update(width, height)
 end
+love.resize = onee.resize
 
 function onee.quit()
 	
 end
-
----------------------------------------------------------------- MISC
-
-onee.love_callbacks = {}
-
---! hook love callbacks, so it can call multiple functions at once
--- @param name -- if love.x, then put it as "x"
-function onee.love(name, func)
-	onee.love_callbacks[name] = onee.love_callbacks[name] or {}
-	
-	local new = onee.love_callbacks[name] == {} and true
-	if new then table.insert(onee.love_callbacks[name], love[name]) end
-	
-	table.insert(onee.love_callbacks[name], func)
-	
-	love[name] = function(...)
-		for i=1, #onee.love_callbacks[name] do
-			onee.love_callbacks[name][i](...)
-		end
-	end
-end
-
-love.graphics.reset_ = love.graphics.reset
-
---! modified love.graphics.reset for my needs
-function love.graphics.reset(ignore) -- bool=
-	if ignore then love.graphics.reset_() end
-	
-	-- might as well use these here
-	love.graphics.setDefaultFilter("nearest", "nearest", 0)
-	love.graphics.setLineStyle("rough")
-	love.graphics.setBackgroundColor(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
-	love.graphics.setFont(onee.font or love.graphics.getFont())
-	
-	if not ignore then
-		-- don't deactivate canvases, transformations, shaders, current font and scissors!
-		love.graphics.setColor(1,1,1,1)
-		love.graphics.setBlendMode("alpha")
-		
-		love.graphics.setLineWidth(1)
-		love.graphics.setLineJoin("miter")
-		love.graphics.setPointSize(1)
-		love.graphics.setStencilTest()
-		love.graphics.setDepthMode()
-		love.graphics.setColorMask()
-		love.graphics.setWireframe(false)
-		love.graphics.setMeshCullMode("none")
-		love.graphics.setFrontFaceWinding("ccw")
-	end
-end
-
-return onee.init()
+love.quit = onee.quit

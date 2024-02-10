@@ -37,7 +37,16 @@ function Slider:new(args)
     self.max = self.max or 1
     self.value = self.value or self.min
     self.step = self.step or (self.max - self.min) / 10
+	self.active = false
     return self
+end
+
+local function hit(button)
+    if not button.active then
+        button.active = true
+
+        button.ui.timer:after(0.15, function() button.active = false end)
+    end
 end
 
 function Slider:onPointerInput(px,py, _, down)
@@ -56,9 +65,11 @@ function Slider:onPointerInput(px,py, _, down)
     end
 
     local v = fraction*(self.max - self.min) + self.min
+	v = math.round(v / self.step) * self.step
     if v ~= self.value then
         self.value = v
         self:onChange(v)
+		hit(self)
     end
 end
 
@@ -76,6 +87,7 @@ function Slider:onActionInput(action)
     end
     if handled then
         self:onChange(self.value)
+		hit(self)
     end
 
     return handled

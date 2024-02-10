@@ -38,7 +38,7 @@ function Label:new(args)
 end
 
 function Label:draw()
-    local x,y,w,h = self.x,self.y,self.w,self.h
+    local x,y,w,h = self.xx or self.x, self.yy or self.y, self.w, self.h
     local color, font, _ = core.themeForWidget(self)
 
     y = y + core.verticalOffsetForAlign(self.valign, font, h)

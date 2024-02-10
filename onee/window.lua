@@ -4,7 +4,7 @@ window = {}
 do
 	window.x, window.y = 0, 0
 	window.scale = 0
-	
+
 	window.internal = 1
 	window.mode = ""
 	
