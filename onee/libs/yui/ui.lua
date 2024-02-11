@@ -79,6 +79,7 @@ function Ui:new(args)
     assert(#self == 1, "Ui:new() must have exactly one root widget.")
 	
 	self.yui = true
+	self.active = true
 	
     self.device = self.device or require(BASE..'love').new()
     self.x = self.x or 0

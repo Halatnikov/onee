@@ -23,6 +23,7 @@ function input.update()
 	for key in pairs(input.time) do 
 		input[key] = false -- reset key states
 	end
+	if input.ignore then return end
 	
 	-- keyboard and mouse mode
 	for key, entry in pairs(config.input.keyboard) do

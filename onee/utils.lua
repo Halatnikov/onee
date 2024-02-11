@@ -130,8 +130,9 @@ function string.right(arg, len) --alias
 end
 
 string.find_ = string.find
-function string.find(arg, find, index) -- alias
-	return string.find_(arg, find, index, true)
+function string.find(arg, find, index, plain) -- alias
+	if plain == nil then plain = true end
+	return string.find_(arg, find, index, plain)
 end
 
 function string.findcase(arg, find, i) -- case insensitive alias

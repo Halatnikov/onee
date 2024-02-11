@@ -231,7 +231,8 @@ end
 
 --! INIT A NEW SPRITE INSTANCE
 function sprite.init(sprite, scene, name, data)
-	assert(scene.sprites[name], "sprite.init() | \""..name.."\" is not a valid sprite!")
+	local spritedef = scene.sprites[name]
+	assert(spritedef, "sprite.init() | \""..name.."\" is not a valid sprite!")
 	
 	local t = {
 		sprite = true,

@@ -77,6 +77,9 @@ function Input:textedited(text, start, length)
 end
 
 function Input:textinput(text)
+	self.ui.timer:clear()
+	input.ignore = true
+	
     if text ~= "" then
         local a,b = split(self.text, self.cursor)
 
@@ -85,6 +88,7 @@ function Input:textinput(text)
 
         self:onChange(self.text)
     end
+	self.ui.timer:after(0.25, function() input.ignore = false end)
 end
 
 function Input:keypressed(key, _, isrepeat)
@@ -124,16 +128,6 @@ end
 
 function Input:onActionInput(action)
 	
-    if action.up then
-        self.cursor = 1
-        self.ui:navigate("up")
-    end
-    if action.down then
-        self.cursor = 1
-		print("down")
-        self.ui:navigate("down")
-    end
-    
 end
 
 function Input:keyreleased(key)
@@ -144,10 +138,11 @@ function Input:keyreleased(key)
             self.cursor = 1
         elseif key == 'end' then
             self.cursor = utf8.len(self.text)+1
+		elseif key == 'return' then
+			self:onHit(self.text)
         elseif key == 'up' or key == 'down' then
 			--moveTo = key
-			self:grabFocus()
-        elseif key == 'tab' or key == 'return' then
+        elseif key == 'tab' then
             moveTo = 'right'
         elseif key == 'escape' then
             moveTo = 'cancel'

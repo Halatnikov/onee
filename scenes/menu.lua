@@ -5,20 +5,24 @@ local gui = yui_
 
 function scene.init(self)
 	asset.sprite("spr_menu_arrow_16", self)
+	asset.sprite("checkerboard", self)
+	
 	self.arrow = sprite.init(self.arrow, self, "spr_menu_arrow_16")
+	self.bg = sprite.init(self.bg, self, "checkerboard", {tiled = {width = onee.width, height = onee.height}, scale = 8, z = -1})
 	
 	yui.open.test = true
 end
 
 function scene.close(self)
 	yui.open.test = nil
+	yui.draw()
 end
 
 local theme_default = {
     cornerRadius = 0,
 	font = nil,
     color = {
-        normal = {bg = {0.25, 0.25, 0.25}, fg = {0.73, 0.73, 0.73}},
+        normal = {bg = {0.25, 0.25, 0.25}, fg = {0.75, 0.75, 0.75}},
         hovered = {bg = {0.19, 0.6, 0.73}, fg = {1, 1, 1}},
         active = {bg = {1, 0.6, 0}, fg = {1, 1, 1}},
     }
@@ -36,9 +40,9 @@ local theme_disabled = {
 	cornerRadius = 0,
 	font = nil,
 	color = {
-		normal = {bg = {0,0,0,0}, fg = {0.5,0.5,0.5}},
-		hovered = {bg = {0,0,0,0}, fg = {0.5,0.5,0.5}},
-		active = {bg = {0,0,0,0}, fg = {0.5,0.5,0.5}},
+		normal = {bg = {0,0,0,0}, fg = {0,0,0}},
+		hovered = {bg = {0,0,0,0}, fg = {0,0,0}},
+		active = {bg = {0,0,0,0}, fg = {0,0,0}},
 	}
 }
 
@@ -60,7 +64,9 @@ function yui.new.test()
 		},
 	}
 	
-	table.insert(ui[1], gui.Label {
+	local root = ui[1]
+	
+	table.insert(root, gui.Label {
 		w = width, h = height, align = "left",
 		xx = x-8,
 		text = "Scenes",
@@ -69,24 +75,24 @@ function yui.new.test()
 	local scenes = files.listdir("scenes")
 	for i=1, #scenes do
 		local name = string.remove(scenes[i], "scenes/", ".lua")
-		table.insert(ui[1], gui.Button {
+		table.insert(root, gui.Button {
 			align = "left",
 			text = name,
-			onHit = function()
+			onHit = function(self)
 				scene_.set(name)
 			end,
 		})
 	end
 	
-	table.insert(ui[1], gui.Spacer {h = height})
+	table.insert(root, gui.Spacer {h = height})
 	
-	table.insert(ui[1], gui.Label {
-		w = width, h = height, align = "left",
+	table.insert(root, gui.Label {
+		align = "left",
 		xx = x-8,
 		text = "Thingies",
 	})
 	
-	table.insert(ui[1], gui.Button {
+	table.insert(root, gui.Button {
 		align = "left",
 		text = "Button",
 		onHit = function(self)
@@ -94,15 +100,7 @@ function yui.new.test()
 		end,
 	})
 	
-	table.insert(ui[1], gui.Button {
-		align = "left", theme = theme_disabled,
-		text = "Disabled",
-		onHit = function(self)
-			
-		end,
-	})
-	
-	table.insert(ui[1], gui.Columns {
+	table.insert(root, gui.Columns {
 		gui.Label {
 			w = width/2, h = height, align = "left",
 			text = "Checkbox",
@@ -110,13 +108,13 @@ function yui.new.test()
 		gui.Checkbox {
 			theme = theme_default,
 			checked = bool,
-			onChange = function(_, checked)
+			onChange = function(self, checked)
 				bool = not bool
 			end,
 		},
 	})
 	
-	table.insert(ui[1], gui.Columns {
+	table.insert(root, gui.Columns {
 		gui.Label {
 			w = width/2, h = height, align = "left",
 			text = "Slider",
@@ -129,8 +127,8 @@ function yui.new.test()
 				value = num,
 
 				onChange = function(self, value)
-					num = math.floor(value)
-					self.parent[table.find(self.parent, self)+1].text = tostring(num)
+					num = value
+					self.parent[2].text = tostring(num)
 				end
 			},
 			gui.Label {
@@ -140,7 +138,7 @@ function yui.new.test()
 		},
 	})
 	
-	table.insert(ui[1], gui.Columns {
+	table.insert(root, gui.Columns {
 		gui.Label {
 			w = width/2, h = height, align = "left",
 			text = "Multi-choice",
@@ -155,13 +153,13 @@ function yui.new.test()
 			default = str,
 			nowrap = true,
 
-			onChange = function(_, choice) 
+			onChange = function(self, choice) 
 				str = choice.value
-			end
+			end,
 		},
 	})
 	
-	table.insert(ui[1], gui.Columns {
+	table.insert(root, gui.Columns {
 		gui.Label {
 			w = width/2, h = height, align = "left",
 			text = "Text input",
@@ -170,13 +168,17 @@ function yui.new.test()
 			w = width/2/2, theme = theme_default,
 			text = textinput,
 
-			onChange = function(_, text)
+			onChange = function(self, text)
 				textinput = text
-			end
+			end,
+			onHit = function(self, text)
+				self.cursor = 1
+				self.text = ""
+			end,
 		},
 	})
 	
-	table.insert(ui[1], gui.Columns {
+	table.insert(root, gui.Columns {
 		gui.Label {
 			w = width/2, h = height, align = "left",
 			text = "Toggle",
@@ -191,9 +193,17 @@ function yui.new.test()
 		},
 	})
 	
-	table.insert(ui[1], gui.Spacer {h = height})
+	table.insert(root, gui.Button {
+		align = "left", theme = theme_disabled,
+		text = "Disabled",
+		onHit = function(self)
+			
+		end,
+	})
 	
-	table.insert(ui[1], gui.Button {
+	table.insert(root, gui.Spacer {h = height})
+	
+	table.insert(root, gui.Button {
 		align = "left",
 		text = "the",
 		onHit = function(self)
@@ -201,10 +211,10 @@ function yui.new.test()
 		end,
 	})
 	
-	table.insert(ui[1], gui.Button {
+	table.insert(root, gui.Button {
 		align = "left",
 		text = "Quit",
-		onHit = function()
+		onHit = function(self)
 			love.event.quit()
 		end,
 	})
@@ -217,27 +227,22 @@ function scene.update(self)
 end
 
 function scene.draw(self)
+	sprite.draw(self.bg, self)
+	
 	if yui.test then
-		for i=1, #yui.test[1] do
-			local item = yui.test[1][i]
-			
-			if #item == 2 then
-				if #item[2] == 2 then
-					if item[2][1].hovered then item = item[2][1] end
-				elseif item[2].hovered then item = item[2] end
-			end
-			
-			if item.hovered then
-				gradient("horizontal", {
-					{0, 1, 1, 0.25},
-					{0, 0, 0, 0},
-				}, 0, item.y-2, 0, onee.width, item.h+4)
-				
-				self.arrow.x = 16
-				self.arrow.y = item.y+8
-				sprite.draw(self.arrow, self)
-			end
-		end
+		local item = yui.test.focused
+		
+		queue.add(self.drawlist, 0, function()
+			gradient("horizontal", {
+				{0, 1, 1, 0.5},
+				{0, 1, 1, 0.125},
+				{0, 0, 0, 0},
+			}, 0, item.y-2, 0, onee.width, item.h+4)
+		end)
+		
+		self.arrow.x = 16
+		self.arrow.y = item.y+8
+		sprite.draw(self.arrow, self)
 	end
 end
 

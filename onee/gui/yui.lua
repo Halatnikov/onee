@@ -64,10 +64,10 @@ function yui.draw()
 	end
 	
 	for k,v in pairs(yui) do
-		if type(yui[k]) == "table" and yui[k].yui == true then
+		if type(v) == "table" and v.yui == true then
 			if yui.open[k] == true then
-				yui[k]:update(tick)
-				yui[k]:draw()
+				if v.active then v:update(tick) end
+				v:draw()
 			else
 				yui[k] = nil
 			end

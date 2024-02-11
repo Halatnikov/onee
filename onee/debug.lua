@@ -56,6 +56,7 @@ function debug.enable(enabled)
 		love.window.setTitle(love.config.title)
 		
 		_prof.hook = noop
+		onee.love = noop
 		
 		debug_draw_collisions = false
 		debug_draw_sprites = false
@@ -109,28 +110,27 @@ function debug.draw()
 	
 	debug.drawlist = {}
 	for id, scene in kpairs(scenes) do
-		for id, instance in pairs(scene.instances) do
-			local function draw_recursively(arg)
-				for k, v in pairs(arg) do
-					if type(v) == "table" then
-						if debug_draw_collisions and v.collision == true then
-							queue.add(debug.drawlist, 1, function()
-								collision.debug_draw(v)
-							end)
-						elseif debug_draw_sprites and v.sprite == true then
-							queue.add(debug.drawlist, 2, function()
-								sprite.debug_draw(v, scene)
-							end)
-						-- skip 3d models, they cause a stack overflow
-						elseif v.model ~= true then
-							draw_recursively(v)
-						end
+		local function draw_recursively(arg)
+			for k, v in pairs(arg) do
+				if type(v) == "table" then
+					if debug_draw_collisions and v.collision == true then
+						queue.add(debug.drawlist, 1, function()
+							collision.debug_draw(v)
+						end)
+					elseif debug_draw_sprites and v.sprite == true then
+						queue.add(debug.drawlist, 2, function()
+							sprite.debug_draw(v, scene)
+						end)
+					-- skip 3d models, they cause a stack overflow
+					-- TODO: maybe handle recursive references? serpent
+					elseif v.model ~= true and k ~= "models" and k ~= "assets" then
+						draw_recursively(v)
 					end
 				end
 			end
-			
-			draw_recursively(instance)
 		end
+		
+		draw_recursively(scene)
 	end
 	queue.execute(debug.drawlist)
 	
@@ -195,7 +195,7 @@ function debug.keypressed(k, scancode, isrepeat)
 	
 	if k == "f2" then love.event.quit("restart") end
 	
-	if k == "q" or k == "f3" then scene.set("init") end
+	if k == "q" or k == "f3" then scene.set(scenes[1].name) end
 	 
 	if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
 	if k == "g" then log(string.random(150)) end
