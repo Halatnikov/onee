@@ -34,7 +34,12 @@ function Label:new(args)
     self.text = self.text or ""
     self.align = self.align or 'center'
     self.valign = self.valign or 'center'
+	self.focus = self.focus or false
     return self
+end
+
+function Label:onPointerInput(_,_, clicked)
+    if self.focus then self:grabFocus() end
 end
 
 function Label:draw()

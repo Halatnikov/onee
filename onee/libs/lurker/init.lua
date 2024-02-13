@@ -128,7 +128,7 @@ function lurker.onerror(e, nostacktrace)
     love[v] = function() end
   end
 
-  errorhandler.print(e, 2)
+  errorhandler.print(e)
   
   local draw, copyToClipboard = errorhandler.draw(e, "lurker", nostacktrace)
 

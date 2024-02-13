@@ -235,14 +235,18 @@ end
 
 function Layout:update(dt)
     for _,widget in ipairs(self.stack) do
+		widget:beforeUpdate()
         widget:update(dt)
+		widget:onUpdate()
     end
 end
 
 function Layout:draw()
     -- Draw all children according to their order (topmost last)
     for _,widget in ipairs(self.stack) do
+		widget:beforeDraw()
         widget:draw()
+        widget:onDraw()
     end
 end
 

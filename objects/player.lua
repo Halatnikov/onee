@@ -129,7 +129,7 @@ function object.update(self, scene)
 	end
 	
 	--temp
-	if love.keyboard.isDown("lshift") then player.x = mousex; player.y = mousey; player.ground = false end
+	if love.keyboard.isDown("lshift") then player.x, player.y = window.mouse() ; player.ground = false end
 	
 	-- update sprite
 	self.sprite.x = player.x

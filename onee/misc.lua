@@ -20,7 +20,7 @@ end
 
 love.graphics.reset_ = love.graphics.reset
 
---! modified love.graphics.reset for my needs
+--! modified love.graphics.reset() for my needs
 function love.graphics.reset(ignore) -- bool=
 	if ignore then love.graphics.reset_() end
 	

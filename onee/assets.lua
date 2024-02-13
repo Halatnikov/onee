@@ -195,7 +195,7 @@ function asset.sprite(path, scene)
 			if type(sprite.tiled) == "string" then image:setWrap(sprite.tiled, sprite.tiled) end
 			if type(sprite.tiled) == "table" then image:setWrap(sprite.tiled[1], sprite.tiled[2]) end
 			
-			-- nine-slices (9patches)
+			-- nine-slices
 			if sprite.nineslice then
 				nineslice.add(name, anim, frame, image, animdef, framedef, scene.assets[name])
 			end
@@ -365,7 +365,7 @@ function sprite.draw(sprite, scene, queued)
 	-- basics
 	local x = sprite.x or 0; x = math.round(x)
 	local y = sprite.y or 0; y = math.round(y)
-	local angle = sprite.angle or 0; angle = math.round(angle); angle = math.rad(angle)
+	local angle = sprite.angle or 0; angle = math.rad(math.round(angle))
 	local scalex = sprite.scalex or sprite.scale or 1
 	local scaley = sprite.scaley or sprite.scale or 1
 	local skewx = sprite.skewx or 0

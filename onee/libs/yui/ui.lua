@@ -80,6 +80,7 @@ function Ui:new(args)
 	
 	self.yui = true
 	self.active = true
+	self.visible = true
 	
     self.device = self.device or require(BASE..'love').new()
     self.x = self.x or 0
@@ -282,14 +283,18 @@ function Ui:update(dt)
     eventpropagate(self, snap)
 
     -- Perform regular lifetime updates
+	root:beforeUpdate()
     root:update(dt)
+	root:onUpdate()
 end
 
 function Ui:draw()
     local root = self[1]
 
     love.graphics.push('all')
+		root:beforeDraw()
         root:draw()
+		root:onDraw()
     love.graphics.pop()
 end
 

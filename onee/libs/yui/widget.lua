@@ -117,6 +117,11 @@ function Widget:onEnter() end
 function Widget:onLeave() end
 function Widget:onChange() end
 
+function Widget:beforeUpdate() end
+function Widget:onUpdate() end
+function Widget:beforeDraw() end
+function Widget:onDraw() end
+
 -- NOP input event handlers
 function Widget:onActionInput(action) end
 function Widget:onPointerInput(x,y, clicked) end

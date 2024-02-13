@@ -2,13 +2,13 @@ errorhandler = {}
 local utf8 = require("utf8")
 
 local function error_printer(msg, layer)
-	print(debug.traceback("Error: " .. tostring(msg), 1+(layer or 1)):gsub("\n[^\n]+$", ""))
+	print(debug.traceback("Error: " .. tostring(msg), 1+(layer or 3)):gsub("\n[^\n]+$", ""))
 end
 
 function love.errorhandler(msg)
 	msg = tostring(msg)
 
-	error_printer(msg, 2)
+	error_printer(msg)
 
 	if not love.window or not love.graphics or not love.event then
 		return

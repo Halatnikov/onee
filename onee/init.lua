@@ -1,5 +1,5 @@
 onee = {}
-onee.version = "0.0.2-15"
+onee.version = "0.0.2-16"
 onee.colors = {
 	bg = {8/255, 8/255, 8/255},
 	bg_deep = {16/255, 16/255, 16/255},
@@ -12,7 +12,6 @@ do
 	require("onee/libs/errorhandler")
 	
 	-- love2d shenanigans
-	love.filesystem.setIdentity(love.filesystem.getIdentity(), true)
 	mobile = (love._os == "Android" or love._os == "iOS")
 	
 	love.window.setMode(love.config.window.width, love.config.window.height, {

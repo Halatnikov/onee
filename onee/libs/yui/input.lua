@@ -61,8 +61,9 @@ function Input:loseFocus()
 end
 
 function Input:onPointerInput(px,py, clicked)
+	if not mobile then self:grabFocus() end
     if clicked then
-        self:grabFocus()
+		self:grabFocus()
 
         -- Schedule cursor reposition for next draw()
         self.px = px
@@ -80,7 +81,9 @@ function Input:textinput(text)
 	self.ui.timer:clear()
 	input.ignore = true
 	
-    if text ~= "" then
+	local color, font, cornerRadius = core.themeForWidget(self)
+	
+    if text ~= "" and font:hasGlyphs(text) then
         local a,b = split(self.text, self.cursor)
 
         self.text = table.concat {a, text, b}
@@ -121,7 +124,12 @@ function Input:keypressed(key, _, isrepeat)
             self.cursor = math.max(1, self.cursor-1)
         elseif key == 'right' then
             self.cursor = math.min(utf8.len(self.text)+1, self.cursor+1)
-        end
+        elseif key == "v" and love.keyboard.isDown("lctrl","rctrl") then
+			local text = love.system.getClipboardText()
+			text = string.replace(text, newline, " ")
+			
+			self:textinput(text)
+		end
     end
 end
 
@@ -164,6 +172,7 @@ function Input:draw()
 
     local x,y,w,h = self.x,self.y,self.w,self.h
     local color, font, cornerRadius = core.themeForWidget(self)
+	local c = core.colorForWidgetState(self, color)
     local th = font:getHeight()
     local tw = font:getWidth(self.text)
 
@@ -207,7 +216,7 @@ function Input:draw()
     end
 
     -- Perform actual draw
-    core.drawBox(x,y,w,h, color.normal, cornerRadius)
+    core.drawBox(x,y,w,h, c, cornerRadius)
 
     -- Apply text margins
     x = math.min(x + 3, x + w)
@@ -220,7 +229,7 @@ function Input:draw()
     x = x - self.drawofs
 
     -- Text
-    love.graphics.setColor(color.normal.fg)
+    love.graphics.setColor(c.fg)
     love.graphics.setFont(font)
     love.graphics.print(self.text, x, y + (h-th)/2)
 
@@ -228,7 +237,7 @@ function Input:draw()
         -- Candidate text
         local ctw = font:getWidth(self.candidate.text)
 
-        love.graphics.setColor(color.normal.fg)
+        love.graphics.setColor(c.fg)
         love.graphics.print(self.candidate.text, x + tw, y + (h-th)/2)
 
         -- Candidate text rectangle box

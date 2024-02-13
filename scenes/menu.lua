@@ -102,7 +102,7 @@ function yui.new.test()
 	
 	table.insert(root, gui.Columns {
 		gui.Label {
-			w = width/2, h = height, align = "left",
+			w = width/2, h = height, align = "left", focus = true,
 			text = "Checkbox",
 		},
 		gui.Checkbox {
@@ -116,7 +116,7 @@ function yui.new.test()
 	
 	table.insert(root, gui.Columns {
 		gui.Label {
-			w = width/2, h = height, align = "left",
+			w = width/2, h = height, align = "left", focus = true,
 			text = "Slider",
 		},
 		gui.Columns {
@@ -140,7 +140,7 @@ function yui.new.test()
 	
 	table.insert(root, gui.Columns {
 		gui.Label {
-			w = width/2, h = height, align = "left",
+			w = width/2, h = height, align = "left", focus = true,
 			text = "Multi-choice",
 		},
 		gui.Choice {
@@ -161,7 +161,7 @@ function yui.new.test()
 	
 	table.insert(root, gui.Columns {
 		gui.Label {
-			w = width/2, h = height, align = "left",
+			w = width/2, h = height, align = "left", focus = true,
 			text = "Text input",
 		},
 		gui.Input {
@@ -180,7 +180,7 @@ function yui.new.test()
 	
 	table.insert(root, gui.Columns {
 		gui.Label {
-			w = width/2, h = height, align = "left",
+			w = width/2, h = height, align = "left", focus = true,
 			text = "Toggle",
 		},
 		gui.Button {

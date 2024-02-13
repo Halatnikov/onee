@@ -47,7 +47,6 @@ function Choice:new(args)
         if type(choice) ~= 'table' then
             choice = {
                 text = tostring(choice),
-                notranslate = type(choice) ~= 'string',
                 value = choice
             }
 

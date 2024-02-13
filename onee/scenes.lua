@@ -11,7 +11,7 @@ function scene.set(path, data, name)
 	
 	name = name or string.tokenize(path, "/", -1)
 	
-	if scenes[1] and scenes[1].close then scenes[1].close() end
+	if scenes[1] then scenes[1].close(scenes[1]) end
 	scenes[1] = {}
 	collectgarbage()
 	
@@ -30,16 +30,22 @@ function scene.set(path, data, name)
 		models = {},
 		
 		drawlist = {},
+		
+		init = noop,
+		update = noop,
+		draw = noop,
+		close = noop,
 	}
 	
 	if files.exists("scenes/"..path..".lua") then table.append(t, dofile("scenes/"..path)) end
-	if data then table.append(t, data) end
 	
-	t = table.protect(t, {"scene", "name", "id"})
+	if data then table.append(t, data) end -- additional data
+	
+	t = table.protect(t, {"scene", "id"})
 	
 	scenes[1] = t --done
 	
-	if t.init then t.init(t) end
+	t.init(t)
 	
 end
 
@@ -48,15 +54,15 @@ function scene.update()
 	assert(table.length(scenes) > 0, "scene.update() | No scene initialized!")
 	_prof.push("scene.update")
 	
-	for id, scene in kpairs(scenes) do
+	for id, scene in ipairs(scenes) do
 		_prof.push(scene.name)
 		if scene.active then
 			_prof.mark("scene")
-			if scene.update then scene.update(scene) end -- scene
+			scene.update(scene) -- scene
 			
 			for id, instance in pairs(scene.instances) do
 				_prof.push(id)
-				if instance.active and instance.update then
+				if instance.active then
 					instance.update(instance, scene) -- instances
 				end
 				_prof.pop()
@@ -70,16 +76,16 @@ end
 --! SCENES DRAW LOOP
 function scene.draw()
 	_prof.push("scene.draw")
-	for id, scene in kpairs(scenes) do
+	for id, scene in ipairs(scenes) do
 		_prof.push(scene.name)
 		scene.drawlist = {} -- new frame
 		if scene.visible then
 			_prof.mark("scene")
-			if scene.draw then scene.draw(scene) end -- scene
+			scene.draw(scene) -- scene
 			
 			for id, instance in pairs(scene.instances) do
 				_prof.push(id)
-				if instance.visible and instance.draw then
+				if instance.visible then
 					instance.draw(instance, scene) -- instances
 				end
 				_prof.pop()
@@ -112,7 +118,7 @@ function object.new(path, scene, data, name)
 		t.data = dofile("objects/"..path) -- add code to object, if it exists
 	end
 	
-	if data then -- pass additional stuff to object through this table
+	if data then -- additional data
 		t.data = t.data or {}
 		table.append(t.data, data)
 	end
@@ -164,10 +170,15 @@ function instance.new(name, scene, data) -- string, table, table=
 		
 		active = true,
 		visible = true,
+		
+		init = noop,
+		update = noop,
+		draw = noop,
 	}
 	
 	if object.data then table.append(t, object.data) end
-	if data then table.append(t, data) end -- pass additional stuff to instance through this table
+	
+	if data then table.append(t, data) end -- additional data
 	
 	function t.delete()
 		instance.delete(t.id, scene)
@@ -179,7 +190,7 @@ function instance.new(name, scene, data) -- string, table, table=
 	
 	object.instances = object.instances + 1
 	
-	if t.init then t.init(t, scene) end
+	t.init(t, scene)
 	
 	return t
 	
@@ -196,8 +207,9 @@ end
 
 --! CLEAR ALL INSTANCES OF OBJECT
 function instance.clear(name, scene)
+	local instance_ = instance
 	for id, instance in pairs(scene.instances) do
-		if instance.object == name then instance.delete() end
+		if instance.object == name then instance_.delete(id, scene) end
 	end
 end
 

@@ -135,8 +135,8 @@ function string.find(arg, find, index, plain) -- alias
 	return string.find_(arg, find, index, plain)
 end
 
-function string.findcase(arg, find, i) -- case insensitive alias
-	return string.find(string.lower(arg), string.lower(find), i)
+function string.findcase(arg, find, index, plain) -- case insensitive alias
+	return string.find(string.lower(arg), string.lower(find), index, plain)
 end
 
 function string.remove(arg, ...)
@@ -156,11 +156,11 @@ function string.split(arg)
 end
 
 function string.random(length)
-	local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
+	local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 	local t = {}
 	for i=1, length do
-		local r = math.random(1, #charset)
-		table.insert(t, string.mid(charset, r, r))
+		local r = math.random(1, #chars)
+		table.insert(t, string.mid(chars, r, r))
 	end
 	return table.concat(t)
 end
@@ -526,7 +526,7 @@ end
 
 ---------------------------------------------------------------- MISC
 
-function noop() end
+function noop(...) end
 
 function unrequire(arg)
 	package.loaded[arg] = nil
