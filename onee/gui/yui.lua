@@ -58,10 +58,29 @@ function yui.draw()
 			if yui.open[k] == true then
 				if v.active then v:update(tick) end
 				if v.visible then v:draw() end
+				if debug_yui then yui.debug_draw(v) end
 			else
 				yui[k] = nil
 			end
 		end
+	end
+end
+
+function yui.debug_draw(ui)
+	function draw_recursive(arg)
+		for k,v in ipairs(arg) do
+			love.graphics.setColor(1,1,1,0.1)
+			local mode = ui.focused == v and "fill" or "line"
+			love.graphics.rectangle(mode, math.round(v.x), math.round(v.y), v.w, v.h)
+			love.graphics.reset()
+			draw_recursive(v)
+		end
+	end
+	draw_recursive(ui)
+	if ui.focused then
+		local v = ui.focused
+		local x,y = window.mouse()
+		love.graphics.print(math.round(v.x).." "..math.round(v.y).." "..v.w.." "..v.h, x+16, y)
 	end
 end
 
@@ -146,6 +165,14 @@ function yui.new.debug()
 				text = "Draw sprite BBoxes",
 				onChange = function()
 					debug_draw_sprites = not debug_draw_sprites
+				end,
+			},
+			-- draw yui debui
+			gui.Checkbox {
+				checked = debug_yui,
+				text = "yui debug",
+				onChange = function()
+					debug_yui = not debug_yui
 				end,
 			},
 		},

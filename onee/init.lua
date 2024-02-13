@@ -134,3 +134,5 @@ function onee.quit()
 	
 end
 love.quit = onee.quit
+
+-- love.focus, love.mousefocus, love.visible, love.filedropped, love.directorydropped

@@ -441,13 +441,17 @@ function imgui.window.menubar()
 			end
 			
 			gui.Separator()
-			-- draw collisions shortcut
+			-- draw collisions
 			if gui.MenuItem_Bool("Draw collisions", nil, debug_draw_collisions) then
 				debug_draw_collisions = not debug_draw_collisions
 			end
-			-- draw sprite bboxes shortcut
+			-- draw sprite bboxes
 			if gui.MenuItem_Bool("Draw sprite BBoxes", nil, debug_draw_sprites) then
 				debug_draw_sprites = not debug_draw_sprites
+			end
+			-- draw yui debug
+			if gui.MenuItem_Bool("yui debug", nil, debug_yui) then
+				debug_yui = not debug_yui
 			end
 			
 			gui.Separator()
@@ -747,6 +751,10 @@ function imgui.window.main()
 		local _v = _bool(imgui.open.overlay)
 		gui.Checkbox("Show inspect overlay", _v)
 		imgui.open.overlay = _v[0]
+		
+		local _v = _bool(debug_yui)
+		gui.Checkbox("yui debug", _v)
+		debug_yui = _v[0]
 		
 		------------------------------------------------ SCENE STACK HEADER
 		if gui.CollapsingHeader_BoolPtr("Scene stack") then

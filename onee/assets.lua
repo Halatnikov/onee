@@ -237,9 +237,9 @@ function sprite.init(sprite, scene, name, data)
 	local t = {
 		sprite = true,
 		name = name,
-		
 		active = true,
 		visible = true,
+		
 		animation = "idle",
 		animation_old = "idle",
 		frame = 1,
@@ -247,6 +247,8 @@ function sprite.init(sprite, scene, name, data)
 		seq = "seq_start",
 		seq_index = 1,
 		loops = 0,
+		
+		anim_end = noop,
 	}
 	
 	if scene.sprites[name].tiled then
@@ -319,7 +321,7 @@ function sprite.update(sprite, scene)
 		sprite.seq_index = sprite.seq_index + 1
 		if sprite.seq_index > #animdef[sprite.seq] then -- animation reached end
 			-- callback
-			if sprite.anim_end then sprite.anim_end(sprite.animation) end
+			sprite.anim_end(sprite.animation)
 			
 			-- loop
 			if not (animdef.loops == false) or (animdef.loops and sprite.loops < animdef.loops) then
@@ -608,7 +610,6 @@ function model.init(model, scene, name, data)
 	local t = {
 		model = true,
 		name = name,
-		
 		active = true,
 		visible = true,
 		

@@ -107,6 +107,8 @@ function input.update()
 						local y = shape.circle[2]
 						local radius = shape.circle[3]
 						
+						if shape.centerx then x = (windowwidth/2) + x end
+						if shape.centery then y = (windowheight/2) + y end
 						if math.sign(x) == -1 then x = windowwidth + x end
 						if math.sign(y) == -1 then y = windowheight + y end
 						
@@ -122,6 +124,8 @@ function input.update()
 						local width = shape.rect[3]
 						local height = shape.rect[4] or width
 						
+						if shape.centerx then x = (windowwidth/2) + x end
+						if shape.centery then y = (windowheight/2) + y end
 						if math.sign(x) == -1 then x = windowwidth + x end
 						if math.sign(y) == -1 then y = windowheight + y end
 						
@@ -160,6 +164,8 @@ function input.draw()
 					local y = shape.circle[2]
 					local radius = shape.circle[3]
 					
+					if shape.centerx then x = (windowwidth/2) + x end
+					if shape.centery then y = (windowheight/2) + y end
 					if math.sign(x) == -1 then x = windowwidth + x end
 					if math.sign(y) == -1 then y = windowheight + y end
 					
@@ -170,7 +176,7 @@ function input.draw()
 					else
 						love.graphics.setColor(1,1,1,0.5)
 						love.graphics.circle("fill",x,y,radius)
-						love.graphics.printf(shape.text or "", x-(radius/1.33), y-12, radius, "center", 0, 1.5, 1.5)
+						love.graphics.printf(shape.text or "", x-(radius/1.33), y-10, radius, "center", 0, 1.5, 1.5)
 					end
 				end
 				
@@ -180,6 +186,8 @@ function input.draw()
 					local width = shape.rect[3]
 					local height = shape.rect[4] or width
 					
+					if shape.centerx then x = (windowwidth/2) + x end
+					if shape.centery then y = (windowheight/2) + y end
 					if math.sign(x) == -1 then x = windowwidth + x end
 					if math.sign(y) == -1 then y = windowheight + y end
 					
@@ -190,7 +198,7 @@ function input.draw()
 					else
 						love.graphics.setColor(1,1,1,0.5)
 						love.graphics.rectangle("fill",x,y,width,height)
-						love.graphics.printf(shape.text or "", x-(width/4), y+(height/2)-12, width, "center", 0, 1.5, 1.5)
+						love.graphics.printf(shape.text or "", x-(width/4), y+(height/2)-10, width, "center", 0, 1.5, 1.5)
 					end
 				end
 				

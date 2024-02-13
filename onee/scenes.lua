@@ -11,7 +11,7 @@ function scene.set(path, data, name)
 	
 	name = name or string.tokenize(path, "/", -1)
 	
-	if scenes[1] then scenes[1].close(scenes[1]) end
+	if scenes[1] then scenes[1].delete(scenes[1]) end
 	scenes[1] = {}
 	collectgarbage()
 	
@@ -32,9 +32,9 @@ function scene.set(path, data, name)
 		drawlist = {},
 		
 		init = noop,
+		delete = noop,
 		update = noop,
 		draw = noop,
-		close = noop,
 	}
 	
 	if files.exists("scenes/"..path..".lua") then table.append(t, dofile("scenes/"..path)) end
@@ -49,7 +49,7 @@ function scene.set(path, data, name)
 	
 end
 
---! SCENES UPDATE LOOP
+-- SCENES UPDATE LOOP
 function scene.update()
 	assert(table.length(scenes) > 0, "scene.update() | No scene initialized!")
 	_prof.push("scene.update")
@@ -62,9 +62,7 @@ function scene.update()
 			
 			for id, instance in pairs(scene.instances) do
 				_prof.push(id)
-				if instance.active then
-					instance.update(instance, scene) -- instances
-				end
+				if instance.active then instance.update(instance, scene) end -- instances
 				_prof.pop()
 			end
 		end
@@ -73,7 +71,7 @@ function scene.update()
 	_prof.pop()
 end
 
---! SCENES DRAW LOOP
+-- SCENES DRAW LOOP
 function scene.draw()
 	_prof.push("scene.draw")
 	for id, scene in ipairs(scenes) do
@@ -85,9 +83,7 @@ function scene.draw()
 			
 			for id, instance in pairs(scene.instances) do
 				_prof.push(id)
-				if instance.visible then
-					instance.draw(instance, scene) -- instances
-				end
+				if instance.visible then instance.draw(instance, scene) end -- instances
 				_prof.pop()
 			end
 			
@@ -172,6 +168,7 @@ function instance.new(name, scene, data) -- string, table, table=
 		visible = true,
 		
 		init = noop,
+		delete = noop,
 		update = noop,
 		draw = noop,
 	}
@@ -180,7 +177,7 @@ function instance.new(name, scene, data) -- string, table, table=
 	
 	if data then table.append(t, data) end -- additional data
 	
-	function t.delete()
+	function t.destroy()
 		instance.delete(t.id, scene)
 	end
 	
@@ -198,10 +195,13 @@ end
 
 --! DELETE INSTANCE
 function instance.delete(id, scene)
-	if not scene.instances[id] then return end
-	local name = scene.instances[id].object
+	local instance = scene.instances[id]
+	if not instance then return end
+	
+	local name = instance.object
 	scene.objects[name].instances = scene.objects[name].instances - 1
-
+	
+	instance.delete(instance)
 	scene.instances[id] = nil
 end
 
