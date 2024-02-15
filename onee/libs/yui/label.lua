@@ -9,8 +9,6 @@ local BASE = (...):gsub('label$', '')
 local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
-local shadowtext = require 'onee/libs/yui/gear.shadowtext'
-
 -- Labels don't accept focus
 local Label = setmetatable({
     nofocus = true,
@@ -23,7 +21,6 @@ Label.__index = Label
 -- @field text (string) text displayed inside the Label
 -- @field[opt='center'] valign (string) vertical alignment 'top', 'bottom', 'center'
 -- @field[opt='center'] align (string) horizontal alignment, 'left', 'center', 'right'
--- @field notranslate (boolean) don't translate text
 -- @table LabelAttributes
 
 --- Label constructor
@@ -35,6 +32,7 @@ function Label:new(args)
     self.align = self.align or 'center'
     self.valign = self.valign or 'center'
 	self.focus = self.focus or false
+	
     return self
 end
 
@@ -50,7 +48,6 @@ function Label:draw()
 
     love.graphics.setColor(color.normal.fg)
     love.graphics.setFont(font)
-    --shadowtext.printf(self.text, x+2, y, w-4, self.align)
     love.graphics.printf(text(self.text), x+2, y, w-4, self.align)
 end
 

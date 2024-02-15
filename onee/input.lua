@@ -6,8 +6,6 @@ input = {
 	mouse_istouch = {},
 }
 
-love.joystick.loadGamepadMappings("onee/libs/gamecontrollerdb.txt")
-
 -- initialize the table
 for k in pairs(config.input.keyboard) do 
 	input[k] = false

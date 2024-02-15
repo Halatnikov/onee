@@ -13,7 +13,6 @@ local BASE = (...):gsub('button$', '')
 local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
-local shadowtext = require 'onee/libs/yui/gear.shadowtext'
 
 local Button = setmetatable({
     __call = function(cls, args) return cls:new(args) end
@@ -28,7 +27,6 @@ Button.__index = Button
 -- @field[opt='center'] valign (string) vertical alignment 'top', 'bottom', 'center'
 -- @field[opt='center'] align (string) horizontal alignment, 'left', 'center', 'right'
 -- @field cornerRadius (number) radius for rounded corners
--- @field notranslate (boolean) don't translate text
 -- @table ButtonAttributes
 
 
@@ -41,6 +39,8 @@ function Button:new(args)
     self.align = self.align or 'center'
     self.valign = self.valign or 'center'
     self.active = false
+	self.description = self.description or nil
+	
     return self
 end
 
@@ -72,7 +72,6 @@ function Button:draw()
     love.graphics.setFont(font)
 
     y = y + core.verticalOffsetForAlign(self.valign, font, h)
-	--shadowtext.printf(self.text, x+2, y, w-4, self.align)
 	love.graphics.printf(text(self.text), x+2, y, w-4, self.align)
 end
 

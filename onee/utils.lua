@@ -99,11 +99,6 @@ function math.loop_pingpong(a, b, t)
 	return len - math.abs(t - len)
 end
 
-function math.every(arg)
-	local decimals = #tostring(arg) == 3 and 1 or 0
-	return math.round(love.timer.getTime(), decimals) % arg == 0 
-end
-
 ---------------------------------------------------------------- STRINGS
 
 string.replace = string.gsub

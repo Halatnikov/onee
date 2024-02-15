@@ -747,24 +747,29 @@ end--#endregion
 
 do--#region text
 --! @function text
-local function process(arg)
+local function processtext(arg)
 	if not arg then return end
 	
-	local output = string.gsub(arg, "{([%w%p]+)}", function(icon)
+	local output = string.gsub(arg, "(%b{})", function(icon)
+		icon = string.sub(icon, 2, -2)
+		
 		if string.find(icon, "input_") then
-			local prefix
 			local button = string.tokenize(icon, "_", 2)
 			
 			if input.mode == "keyboard" then 
-				prefix = "k_"
-				
+				local prefix = "key_"
 				local config = config.input.keyboard[button]
+				
 				if config then
-					button = config.k and config.k[1] 
-						or config.m
-						or config.mw
-					
-					icon = prefix..button
+					if config.k then
+						icon = prefix..config.k[1]
+					elseif config.m then
+						
+					elseif config.mw then
+						
+					else
+						icon = "null"
+					end
 				else
 					icon = "null"
 				end
@@ -776,7 +781,7 @@ local function process(arg)
 		if fonts.icons.__anim[icon] then
 			local anim = fonts.icons.__anim[icon]
 			
-			anim.timer:update(dt)
+			anim.timer:update()
 			
 			icon = icon..anim.current
 		end
@@ -787,15 +792,14 @@ local function process(arg)
 	return output
 end
 
-setmetatable(text, {__call = function(t, ...) return process(...) end})
+setmetatable(text, {__call = function(t, ...) return processtext(...) end})
 
 --! add font icons
 function text.icons(arg)
 	local utf8 = require("utf8")
 	
 	for line in love.filesystem.lines("fonts/"..arg..".txt") do
-		local line = string.tokenize(line, " ")
-		local id, name, animdelay = unpack(line)
+		local id, name, animdelay = unpack(string.tokenize(line, " "))
 		
         fonts.icons[name] = utf8.char(tonumber(id))
 		

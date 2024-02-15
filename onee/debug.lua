@@ -193,7 +193,7 @@ end
 
 function debug.keypressed(k, scancode, isrepeat)
 	if not debug_mode then return end
-	print(k)
+	--print(k)
 	--press l to learn
 	
 	if k == "f2" then love.event.quit("restart") end

@@ -579,7 +579,7 @@ function imgui.window.menubar()
 		
 		------------------------------------------------ right corner fps and dt
 		gui.SameLine(windowwidth-120)
-		gui.Text(string.format("%02d FPS %02.2fms", love.timer.getFPS(), 1000*love.timer.getAverageDelta()))
+		gui.Text(string.format("%d FPS %02.2fms", love.timer.getFPS(), 1000*love.timer.getAverageDelta()))
 		if gui.BeginItemTooltip() then
 			gui.Text(string.format("%02.2f FPS %02.2fms", fps, 1000*dt))
 			local date = os.date("*t")

@@ -130,7 +130,7 @@ function yui.new.debug()
 				align = "right",
 				text = "",
 				onUpdate = function(self)
-					self.text = string.format("%02d %02.2f FPS %02.2fms", love.timer.getFPS(), fps, 1000*love.timer.getAverageDelta())
+					self.text = string.format("%d %02.2f FPS %02.2fms", love.timer.getFPS(), fps, 1000*love.timer.getAverageDelta())
 				end,
 			},
 			gui.Columns {

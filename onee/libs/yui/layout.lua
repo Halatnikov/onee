@@ -108,6 +108,8 @@ function Layout:layoutWidgets()
         widget.x, widget.y = nx, ny
         widget.ui = self.ui
         widget.parent = self
+		
+		widget.description = widget.description or self.description
 
         if isinstance(widget, Layout) then
             widget:layoutWidgets()

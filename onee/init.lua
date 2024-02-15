@@ -25,11 +25,12 @@ do
 	love.graphics.present() -- black screen
 
 	-- libraries (user)
+	require("onee/libs/timer")
 	require("onee/libs/urfs")
-	timer = require("onee/libs/hump_timer")
 	require("onee/libs/json")
 	require("onee/libs/gifload")
 	require("onee/libs/gltf")
+	love.joystick.loadGamepadMappings("onee/libs/gamecontrollerdb.txt")
 
 	-- onee modules
 	require("onee/utils")
