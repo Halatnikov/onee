@@ -121,6 +121,7 @@ function string.escape(arg)
 end
 
 function string.left(arg, len) -- alias
+	if len < 0 then len = #arg - math.abs(len) end -- count from end
 	return string.mid(arg, 1, len)
 end
 

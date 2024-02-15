@@ -32,12 +32,12 @@ function Device:snapshot()
     snap.pointer = px ~= self.px or py ~= self.py or snap.clicked or snap.pointing
 
     -- Keyboard input
-    local confirm = love.keyboard.isDown("return") or (input.mode ~= "mouse" and input.a)
-    local cancel = love.keyboard.isDown("escape") or (input.mode ~= "mouse" and input.b)
-    local up = input.up
-    local left = input.left
-    local down = input.down
-    local right = input.right
+    local confirm = love.keyboard.isDown("return") or (love.mouse.isDown(1) ~= true and input.a)
+    local cancel = love.keyboard.isDown("escape") or (love.mouse.isDown(1) ~= true and input.b)
+    local up = love.keyboard.isDown("up") or input.up
+    local left = love.keyboard.isDown("left") or input.left
+    local down = love.keyboard.isDown("down") or input.down
+    local right = love.keyboard.isDown("right") or input.right
 
     snap.confirm = self.confirm and not confirm
     snap.cancel = self.cancel and not cancel

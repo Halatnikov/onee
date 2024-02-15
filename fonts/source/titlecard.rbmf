@@ -1,0 +1,20 @@
+#ReFreezedBitmapFontConverter
+version=1
+
+[in]
+colored=true
+
+[edit]
+trim=false
+
+[out]
+fileImage=<name>.png
+fileDescriptor=<name>.fnt
+imageBounds=poweroftwosquare
+glyphSpacing=1 1
+renderSpacing=2
+
+[1]
+glyphs=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+[2]
+glyphs=0123456789!?,: 

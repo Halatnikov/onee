@@ -4,40 +4,45 @@ local scene = {}
 local gui = yui_
 
 local menu = {}
+menu.name = "test"
 menu.root = {}
 
-local theme_default = {
-    cornerRadius = 0,
-	font = fonts.freaks12,
-    color = {
-        normal = {bg = {0.25, 0.25, 0.25}, fg = {0.75, 0.75, 0.75}},
-        hovered = {bg = {0.19, 0.6, 0.73}, fg = {1, 1, 1}},
-        active = {bg = {1, 0.6, 0}, fg = {1, 1, 1}},
-    }
-}
-local theme_textonly = {
-	cornerRadius = 0,
-	font = fonts.freaks12,
-	color = {
-		normal = {bg = {0,0,0,0}, fg = {1,1,1}},
-		hovered = {bg = {0,0,0,0}, fg = {1,1,1}},
-		active = {bg = {0,0,0,0}, fg = {1, 0.6, 0}},
-	}
-}
-local theme_disabled = {
-	cornerRadius = 0,
-	font = fonts.freaks12,
-	color = {
-		normal = {bg = {0,0,0,0}, fg = {0,0,0}},
-		hovered = {bg = {0,0,0,0}, fg = {0,0,0}},
-		active = {bg = {0,0,0,0}, fg = {0,0,0}},
-	}
+menu.themes = {
+	default = {
+		cornerRadius = 0,
+		font = fonts.freaks12,
+		color = {
+			normal = {bg = {0.25, 0.25, 0.25}, fg = {0.75, 0.75, 0.75}},
+			hovered = {bg = {0.19, 0.6, 0.73}, fg = {1, 1, 1}},
+			active = {bg = {1, 0.6, 0}, fg = {1, 1, 1}},
+		}
+	},
+	
+	textonly = {
+		cornerRadius = 0,
+		font = fonts.freaks12,
+		color = {
+			normal = {bg = {0,0,0,0}, fg = {1,1,1}},
+			hovered = {bg = {0,0,0,0}, fg = {1,1,1}},
+			active = {bg = {0,0,0,0}, fg = {1, 0.6, 0}},
+		}
+	},
+	
+	disabled = {
+		cornerRadius = 0,
+		font = fonts.freaks12,
+		color = {
+			normal = {bg = {0,0,0,0}, fg = {0,0,0}},
+			hovered = {bg = {0,0,0,0}, fg = {0,0,0}},
+			active = {bg = {0,0,0,0}, fg = {0,0,0}},
+		}
+	},
 }
 
 local x,y = 32, 16
 local width, height = onee.width-32-32, 16
 local padding = 4
-local theme = theme_textonly
+local theme = menu.themes.textonly
 
 local bool = true
 local num = 5
@@ -51,16 +56,16 @@ function scene.init(self)
 	self.arrow = sprite.init(self.arrow, self, "spr_menu_arrow_16", {x = 16})
 	self.bg = sprite.init(self.bg, self, "checkerboard", {tiled = {width = onee.width, height = onee.height}, scale = 8, z = -1})
 	
-	yui.open.test = true
-	yui.new.test = noop
-	yui.draw()
+	yui.open[menu.name] = true
 	
 	local ui = {
-		x = x, y = y, theme = theme_textonly,
+		x = x, y = y, theme = theme,
 		gui.Rows {
 			padding = padding,
 			onDraw = function(self)
-				local description = self.ui.focused and (self.ui.focused.description or "") or ""
+				local focused = self.ui.focused
+				
+				local description = focused.description or ""
 				local font = fonts.freaks16
 				local width, wraps = font:getWrap(description, onee.width - 4)
 				local height = font:getHeight()
@@ -68,13 +73,13 @@ function scene.init(self)
 				love.graphics.setColor(0, 0, 0, 0.75)
 				love.graphics.rectangle("fill", 0, onee.height - (height * #wraps) - 4, onee.width, 64)
 				love.graphics.reset()
-				love.graphics.printf(description, fonts.freaks16, 4, onee.height - (height * #wraps) - 2, onee.width - 4)
+				love.graphics.printf(text(description), fonts.freaks16, 4, onee.height - (height * #wraps) - 2, onee.width - 4)
 			end,
 		},
 	}
 	menu.root = ui[1]
 	
-	menu.label("Scenes", t)
+	menu.label("Scenes")
 		
 	local scenes = files.listdir("scenes")
 	for i=1, #scenes do
@@ -87,9 +92,9 @@ function scene.init(self)
 	
 	menu.spacer()
 	
-	menu.label("Thingies", t)
+	menu.label("{unknown}Thingies")
 	
-	menu.button("Button", "that is a button", function(self)
+	menu.button("{input_a}Button {k_escape}", "that is a button", function(self)
 		print("yes indeed")
 	end)
 	
@@ -103,10 +108,10 @@ function scene.init(self)
 			text = "Multi-choice",
 		},
 		gui.Choice {
-			w = width/2/2, theme = theme_default,
+			w = width/2/2, theme = menu.themes.default,
 			choices = {
 				{ text = "Have", value = "have" },
-				{ text = "You", value = "you" },
+				{ text = "Yo{null}u", value = "you" },
 				{ text = "Ever",  value = "ever" }
 			},
 			default = str,
@@ -147,11 +152,11 @@ function scene.init(self)
 		love.event.quit()
 	end)
 	
-	yui.test = gui.Ui:new(ui)
+	yui[menu.name] = gui.Ui:new(ui)
 end
 
 function scene.delete(self)
-	yui.open.test = nil
+	yui.open[menu.name] = nil
 	yui.draw()
 end
 
@@ -183,7 +188,7 @@ function menu.button(label, description, func, t)
 end
 
 function menu.disabled(label, description, t)
-	return menu.button(label, description, nil, table.append({theme = theme_disabled}, t or {}))
+	return menu.button(label, description, nil, table.append({theme = menu.themes.disabled}, t or {}))
 end
 
 function menu.checkbox(label, description, var, t)
@@ -194,7 +199,7 @@ function menu.checkbox(label, description, var, t)
 			description = description or "",
 		},
 		gui.Checkbox {
-			theme = theme_default,
+			theme = menu.themes.default,
 			description = description or "",
 			
 			checked = var,
@@ -217,7 +222,7 @@ function menu.slider(label, description, var, min, max, step, t)
 		gui.Columns {
 			padding = 16,
 			gui.Slider {
-				w = width/2/2, h = height, theme = theme_default,
+				w = width/2/2, h = height, theme = menu.themes.default,
 				description = description or "",
 				
 				min = min, max = max, step = step or 1,
@@ -246,7 +251,7 @@ function menu.textinput(label, description, var, t)
 			description = description or "",
 		},
 		gui.Input {
-			w = width/2/2, theme = theme_default,
+			w = width/2/2, theme = menu.themes.default,
 			description = description or "",
 			
 			text = var,
@@ -257,7 +262,7 @@ function menu.textinput(label, description, var, t)
 			onHit = function(self, text)
 				self.cursor = 1
 				self.text = ""
-				self:onChange("")
+				self:onChange(self.text)
 			end,
 		},
 	}
@@ -272,7 +277,7 @@ end
 function scene.draw(self)
 	sprite.draw(self.bg, self)
 	
-	local item = yui.test.focused
+	local item = yui[menu.name].focused
 	
 	queue.add(self.drawlist, 0, function()
 		gradient("horizontal", {

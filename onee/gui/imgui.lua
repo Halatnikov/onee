@@ -813,6 +813,9 @@ function imgui.window.main()
 			
 			-- window size
 			gui.Text("Window size: "..windowwidth.."x"..windowheight)
+			
+			gui.TextWrapped("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~\\")
+			
 			--newly declared globals tree
 			if gui.TreeNodeEx_Str("Newly declared globals", gui.love.TreeNodeFlags("SpanAvailWidth")) then
 				if gui.BeginTable("globals", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then

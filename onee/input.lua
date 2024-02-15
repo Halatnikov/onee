@@ -38,7 +38,7 @@ function input.update()
 		if entry.m then
 			if love.mouse.isDown(entry.m)
 			and not input.mouse_istouch[1] then -- prevent touch input
-				input.mode = "mouse"
+				input.mode = "keyboard"
 				input[key] = true
 			end
 		end
@@ -46,7 +46,7 @@ function input.update()
 		if entry.mw then
 			if math.abs(input.mouse_wheel) > 0
 			and math.sign(input.mouse_wheel) == entry.mw then
-				input.mode = "mouse"
+				input.mode = "keyboard"
 				input[key] = true 
 			end
 		end

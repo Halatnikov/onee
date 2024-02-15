@@ -166,14 +166,14 @@ function Choice:draw()
     end
 
     -- draw text
-    local text = self.choices[self.index].text
+    local label = self.choices[self.index].text
 
     y = y + core.verticalOffsetForAlign(self.valign, font, h)
 
     love.graphics.setColor(c.fg)
     love.graphics.setFont(font)
     --shadowtext.printf(text, x+h+2, y, w-2*(h + 2), self.align)
-    love.graphics.printf(text, x+h+2, y, w-2*(h + 2), self.align)
+    love.graphics.printf(text(label), x+h+2, y, w-2*(h + 2), self.align)
 end
 
 return Choice

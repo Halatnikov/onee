@@ -26,6 +26,7 @@ do
 
 	-- libraries (user)
 	require("onee/libs/urfs")
+	timer = require("onee/libs/hump_timer")
 	require("onee/libs/json")
 	require("onee/libs/gifload")
 	require("onee/libs/gltf")
@@ -56,6 +57,8 @@ do
 	_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
 	jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
 	jit.version_revision = string.left(jit.version_rolling, 2)
+	
+	dt = love.timer.getDelta()
 	
 	-- :o
 	debug.enable(debug_mode)

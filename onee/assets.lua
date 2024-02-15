@@ -3,9 +3,12 @@ sprite = {}
 model = {
 	anim = {},
 }
+text = {}
 
 -- temp font storage
-fonts = {}
+fonts = {
+	icons = { __anim = {},},
+}
 
 -- constants
 TILE = {
@@ -738,6 +741,88 @@ function model.draw(model, scene)
 		love.graphics.reset()
 	end)
 end
+end--#endregion
+
+---------------------------------------------------------------- TEXT
+
+do--#region text
+--! @function text
+local function process(arg)
+	if not arg then return end
+	
+	local output = string.gsub(arg, "{([%w%p]+)}", function(icon)
+		if string.find(icon, "input_") then
+			local prefix
+			local button = string.tokenize(icon, "_", 2)
+			
+			if input.mode == "keyboard" then 
+				prefix = "k_"
+				
+				local config = config.input.keyboard[button]
+				if config then
+					button = config.k and config.k[1] 
+						or config.m
+						or config.mw
+					
+					icon = prefix..button
+				else
+					icon = "null"
+				end
+			end
+			
+			if not (fonts.icons[icon] or fonts.icons.__anim[icon]) then icon = "unknown" end
+		end
+		
+		if fonts.icons.__anim[icon] then
+			local anim = fonts.icons.__anim[icon]
+			
+			anim.timer:update(dt)
+			
+			icon = icon..anim.current
+		end
+		
+		return fonts.icons[icon]
+	end)
+	
+	return output
+end
+
+setmetatable(text, {__call = function(t, ...) return process(...) end})
+
+--! add font icons
+function text.icons(arg)
+	local utf8 = require("utf8")
+	
+	for line in love.filesystem.lines("fonts/"..arg..".txt") do
+		local line = string.tokenize(line, " ")
+		local id, name, animdelay = unpack(line)
+		
+        fonts.icons[name] = utf8.char(tonumber(id))
+		
+		local animname = string.left(name, -1)
+		
+		if animdelay then
+			fonts.icons.__anim[animname] = {}
+			local anim = fonts.icons.__anim[animname]
+			
+			anim.delay = tonumber(animdelay)
+			anim.current = 1
+			
+			anim.timer = timer.new()
+			anim.timer:every(anim.delay , function()
+				anim.current = anim.current + 1
+				if anim.current > anim.frames then anim.current = 1 end
+			end)
+		end
+		
+		if fonts.icons.__anim[animname] then
+			local anim = fonts.icons.__anim[animname]
+			
+			anim.frames = (anim.frames or 0) + 1
+		end
+    end
+end
+
 end--#endregion
 
 _prof.hook("asset")

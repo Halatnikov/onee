@@ -1,0 +1,48 @@
+#ReFreezedBitmapFontConverter
+version=1
+
+[in]
+colored=true
+
+[edit]
+trim=false
+
+[out]
+fileImage=<name>.png
+fileDescriptor=<name>.fnt
+imageBounds=poweroftwosquare
+glyphSpacing=1 1
+renderSpacing=2
+
+#KEYBOARD
+#letters
+[1]
+icons=k_a1 k_b1 k_c1 k_d1 k_e1 k_f1 k_g1 k_h1 k_i1 k_j1 k_k1 k_l1 k_m1 k_n1 k_o1 k_p1 k_q1 k_r1 k_s1 k_t1 k_u1 k_v1 k_w1 k_x1 k_y1 k_z1
+[2]
+icons=k_a2 k_b2 k_c2 k_d2 k_e2 k_f2 k_g2 k_h2 k_i2 k_j2 k_k2 k_l2 k_m2 k_n2 k_o2 k_p2 k_q2 k_r2 k_s2 k_t2 k_u2 k_v2 k_w2 k_x2 k_y2 k_z2
+#numbers and numpad
+[3]
+icons=k_01 k_11 k_21 k_31 k_41 k_51 k_61 k_71 k_81 k_91 k_kp01 k_kp11 k_kp21 k_kp31 k_kp41 k_kp51 k_kp61 k_kp71 k_kp81 k_kp91
+[4]
+icons=k_02 k_12 k_22 k_32 k_42 k_52 k_62 k_72 k_82 k_92 k_kp02 k_kp12 k_kp22 k_kp32 k_kp42 k_kp52 k_kp62 k_kp72 k_kp82 k_kp92
+#function keys
+[5]
+icons=k_f11 k_f21 k_f31 k_f41 k_f51 k_f61 k_f71 k_f81 k_f91 k_f101 k_f111 k_f121 k_f131 k_f141 k_f151 k_f161 k_f171 k_f181
+[6]
+icons=k_f12 k_f22 k_f32 k_f42 k_f52 k_f62 k_f72 k_f82 k_f92 k_f102 k_f112 k_f122 k_f132 k_f142 k_f152 k_f162 k_f172 k_f182
+#general keys
+[7]
+icons=k_up1 k_down1 k_left1 k_right1 k_escape1 k_space1 k_return1 k_backspace1 k_tab1 k_lctrl1 k_rctrl1 k_lalt1 k_ralt1 k_lshift1 k_rshift1 k_pause1 k_insert1 k_home1 k_delete1 k_end1 k_pageup1 k_pagedown1
+[8]
+icons=k_up2 k_down2 k_left2 k_right2 k_escape2 k_space2 k_return2 k_backspace2 k_tab2 k_lctrl2 k_rctrl2 k_lalt2 k_ralt2 k_lshift2 k_rshift2 k_pause2 k_insert2 k_home2 k_delete2 k_end2 k_pageup2 k_pagedown2
+#symbols
+[9]
+icons=k_`1 k_-1 k_=1 k_\1 k_[1 k_]1 k_;1 k_'1 k_,1 k_.1 k_/1 k_kp/1 k_kp*1 k_kp-1 k_kp+1 k_kp.1 k_kpenter1
+[10]
+icons=k_`2 k_-2 k_=2 k_\2 k_[2 k_]2 k_;2 k_'2 k_,2 k_.2 k_/2 k_kp/2 k_kp*2 k_kp-2 k_kp+2 k_kp.2 k_kpenter2
+
+#UNDEFINED
+[11]
+icons=unknown1 unknown2 unknown3 unknown4
+[12]
+icons=null1 null2 null3 null4
