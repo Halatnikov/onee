@@ -372,7 +372,7 @@ function sprite.update(sprite, scene)
 end
 
 --! DRAW SPRITE
-function sprite.draw(sprite, scene, queued)
+function sprite.draw(sprite, scene, args)
 	assert((sprite and sprite.sprite), "sprite.draw() | not a valid sprite")
 	
 	if not sprite.visible then return end
@@ -380,8 +380,9 @@ function sprite.draw(sprite, scene, queued)
 	local spritedef = scene.sprites[sprite.name]
 	assert(spritedef, "sprite.draw() | no such sprite \""..sprite.name.."\"")
 	
-	if queued == nil then queued = true end
-	if queued == false then sprite.queued = false end
+	args = args or {}
+	if args.queued == nil then args.queued = true end
+	if args.queued == false then sprite.queued = false end
 	
 	-- basics
 	local x = sprite.x or 0; x = math.round(x)
@@ -481,17 +482,20 @@ function sprite.draw(sprite, scene, queued)
 		
 	end
 	
-	if queued then
+	if args.queued then
 		queue.add(scene.drawlist, z, function()
 			love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 			draw()
 			love.graphics.reset()
 		end)
-	else
+	elseif args.ignorescale then
 		window.pop()
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		draw()
 		window.push()
+	else
+		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+		draw()
 	end
 end
 
@@ -901,6 +905,8 @@ function asset.spritefont(path)
 	
 	font.font = fontdef
 	
+	fontdef.spacing = fontdef.spacing or 0
+	
 	-- static character rows helper
 	if fontdef.rows then
 		for i, row in ipairs(fontdef.rows) do
@@ -944,10 +950,13 @@ function asset.spritefont(path)
 					end
 				end
 				
-				sprite.animations[chars[i]] = {
+				local t  = {
 					filename = filename,
 					sheet = {x = x, y = row.y, width = width, height = row.height},
 				}
+				
+				sprite.animations[chars[i]] = sprite.animations[chars[i]] or {}
+				table.append(sprite.animations[chars[i]], t)
 			end
 			
 		end
@@ -960,6 +969,7 @@ function asset.spritefont(path)
 	asset.sprite(path, font.scene, sprite) -- done
 end
 
+--!
 function text.new(arg, font)
 	local scene = font.scene
 	local id = string.md5(table.concat(arg))
@@ -971,19 +981,29 @@ function text.new(arg, font)
 		id = id,
 		
 		sprites = {},
+		
+		timer = 0,
 	}
 	t = table.protect(t, {"instance", "id", "scene", "text"})
 	
 	scene.instances[id] = t
+	
+	return t
 end
 
-function text.draw(arg, font, x, y, r, sx, sy, ox, oy, kx, ky)
+--!
+function text.printf(arg, font, x, y, limit, alignh, alignv, r, sx, sy, ox, oy, kx, ky)
+	return text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, alignv)
+end
+
+--!
+function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, alignv)
 	if type(arg) == "string" then arg = {arg} end
 	if type(font) == "string" then font = fonts2[font] end
 	
 	x = x or 0; x = math.round(x)
 	y = y or 0; y = math.round(y)
-	r = r or 0; math.rad(math.round(r))
+	r = r or 0; r = math.round(r)
 	sx = sx or 1
 	sy = sy or sx or 1
 	ox = ox or 0
@@ -991,11 +1011,77 @@ function text.draw(arg, font, x, y, r, sx, sy, ox, oy, kx, ky)
 	kx = kx or 0
 	ky = ky or 0
 	
-	local scene = font.scene
+	local fontscene = font.scene
+	local fontdef = font.font
+	
 	local id = string.md5(table.concat(arg))
+	fontscene.instances[id] = fontscene.instances[id] or text.new(arg, font)
+	local instance = fontscene.instances[id]
 	
-	local instance = scene.instances[id] or text.new(arg, font)
+	instance.timer = instance.timer + dt
+	instance.dt = dt
 	
+	local curx, cury = 0, 0
+	local width, height = 0, 0
+	local charcount = 0
+	
+	-- loop  through all chunks
+	for i, chunk in ipairs(arg) do
+		
+		-- regular text
+		if type(chunk) ~= "table" then
+			chunk = tostring(chunk)
+			
+			-- loop through characters
+			for i, char in ipairs(string.split(chunk)) do
+				-- find character in available fonts
+				local validchar, curfont
+				for k, font in pairs(fontscene.assets) do
+					if font[char] then 
+						validchar = true
+						curfont = k
+						break
+					end
+				end
+				
+				if validchar then
+					charcount = charcount + 1
+					
+					-- sprite per character
+					instance.sprites[charcount] = instance.sprites[charcount]
+						or sprite.init(instance.sprites[charcount], fontscene, curfont, {animation = char})
+					
+					local charsprite = instance.sprites[charcount]
+					
+					local spritedef = fontscene.sprites[curfont]
+					local animdef = spritedef.animations[char]
+					local framedef = animdef.frames[charsprite.frame]
+					
+					charsprite.x = curx
+					charsprite.y = cury
+					
+					curx = curx + framedef.width + fontdef.spacing
+				end
+			end
+		end
+		
+	end
+	
+	-- final draw
+	love.graphics.push()
+	
+	love.graphics.translate(x, y)
+	love.graphics.rotate(math.rad(r))
+	love.graphics.scale(sx, sy)
+	love.graphics.shear(kx, ky)
+	love.graphics.translate(-ox, -oy)
+	
+	for i, charsprite in pairs(instance.sprites) do
+		sprite.update(charsprite, fontscene)
+		sprite.draw(charsprite, fontscene, {queued = false})
+	end
+	
+	love.graphics.pop()
 end
 end--#endregion
 

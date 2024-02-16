@@ -102,7 +102,9 @@ function scene.draw(self)
 	self.arrow.y = focused.y + 8
 	sprite.draw(self.arrow, self)
 	
-	text.draw("Hello world!", fonts2.font_freaks12, 0, 0)
+	queue.add(self.drawlist, 2, function()
+		text.print("Hello world!", "font_freaks12", 100, 100)
+	end)
 end
 
 return scene

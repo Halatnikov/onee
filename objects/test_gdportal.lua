@@ -56,13 +56,13 @@ function object.draw(self, scene)
 	
 	self.canvas.back:renderTo(function()
 		love.graphics.clear()
-		sprite.draw(self.sprites.back, scene, false)
+		sprite.draw(self.sprites.back, scene, {queued = false, ignorescale = true})
 	end)
 	self.canvas.front:renderTo(function()
 		love.graphics.clear()
-		sprite.draw(self.sprites.front, scene, false)
-		sprite.draw(self.sprites.detail, scene, false)
-		sprite.draw(self.sprites.icon, scene, false)
+		sprite.draw(self.sprites.front, scene, {queued = false, ignorescale = true})
+		sprite.draw(self.sprites.detail, scene, {queued = false, ignorescale = true})
+		sprite.draw(self.sprites.icon, scene, {queued = false, ignorescale = true})
 	end)
 	
 	local x = self.x or 0
