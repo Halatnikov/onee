@@ -8,10 +8,10 @@ function spritesheet.add(sprite, path, frame, animdef, framedef, export)
 	sprite.cached_images[path] = sprite.cached_images[path] or love.graphics.newImage(path)
 	local image = sprite.cached_images[path]
 	
-	if not sheetdef.x then sheetdef.x = animdef.sheet.x or 0 end
-	if not sheetdef.y then sheetdef.y = animdef.sheet.y or animdef.sheet.x or 0 end
-	if not sheetdef.width then sheetdef.width = animdef.sheet.width or image:getWidth() end
-	if not sheetdef.height then sheetdef.height = animdef.sheet.height or animdef.sheet.width or image:getHeight() end
+	sheetdef.x = sheetdef.x or animdef.sheet.x or 0
+	sheetdef.y = sheetdef.y or animdef.sheet.y or animdef.sheet.x or 0
+	sheetdef.width = sheetdef.width or animdef.sheet.width or image:getWidth()
+	sheetdef.height = sheetdef.height or animdef.sheet.height or animdef.sheet.width or image:getHeight()
 	
 	local canvas = love.graphics.newCanvas(sheetdef.width, sheetdef.height)
 	canvas:renderTo(function()
@@ -31,13 +31,13 @@ function spritesheet.strip(sprite, path, animdef, export)
 	sprite.cached_images[path] = sprite.cached_images[path] or love.graphics.newImage(path)
 	local image = sprite.cached_images[path]
 	
-	if not stripdef.x then stripdef.x = 0 end
-	if not stripdef.y then stripdef.y = 0 end
+	stripdef.x = stripdef.x or 0
+	stripdef.y = stripdef.y or 0
 	-- TODO: only one horizontal row strips for now
-	if not stripdef.width then stripdef.width = image:getWidth() / stripdef.frames end
-	if not stripdef.height then stripdef.height = image:getHeight() end
+	stripdef.width = stripdef.width or image:getWidth() / stripdef.frames
+	stripdef.height = stripdef.height or image:getHeight()
 	
-	if not animdef.frames then animdef.frames = {} end
+	animdef.frames = animdef.frames or {}
 	for i=1, stripdef.frames do
 		if not animdef.frames[i] then animdef.frames[i] = {} end
 		local framedef = animdef.frames[i]

@@ -102,6 +102,7 @@ local function _int(arg, default) -- int* pointer
 end
 
 local function _float(arg, default) -- float* pointer
+	
 	return _convert(arg, default, "float")
 end
 
@@ -283,6 +284,7 @@ end
 function imgui.table_fancy_allow(arg)
 	
 	if arg.x and arg.y then
+		if not (type(arg.x) == "number" and type(arg.y) == "number") then return end 
 		local _v = _float({arg.x, arg.y})
 		gui.DragFloat2("x & y", _v)
 		
@@ -1026,6 +1028,8 @@ function imgui.window.main()
 		
 		------------------------------------------------ GLOBAL VARIABLES
 		imgui.table(_G, "Global variables")
+		
+		imgui.table(fonts2, "i'm too lazy, fonts", {fancy=true,imagescale=1})
 		
 		gui.End()
 	end

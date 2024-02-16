@@ -8,15 +8,15 @@ function nineslice.add(name, anim, frame, image, animdef, framedef, export)
 	assert(ninedef.x1, "nineslice.add() | no nine-slice size for animation \""..anim.."\" in \""..name.."\"")
 	
 	-- add missing nine-slice variables
-	if not ninedef.x2 then ninedef.x2 = ninedef.x1 end
-	if not ninedef.y1 then ninedef.y1 = ninedef.x1 end
-	if not ninedef.y2 then ninedef.y2 = ninedef.y2 end
+	ninedef.x2 = ninedef.x2 or ninedef.x1
+	ninedef.y1 = ninedef.y1 or ninedef.x1
+	ninedef.y2 = ninedef.y2 or ninedef.y1
 	
-	if not ninedef.left then ninedef.left = TILE.TILE end
-	if not ninedef.right then ninedef.right = TILE.TILE end
-	if not ninedef.top then ninedef.top = TILE.TILE end
-	if not ninedef.bottom then ninedef.bottom = TILE.TILE end
-	if not ninedef.body then ninedef.body = TILE.TILE end
+	ninedef.left = ninedef.left or TILE.TILE
+	ninedef.right = ninedef.right or TILE.TILE
+	ninedef.top = ninedef.top or TILE.TILE
+	ninedef.bottom = ninedef.bottom or TILE.TILE
+	ninedef.body = ninedef.body or TILE.TILE
 	
 	if ninedef.sides then
 		ninedef.left = ninedef.sides
@@ -28,8 +28,8 @@ function nineslice.add(name, anim, frame, image, animdef, framedef, export)
 	end
 	
 	-- add new assets entries
-	if not export._nineslices then export._nineslices = {} end
-	if not export._nineslices[anim] then export._nineslices[anim] = {} end
+	export._nineslices = export._nineslices or {}
+	export._nineslices[anim] = export._nineslices[anim] or {}
 	export._nineslices[anim][frame] = {}
 	
 	local images = export._nineslices[anim][frame]

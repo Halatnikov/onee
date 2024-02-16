@@ -3,6 +3,7 @@ sprite = {}
 model = {
 	anim = {},
 }
+font = {}
 text = {}
 
 -- temp font storage
@@ -72,7 +73,7 @@ end
 
 do--#region SPRITES
 --! LOAD NEW SPRITE ASSET
-function asset.sprite(path, scene)
+function asset.sprite(path, scene, sprite) -- string, table, table=
 	local name = string.tokenize(path, "/", -1)
 	if scene.assets[name] then return end -- already loaded
 	
@@ -84,7 +85,7 @@ function asset.sprite(path, scene)
 	end)
 	love.graphics.present()
 	
-	local sprite = dofile("sprites/"..path) -- init
+	sprite = sprite or dofile("sprites/"..path) -- init
 	scene.assets[name] = {}
 	sprite.cached_images = {}
 	
@@ -149,18 +150,33 @@ function asset.sprite(path, scene)
 					
 				end
 			
-			-- get single frame from filename if no frames defined
+			-- no frames defined
 			else
-				animdef.frames = {[1] = {}}
-				
-				local imagepath = path.."/"..filename
-				if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
-					imagepath = string.remove(imagepath, path.."/")
+				-- get single frame from spritesheet
+				if animdef.sheet then
+					animdef.frames = {[1] = {sheet = {}}}
+					local framedef = animdef.frames[1]
+					
+					local imagepath = path.."/"..filename
+					if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
+						imagepath = string.remove(imagepath, path.."/")
+					end
+					
+					spritesheet.add(sprite, "sprites/"..imagepath..".png", 1, animdef, framedef, scene.assets[name][anim])
+					
+				-- get single frame from filename
+				else
+					animdef.frames = {[1] = {}}
+					
+					local imagepath = path.."/"..filename
+					if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
+						imagepath = string.remove(imagepath, path.."/")
+					end
+					
+					local image = love.graphics.newImage("sprites/"..imagepath..".png")
+					
+					scene.assets[name][anim][1] = image -- new frame entry
 				end
-				
-				local image = love.graphics.newImage("sprites/"..imagepath..".png")
-				
-				scene.assets[name][anim][1] = image -- new frame entry
 			end
 			
 		end
@@ -190,8 +206,8 @@ function asset.sprite(path, scene)
 			assert(image, "asset.sprite() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"")
 			
 			-- frame width/height
-			if not framedef.width then framedef.width = image:getWidth() end
-			if not framedef.height then framedef.height = image:getHeight() end
+			framedef.width = framedef.width or image:getWidth()
+			framedef.height = framedef.height or image:getHeight()
 			
 			-- tiled sprites
 			if sprite.tiled then image:setWrap(TILE.TILE, TILE.TILE) end
@@ -204,9 +220,9 @@ function asset.sprite(path, scene)
 			end
 			
 			-- add missing frame variables
-			if not framedef.length then framedef.length = 1 end
-			if not framedef.x then framedef.x = animdef.x or 0 end
-			if not framedef.y then framedef.y = animdef.y or 0 end
+			framedef.length = framedef.length or 1
+			framedef.x = framedef.x or animdef.x or 0
+			framedef.y = framedef.y or animdef.y or 0
 			
 		end
 		
@@ -221,7 +237,7 @@ function asset.sprite(path, scene)
 		if animdef.seq and not animdef.seq_start then
 			animdef.seq_start = animdef.seq -- make identical seq_start and seq
 		end
-		if not animdef.speed then animdef.speed = 0 end
+		animdef.speed = animdef.speed or 0
 		
 	end
 	
@@ -513,20 +529,32 @@ function sprite.debug_draw(sprite, scene)
 	
 	-- bbox
 	if sprite.tiled then
-		local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
-		local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
-		
-		love.graphics.polygon(mode, poly.unpack(bbox))
+		if angle ~= 0 then
+			local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
+			local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
+			
+			love.graphics.polygon(mode, poly.unpack(bbox))
+		else
+			love.graphics.rectangle(mode, bbox_x, bbox_y, width, height)
+		end
 	elseif sprite.nineslice then
-		local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
-		local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
-		
-		love.graphics.polygon(mode, poly.unpack(bbox))
+		if angle ~= 0 then
+			local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
+			local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
+			
+			love.graphics.polygon(mode, poly.unpack(bbox))
+		else
+			love.graphics.rectangle(mode, bbox_x, bbox_y, width, height)
+		end
 	else
-		local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
-		local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
-		
-		love.graphics.polygon(mode, poly.unpack(bbox))
+		if angle ~= 0 then
+			local bbox_old = poly.rect(bbox_x, bbox_y, width, height)
+			local bbox = poly.rotate(bbox_old, angle, framedef.x * scalex, framedef.y * scaley)
+			
+			love.graphics.polygon(mode, poly.unpack(bbox))
+		else
+			love.graphics.rectangle(mode, bbox_x, bbox_y, width, height)
+		end
 	end
 	
 	-- origin
@@ -745,7 +773,7 @@ end--#endregion
 
 ---------------------------------------------------------------- TEXT
 
-do--#region text
+do--#region TEXT
 --! @function text
 local function processtext(arg)
 	if not arg then return end
@@ -827,6 +855,148 @@ function text.icons(arg)
     end
 end
 
+end--#endregion
+
+---------------------------------------------------------------- SPRITEFONTS
+
+fonts2 = {}
+
+do--#region SPRITEFONTS
+--! LOAD NEW SPRITEFONT ASSET
+function asset.spritefont(path)
+	local name = string.tokenize(path, "/", -1)
+	if fonts2[name] then return end -- already loaded
+	
+	local time_start = love.timer.getTime()
+	love.graphics.reset(true)
+	window.draw(function()
+		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
+		love.graphics.printf("preprocessing font "..path, onee.width/2-150, onee.height-16, 150*2, "center")
+	end)
+	love.graphics.present()
+	
+	local sprite = dofile("sprites/"..path) -- init
+	fonts2[name] = {}
+	sprite.cached_images = {}
+	
+	sprite.tiled = nil -- nope
+	sprite.nineslice = nil
+	
+	local fontdef = sprite.font
+	local font = fonts2[name]
+	
+	-- mini scene for storing assets
+	font.scene = {
+		scene = true,
+		font = true,
+		name = name,
+		
+		assets = {},
+		sprites = {},
+		
+		instances = {},
+	}
+	
+	font.scene = table.protect(font.scene, {"scene", "font"})
+	
+	font.font = fontdef
+	
+	-- static character rows helper
+	if fontdef.rows then
+		for i, row in ipairs(fontdef.rows) do
+			local filename = row.filename or sprite.filename
+			
+			local imagepath = path.."/"..filename
+			if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
+				imagepath = string.remove(imagepath, path.."/")
+			end
+			imagepath = "sprites/"..imagepath..".png"
+			
+			sprite.cached_images[imagepath] = sprite.cached_images[imagepath] or love.image.newImageData(imagepath)
+			local imagedata = sprite.cached_images[imagepath]
+			
+			local chars = string.split(row.chars)
+			row.x = row.x or 0
+			row.y = row.y or 0
+			row.width = row.width or imagedata:getWidth()
+			row.height = row.height or fontdef.height or imagedata:getHeight()
+			
+			local xoffset = row.x
+			
+			for i=1, #chars do
+				local x, width
+				
+				for j = xoffset, row.width do
+					local done = false
+					local r, g, b
+					
+					if j >= row.width then done = true end
+					
+					if not done then r, g, b = imagedata:getPixel(j, row.y) end
+					if (r == 1 and g == 0 and b == 1) then done = true end -- pink line separator
+					
+					if done then
+						x = xoffset
+						width = j - xoffset
+						
+						xoffset = j + 1
+						break
+					end
+				end
+				
+				sprite.animations[chars[i]] = {
+					filename = filename,
+					sheet = {x = x, y = row.y, width = width, height = row.height},
+				}
+			end
+			
+		end
+	end
+	
+	local time_finish = love.timer.getTime()
+	print("font "..path.." took "..math.round(time_finish - time_start, 4))
+	
+	sprite.cached_images = nil
+	asset.sprite(path, font.scene, sprite) -- done
+end
+
+function text.new(arg, font)
+	local scene = font.scene
+	local id = string.md5(table.concat(arg))
+	
+	local t = {
+		instance = true,
+		text = true,
+		scene = scene.name,
+		id = id,
+		
+		sprites = {},
+	}
+	t = table.protect(t, {"instance", "id", "scene", "text"})
+	
+	scene.instances[id] = t
+end
+
+function text.draw(arg, font, x, y, r, sx, sy, ox, oy, kx, ky)
+	if type(arg) == "string" then arg = {arg} end
+	if type(font) == "string" then font = fonts2[font] end
+	
+	x = x or 0; x = math.round(x)
+	y = y or 0; y = math.round(y)
+	r = r or 0; math.rad(math.round(r))
+	sx = sx or 1
+	sy = sy or sx or 1
+	ox = ox or 0
+	oy = oy or 0
+	kx = kx or 0
+	ky = ky or 0
+	
+	local scene = font.scene
+	local id = string.md5(table.concat(arg))
+	
+	local instance = scene.instances[id] or text.new(arg, font)
+	
+end
 end--#endregion
 
 _prof.hook("asset")

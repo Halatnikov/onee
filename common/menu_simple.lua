@@ -41,6 +41,7 @@ menu.w, menu.h = onee.width-64, 16
 menu.padding = 4
 menu.theme = menu.themes.textonly
 
+--!
 function menu.push(name, params)
 	params = params or {}
 	
@@ -78,32 +79,39 @@ function menu.push(name, params)
 	menu.root = menu.ui[1]
 end
 
+--!
 function menu.pop()
 	yui[menu.name] = gui.Ui:new(menu.ui)
 	menu.ui = nil
 end
 
+--!
 function menu.close()
 	yui.open[menu.name] = nil
 	yui.draw()
 end
 
+--!
 function menu.label(label, t)
 	local item = gui.Label {
 		w = menu.w, h = menu.h, align = "left",
 		xx = menu.x-8,
 		text = label or "",
 	}
+	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
 end
 
+--!
 function menu.spacer(size, t)
 	local item = gui.Spacer {h = size or menu.h}
+	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
 end
 
+--!
 function menu.button(label, description, func, t)
 	local item = gui.Button {
 		align = "left",
@@ -111,14 +119,17 @@ function menu.button(label, description, func, t)
 		description = description,
 		onHit = func or noop,
 	}
+	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
 end
 
+--!
 function menu.disabled(label, description, t)
 	return menu.button(label, description, nil, table.append({theme = menu.themes.disabled}, t or {}))
 end
 
+--!
 function menu.checkbox(label, description, var, t)
 	local item = gui.Columns {
 		description = description,
@@ -136,10 +147,12 @@ function menu.checkbox(label, description, var, t)
 			end,
 		},
 	}
+	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
 end
 
+--!
 function menu.slider(label, description, var, min, max, step, t)
 	local item = gui.Columns {
 		description = description,
@@ -167,10 +180,37 @@ function menu.slider(label, description, var, min, max, step, t)
 			},
 		},
 	}
+	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
 end
 
+--!
+function menu.choice(label, description, var, choices, wrap, t)
+	local item = gui.Columns {
+		description = description,
+		
+		gui.Label {
+			w = menu.w/2, h = menu.h, align = "left", focus = true,
+			text = label or "",
+		},
+		gui.Choice {
+			w = menu.w/3, theme = menu.themes.default,
+			choices = choices,
+			default = var,
+			nowrap = not wrap,
+
+			onChange = function(self, choice) 
+				var = choice[2]
+			end,
+		},
+	}
+	
+	table.append(item, t or {})
+	table.insert(menu.root, item)
+end
+
+--!
 function menu.textinput(label, description, var, t)
 	local item = gui.Columns {
 		description = description,
@@ -194,6 +234,7 @@ function menu.textinput(label, description, var, t)
 			end,
 		},
 	}
+	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
 end

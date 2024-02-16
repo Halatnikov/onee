@@ -12,7 +12,7 @@ function gif.add(path, animdef, export)
 	assert(gif.nimages > 0, "gif.add() | invalid gif \""..path.."\"")
 	
 	local no_seq -- init frames and seq from gif
-	if not animdef.frames then animdef.frames = {} end
+	animdef.frames = animdef.frames or {}
 	if not animdef.seq then animdef.seq = {}; no_seq = true end
 	
 	if not animdef.loops then -- loop: 0 = infinite, false = don't loop, >1 = loop x times 
@@ -34,16 +34,14 @@ function gif.add(path, animdef, export)
 		if delay < 0.01 then delay = 0.01 end -- minimum delay
 		delays[i] = delay -- count all delays
 		
-		if not animdef.frames[i] then animdef.frames[i] = {} end -- add to frames and seq
+		animdef.frames[i] = animdef.frames[i] or {} -- add to frames and seq
 		if no_seq then animdef.seq[i] =  i end
 	end
 	
 	asset.negative_frames(animdef)
 	
 	local base_delay = table.mostcommon(delays) -- get the most common delay
-	if not animdef.speed then
-		animdef.speed = math.round(gif.nimages / (base_delay * gif.nimages), 2) -- speed
-	end
+	animdef.speed = animdef.speed or math.round(gif.nimages / (base_delay * gif.nimages), 2) -- speed
 	
 	-- canvas to paste incomplete gif frames onto
 	local canvas = love.graphics.newCanvas(gif.width, gif.height)

@@ -12,7 +12,6 @@ local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
 local clamp = require('onee/libs/yui/gear.algo').clamp
-local shadowtext = require 'onee/libs/yui/gear.shadowtext'
 
 local Choice = setmetatable({
     __call = function(cls, args) return cls:new(args) end
@@ -26,7 +25,6 @@ Choice.__index = Choice
 -- @field nowrap (boolean) disable choices wrapping
 -- @field[opt='center'] valign (string) vertical alignment 'top', 'bottom', 'center'
 -- @field[opt='center'] align (string) horizontal alignment, 'left', 'center', 'right'
--- @field notranslate (boolean) don't translate text
 -- @table ChoiceAttributes
 
 
@@ -45,15 +43,12 @@ function Choice:new(args)
     for i,choice in ipairs(self.choices) do
         -- Expand shorthands
         if type(choice) ~= 'table' then
-            choice = {
-                text = tostring(choice),
-                value = choice
-            }
+            choice = {tostring(choice), choice}
 
             self.choices[i] = choice
         end
         -- Mark default choice if needed
-        if choice.value == self.default then
+        if choice[2] == self.default then
             self.index = i
         end
     end
@@ -166,14 +161,12 @@ function Choice:draw()
     end
 
     -- draw text
-    local label = self.choices[self.index].text
 
     y = y + core.verticalOffsetForAlign(self.valign, font, h)
 
     love.graphics.setColor(c.fg)
     love.graphics.setFont(font)
-    --shadowtext.printf(text, x+h+2, y, w-2*(h + 2), self.align)
-    love.graphics.printf(text(label), x+h+2, y, w-2*(h + 2), self.align)
+    love.graphics.printf(text(self.choices[self.index][1]), x+h+2, y, w-2*(h + 2), self.align)
 end
 
 return Choice

@@ -11,6 +11,8 @@ local str = "You"
 local textinput = "i'm freaks"
 
 function scene.init(self)
+	asset.spritefont("font_freaks12")
+	
 	asset.sprite("spr_menu_arrow_16", self)
 	asset.sprite("checkerboard", self)
 	
@@ -42,26 +44,7 @@ function scene.init(self)
 	
 	menu.slider("Slider", nil, num, 0, 10, 1)
 	
-	table.insert(menu.root, gui.Columns {
-		gui.Label {
-			w = menu.w/2, h = menu.h, align = "left", focus = true,
-			text = "Multi-choice",
-		},
-		gui.Choice {
-			w = menu.w/3, theme = menu.themes.default,
-			choices = {
-				{ text = "Have", value = "have" },
-				{ text = "Yo{null}u", value = "you" },
-				{ text = "Ever",  value = "ever" }
-			},
-			default = str,
-			nowrap = true,
-
-			onChange = function(self, choice) 
-				str = choice.value
-			end,
-		},
-	})
+	menu.choice("Multi-choice", nil, str, {{"Have", "have"}, {"Yo{null}u", "you"}, {"Ever", "ever"}}, false)
 	
 	menu.textinput("Text input", "aaaaaaaaaaaaaaaaaaaa", textinput)
 	
@@ -118,6 +101,8 @@ function scene.draw(self)
 	
 	self.arrow.y = focused.y + 8
 	sprite.draw(self.arrow, self)
+	
+	text.draw("Hello world!", fonts2.font_freaks12, 0, 0)
 end
 
 return scene

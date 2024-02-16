@@ -4,7 +4,7 @@ sprite.tiled = true
 
 sprite.animations = {
 
-	idle = { filename = "checkerboard" },
+	idle = {filename = "checkerboard"},
 	
 }
 
