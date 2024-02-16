@@ -103,7 +103,7 @@ function scene.draw(self)
 	sprite.draw(self.arrow, self)
 	
 	queue.add(self.drawlist, 2, function()
-		text.print("Hello world!", "font_freaks12", 100, 100)
+		text.print({"Hello world!", {255,0,255, " you too"}, " yeah"}, "font_freaks12", 100, 100)
 	end)
 end
 

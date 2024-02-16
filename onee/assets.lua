@@ -496,6 +496,7 @@ function sprite.draw(sprite, scene, args)
 	else
 		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
 		draw()
+		love.graphics.reset()
 	end
 end
 
@@ -867,6 +868,7 @@ fonts2 = {}
 
 do--#region SPRITEFONTS
 --! LOAD NEW SPRITEFONT ASSET
+-- an extension of sprite
 function asset.spritefont(path)
 	local name = string.tokenize(path, "/", -1)
 	if fonts2[name] then return end -- already loaded
@@ -892,7 +894,7 @@ function asset.spritefont(path)
 	-- mini scene for storing assets
 	font.scene = {
 		scene = true,
-		font = true,
+		fontscene = true,
 		name = name,
 		
 		assets = {},
@@ -966,17 +968,17 @@ function asset.spritefont(path)
 	print("font "..path.." took "..math.round(time_finish - time_start, 4))
 	
 	sprite.cached_images = nil
-	asset.sprite(path, font.scene, sprite) -- done
+	asset.sprite(path, font.scene, sprite) -- done, move on
 end
 
 --!
 function text.new(arg, font)
 	local scene = font.scene
-	local id = string.md5(table.concat(arg))
+	local id = string.md5(unpack(arg))
 	
 	local t = {
 		instance = true,
-		text = true,
+		fontinstance = true,
 		scene = scene.name,
 		id = id,
 		
@@ -991,7 +993,7 @@ function text.new(arg, font)
 	return t
 end
 
---!
+--! alias
 function text.printf(arg, font, x, y, limit, alignh, alignv, r, sx, sy, ox, oy, kx, ky)
 	return text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, alignv)
 end
@@ -1001,20 +1003,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	if type(arg) == "string" then arg = {arg} end
 	if type(font) == "string" then font = fonts2[font] end
 	
-	x = x or 0; x = math.round(x)
-	y = y or 0; y = math.round(y)
-	r = r or 0; r = math.round(r)
-	sx = sx or 1
-	sy = sy or sx or 1
-	ox = ox or 0
-	oy = oy or 0
-	kx = kx or 0
-	ky = ky or 0
-	
 	local fontscene = font.scene
 	local fontdef = font.font
 	
-	local id = string.md5(table.concat(arg))
+	-- update or create instance
+	local id = string.md5(unpack(arg))
 	fontscene.instances[id] = fontscene.instances[id] or text.new(arg, font)
 	local instance = fontscene.instances[id]
 	
@@ -1025,53 +1018,94 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	local width, height = 0, 0
 	local charcount = 0
 	
-	-- loop  through all chunks
-	for i, chunk in ipairs(arg) do
-		
-		-- regular text
-		if type(chunk) ~= "table" then
-			chunk = tostring(chunk)
+	local curline = 1
+	
+	-- main function
+	local function handlechunk(chunk, func)
+		local text = tostring(chunk[#chunk])
+		func = func or noop
 			
-			-- loop through characters
-			for i, char in ipairs(string.split(chunk)) do
-				-- find character in available fonts
-				local validchar, curfont
-				for k, font in pairs(fontscene.assets) do
-					if font[char] then 
-						validchar = true
-						curfont = k
-						break
-					end
-				end
-				
-				if validchar then
-					charcount = charcount + 1
-					
-					-- sprite per character
-					instance.sprites[charcount] = instance.sprites[charcount]
-						or sprite.init(instance.sprites[charcount], fontscene, curfont, {animation = char})
-					
-					local charsprite = instance.sprites[charcount]
-					
-					local spritedef = fontscene.sprites[curfont]
-					local animdef = spritedef.animations[char]
-					local framedef = animdef.frames[charsprite.frame]
-					
-					charsprite.x = curx
-					charsprite.y = cury
-					
-					curx = curx + framedef.width + fontdef.spacing
+		-- loop through characters
+		for i, char in ipairs(string.split(text)) do
+			-- find character in available fonts
+			local validchar, curfont
+			for k, font in pairs(fontscene.assets) do
+				if font[char] then 
+					validchar = true
+					curfont = k
+					break
 				end
 			end
+			
+			if validchar then
+				charcount = charcount + 1
+				
+				-- sprite per character
+				instance.sprites[charcount] = instance.sprites[charcount]
+					or sprite.init(instance.sprites[charcount], fontscene, curfont, {animation = char})
+				
+				local charsprite = instance.sprites[charcount]
+				
+				local spritedef = fontscene.sprites[curfont]
+				local curfontdef = spritedef.font
+				local animdef = spritedef.animations[char]
+				local framedef = animdef.frames[charsprite.frame]
+				
+				charsprite.x = curx
+				charsprite.y = cury
+				
+				charsprite.realx = curx
+				charsprite.realy = cury
+				
+				curx = curx + framedef.width + curfontdef.spacing
+				
+				func(charsprite, i)
+			end
 		end
-		
 	end
 	
+	-- iterator function
+	local function loopchunks(arg)
+		for i, chunk in ipairs(arg) do
+			if type(chunk) ~= "table" then chunk = {chunk} end
+			
+			if #chunk == 1 then
+				-- regular text
+				handlechunk(chunk)
+				
+			elseif (#chunk == 3+1 or #chunk == 4+1)
+				and (type(chunk[1]) == "number" and type(chunk[2]) == "number" and type(chunk[3]) == "number") then
+				
+				-- colored text
+				handlechunk(chunk, function(charsprite)
+					local r, g, b = chunk[1], chunk[2], chunk[3]
+					local a = (type(chunk[4]) == "number") and chunk[4] or 100
+					
+					charsprite.rgb = {r, g, b}
+					charsprite.opacity = a
+				end)
+			end
+		end
+	end
+	
+	-- loop  through all chunks
+	loopchunks(arg)
+	
 	-- final draw
+	x = x or 0; x = math.round(x)
+	y = y or 0; y = math.round(y)
+	r = r or 0; r = math.rad(math.round(r))
+	sx = sx or 1
+	sy = sy or sx or 1
+	ox = ox or 0
+	oy = oy or 0
+	kx = kx or 0
+	ky = ky or 0
+	
 	love.graphics.push()
 	
 	love.graphics.translate(x, y)
-	love.graphics.rotate(math.rad(r))
+	love.graphics.rotate(r)
 	love.graphics.scale(sx, sy)
 	love.graphics.shear(kx, ky)
 	love.graphics.translate(-ox, -oy)
@@ -1082,6 +1116,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	end
 	
 	love.graphics.pop()
+	
+	-- clean inactive instances
+	for k,v in pairs(fontscene.instances) do
+		if v.dt ~= dt then fontscene.instances[k] = nil end
+	end
 end
 end--#endregion
 
