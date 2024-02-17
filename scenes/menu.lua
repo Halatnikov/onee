@@ -101,7 +101,8 @@ function scene.draw(self)
 	sprite.draw(self.arrow, self)
 	
 	queue.add(self.drawlist, 2, function()
-		text.print({"brb ", {"shake", "accidentally"}, {{0,255,0}," inventing"}, " my own ", {{{"shake", strengthy = 3},{0,255,255}}, "scribble"}}, "font_12", 100, 90)
+		text.print({"brb ", "{key_a}", {"shake", " accidentally"}, {{0,255,0}," inventing"}, " my own ", {{{"shake", strengthy = 3},{0,255,255}}, "scribble"}}, "font_12", 100, 82)
+		text.print("test", "font_16", 100, 60)
 	end)
 end
 

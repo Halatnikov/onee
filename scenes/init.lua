@@ -5,23 +5,17 @@ function scene.init(self)
 	window.update() -- init window
 	
 	-- init fonts
-	fonts.proggy_clean = love.graphics.newFont("fonts/proggy_clean.fnt")
+	fonts.proggy_clean = love.graphics.newFont("fonts/ProggyClean.ttf", 16, "mono", 2)
+	fonts.proggy_clean:setFilter("nearest")
 	onee.font = fonts.proggy_clean -- set default font
 	
-	fonts.controls = love.graphics.newFont("fonts/controls.fnt")
-	text.icons("controls")
-	
-	fonts.freaks12 = love.graphics.newFont("fonts/freaks12.fnt")
-	fonts.freaks12:setFallbacks(fonts.controls)
-	
-	fonts.freaks16 = love.graphics.newFont("fonts/freaks16.fnt")
-	fonts.freaks16:setFallbacks(fonts.controls)
-	
-	fonts.titlecard = love.graphics.newFont("fonts/titlecard.fnt")
+	asset.spritefont("font_controls")
 	
 	asset.spritefont("font_12")
+	font.append("font_12", "font_controls")
 	
 	asset.spritefont("font_16")
+	font.append("font_16", "font_controls")
 	
 	asset.spritefont("font_titlecard")
 	

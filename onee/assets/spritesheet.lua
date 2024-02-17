@@ -5,22 +5,20 @@ local spritesheet = {}
 function spritesheet.add(sprite, path, frame, animdef, framedef, export)
 	local sheetdef = framedef.sheet
 	
-	sprite.cached_images[path] = sprite.cached_images[path] or love.graphics.newImage(path)
-	local image = sprite.cached_images[path]
+	sprite.cached_images[path] = sprite.cached_images[path] or love.image.newImageData(path)
+	local imagedata = sprite.cached_images[path]
 	
 	sheetdef.x = sheetdef.x or animdef.sheet.x or 0
 	sheetdef.y = sheetdef.y or animdef.sheet.y or animdef.sheet.x or 0
-	sheetdef.width = sheetdef.width or animdef.sheet.width or image:getWidth()
-	sheetdef.height = sheetdef.height or animdef.sheet.height or animdef.sheet.width or image:getHeight()
+	sheetdef.width = sheetdef.width or animdef.sheet.width or imagedata:getWidth()
+	sheetdef.height = sheetdef.height or animdef.sheet.height or animdef.sheet.width or imagedata:getHeight()
 	
-	local canvas = love.graphics.newCanvas(sheetdef.width, sheetdef.height)
-	canvas:renderTo(function()
-		love.graphics.draw(image, -sheetdef.x, -sheetdef.y)
-	end)
+	local output = love.image.newImageData(sheetdef.width, sheetdef.height)
+	output:paste(imagedata, 0, 0, sheetdef.x, sheetdef.y, sheetdef.width, sheetdef.height)
 	
-	export[frame] = love.graphics.newImage(canvas:newImageData())
+	export[frame] = love.graphics.newImage(output)
 	
-	canvas = nil -- clear from memory
+	output = nil -- clear from memory
 	collectgarbage()
 end
 
@@ -28,25 +26,46 @@ function spritesheet.strip(sprite, path, animdef, export)
 	local stripdef = animdef.strip
 	assert(stripdef.frames, "spritesheet.strip() | no frame count specified in spritestrip for \""..path.."\"")
 	
-	sprite.cached_images[path] = sprite.cached_images[path] or love.graphics.newImage(path)
-	local image = sprite.cached_images[path]
+	sprite.cached_images[path] = sprite.cached_images[path] or love.image.newImageData(path)
+	local imagedata = sprite.cached_images[path]
 	
 	stripdef.x = stripdef.x or 0
 	stripdef.y = stripdef.y or 0
-	-- TODO: only one horizontal row strips for now
-	stripdef.width = stripdef.width or image:getWidth() / stripdef.frames
-	stripdef.height = stripdef.height or image:getHeight()
+	stripdef.padding = stripdef.padding or 0
+	
+	-- TODO: sprites per row detection
+	stripdef.mode = stripdef.mode or "horizontal"
+	
+	if stripdef.mode == "horizontal" then
+		stripdef.width = stripdef.width or imagedata:getWidth() / stripdef.frames
+		stripdef.height = stripdef.height or imagedata:getHeight()
+	end
+	if stripdef.mode == "vertical" then
+		stripdef.width = stripdef.width or imagedata:getWidth()
+		stripdef.height = stripdef.height or imagedata:getHeight() / stripdef.frames
+	end
 	
 	animdef.frames = animdef.frames or {}
 	for i=1, stripdef.frames do
-		if not animdef.frames[i] then animdef.frames[i] = {} end
+		animdef.frames[i] = animdef.frames[i] or {}
 		local framedef = animdef.frames[i]
 		
+		local x, y
+		local width = stripdef.width
+		local height = stripdef.height
+		
+		if stripdef.mode == "horizontal" then
+			x = stripdef.x + (stripdef.width * (i - 1)) + (stripdef.padding * (i - 1))
+			y = stripdef.y
+		end
+		if stripdef.mode == "vertical" then
+			x = stripdef.x
+			y = stripdef.y + (stripdef.height * (i - 1)) + (stripdef.padding * (i - 1))
+		end
+		
 		framedef.sheet = {
-			x = stripdef.x + (stripdef.width * (i - 1)),
-			y = stripdef.y,
-			width = stripdef.width,
-			height = stripdef.height,
+			x = x, y = y,
+			width = width, height = height,
 		}
 		
 		spritesheet.add(sprite, path, i, animdef, framedef, export)

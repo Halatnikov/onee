@@ -166,7 +166,7 @@ function Choice:draw()
 
     love.graphics.setColor(c.fg)
     love.graphics.setFont(font)
-    love.graphics.printf(text(self.choices[self.index][1]), x+h+2, y, w-2*(h + 2), self.align)
+    love.graphics.printf(self.choices[self.index][1], x+h+2, y, w-2*(h + 2), self.align)
 end
 
 return Choice

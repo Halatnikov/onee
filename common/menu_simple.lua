@@ -63,14 +63,14 @@ function menu.push(name, params)
 				local description = focused.description
 				
 				if description then
-					local font = fonts.freaks16
+					local font = fonts.freaks16 or onee.font
 					local width, wraps = font:getWrap(description, onee.width - 4)
 					local height = font:getHeight()
 					
 					love.graphics.setColor(0, 0, 0, 0.75)
 					love.graphics.rectangle("fill", 0, onee.height - (height * #wraps) - 4, onee.width, 64)
 					love.graphics.reset()
-					love.graphics.printf(text(description), fonts.freaks16, 4, onee.height - (height * #wraps) - 2, onee.width - 4)
+					love.graphics.printf(description, 4, onee.height - (height * #wraps) - 2, onee.width - 4)
 				end
 			end,
 		},

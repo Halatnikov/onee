@@ -6,10 +6,8 @@ model = {
 font = {}
 text = {}
 
--- temp font storage
-fonts = {
-	icons = { __anim = {},},
-}
+-- containers
+fonts = {}
 
 -- constants
 TILE = {
@@ -776,102 +774,15 @@ function model.draw(model, scene)
 end
 end--#endregion
 
----------------------------------------------------------------- TEXT
-
-do--#region TEXT
---! @function text
-local function processtext(arg)
-	if not arg then return end
-	
-	local output = string.gsub(arg, "(%b{})", function(icon)
-		icon = string.sub(icon, 2, -2)
-		
-		if string.find(icon, "input_") then
-			local button = string.tokenize(icon, "_", 2)
-			
-			if input.mode == "keyboard" then 
-				local prefix = "key_"
-				local config = config.input.keyboard[button]
-				
-				if config then
-					if config.k then
-						icon = prefix..config.k[1]
-					elseif config.m then
-						
-					elseif config.mw then
-						
-					else
-						icon = "null"
-					end
-				else
-					icon = "null"
-				end
-			end
-			
-			if not (fonts.icons[icon] or fonts.icons.__anim[icon]) then icon = "unknown" end
-		end
-		
-		if fonts.icons.__anim[icon] then
-			local anim = fonts.icons.__anim[icon]
-			
-			anim.timer:update()
-			
-			icon = icon..anim.current
-		end
-		
-		return fonts.icons[icon]
-	end)
-	
-	return output
-end
-
-setmetatable(text, {__call = function(t, ...) return processtext(...) end})
-
---! add font icons
-function text.icons(arg)
-	local utf8 = require("utf8")
-	
-	for line in love.filesystem.lines("fonts/"..arg..".txt") do
-		local id, name, animdelay = unpack(string.tokenize(line, " "))
-		
-        fonts.icons[name] = utf8.char(tonumber(id))
-		
-		local animname = string.left(name, -1)
-		
-		if animdelay then
-			fonts.icons.__anim[animname] = {}
-			local anim = fonts.icons.__anim[animname]
-			
-			anim.delay = tonumber(animdelay)
-			anim.current = 1
-			
-			anim.timer = timer.new()
-			anim.timer:every(anim.delay , function()
-				anim.current = anim.current + 1
-				if anim.current > anim.frames then anim.current = 1 end
-			end)
-		end
-		
-		if fonts.icons.__anim[animname] then
-			local anim = fonts.icons.__anim[animname]
-			
-			anim.frames = (anim.frames or 0) + 1
-		end
-    end
-end
-
-end--#endregion
-
 ---------------------------------------------------------------- SPRITEFONTS
 
-fonts2 = {}
-
 do--#region SPRITEFONTS
+
 --! LOAD NEW SPRITEFONT ASSET
 -- an extension of sprite
 function asset.spritefont(path)
 	local name = string.tokenize(path, "/", -1)
-	if fonts2[name] then return end -- already loaded
+	if fonts[name] then return end -- already loaded
 	
 	local time_start = love.timer.getTime()
 	love.graphics.reset(true)
@@ -882,14 +793,13 @@ function asset.spritefont(path)
 	love.graphics.present()
 	
 	local sprite = dofile("sprites/"..path) -- init
-	fonts2[name] = {}
+	fonts[name] = {}
 	sprite.cached_images = {}
 	
 	sprite.tiled = nil -- nope
 	sprite.nineslice = nil
 	
-	local fontdef = sprite.font
-	local font = fonts2[name]
+	local font = fonts[name]
 	
 	-- mini scene for storing assets
 	font.scene = {
@@ -902,11 +812,10 @@ function asset.spritefont(path)
 		
 		instances = {},
 	}
-	
 	font.scene = table.protect(font.scene, {"scene", "font"})
 	
+	local fontdef = sprite.font
 	font.font = fontdef
-	
 	fontdef.spacing = fontdef.spacing or 0
 	
 	-- static character rows helper
@@ -926,7 +835,7 @@ function asset.spritefont(path)
 			local chars = string.split(row.chars)
 			row.x = row.x or 0
 			row.y = row.y or 0
-			row.width = row.width or imagedata:getWidth()
+			row.width = row.width or fontdef.width or imagedata:getWidth()
 			row.height = row.height or fontdef.height or imagedata:getHeight()
 			
 			local xoffset = row.x
@@ -972,10 +881,22 @@ function asset.spritefont(path)
 end
 
 --!
-function text.new(arg, font)
-	local scene = font.scene
-	local id = string.md5(unpack(arg))
+function font.append(font, arg)
+	if type(font) == "string" then font = fonts[font] end
+	if type(arg) ~= "table" then arg = {arg} end
+	local fontscene = font.scene
 	
+	for k,v in ipairs(arg) do
+		if type(v) == "string" then v = fonts[v] end
+		local name = v.scene.name
+		
+		fontscene.assets[name] = v.scene.assets[name]
+		fontscene.sprites[name] = v.scene.sprites[name]
+	end
+end
+
+--!
+function text.new(id, scene)
 	local t = {
 		instance = true,
 		fontinstance = true,
@@ -983,8 +904,6 @@ function text.new(arg, font)
 		id = id,
 		
 		sprites = {},
-		
-		timer = 0,
 	}
 	t = table.protect(t, {"instance", "id", "scene", "text"})
 	
@@ -1001,17 +920,27 @@ end
 --!
 function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, alignv)
 	if type(arg) == "string" then arg = {arg} end
-	if type(font) == "string" then font = fonts2[font] end
+	if type(font) == "string" then font = fonts[font] end
+	
+	x = x or 0; x = math.round(x)
+	y = y or 0; y = math.round(y)
+	r = r or 0; r = math.round(r)
+	sx = sx or 1
+	sy = sy or sx or 1
+	ox = ox or 0
+	oy = oy or 0
+	kx = kx or 0
+	ky = ky or 0
 	
 	local fontscene = font.scene
 	local fontdef = font.font
 	
 	-- update or create instance
-	local id = string.md5(unpack(arg))
-	fontscene.instances[id] = fontscene.instances[id] or text.new(arg, font)
+	local id = string.md5(tostring(font)..x..y..r..sx..sy..ox..oy..kx..ky)
+	fontscene.instances[id] = fontscene.instances[id] or text.new(id, fontscene)
 	local instance = fontscene.instances[id]
 	
-	instance.timer = instance.timer + dt
+	instance.timer = (instance.timer or 0) + dt
 	instance.dt = dt
 	
 	local curx, cury = 0, 0
@@ -1020,6 +949,50 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	
 	local curline = 1
 	
+	-- print character function
+	local function printchar(char)
+		local curfont
+		
+		-- find character in available fonts
+		if fontscene.assets[fontscene.name][char] then -- main font takes priority
+			curfont = fontscene.name
+		else
+			for k, font in pairs(fontscene.assets) do -- look in appended fonts
+				if k ~= fontscene.name and font[char] then 
+					curfont = k
+					break
+				end
+			end
+		end
+		
+		if curfont then
+			charcount = charcount + 1
+			
+			-- sprite per character
+			instance.sprites[charcount] = instance.sprites[charcount]
+				or sprite.init(instance.sprites[charcount], fontscene, curfont, {animation = char})
+			
+			local charsprite = instance.sprites[charcount]
+			
+			local spritedef = fontscene.sprites[curfont]
+			local curfontdef = spritedef.font
+			local animdef = spritedef.animations[char]
+			local framedef = animdef.frames[charsprite.frame]
+			
+			charsprite.x = curx
+			charsprite.y = cury
+			
+			charsprite.realx = curx
+			charsprite.realy = cury
+			charsprite.num = charcount
+			charsprite.char = char
+			
+			curx = curx + framedef.width + curfontdef.spacing
+			
+			return charsprite
+		end
+	end
+	
 	-- main function
 	local function handlechunk(chunk, func)
 		local text = tostring(chunk[#chunk])
@@ -1027,40 +1000,9 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			
 		-- loop through characters
 		for i, char in ipairs(string.split(text)) do
-			-- find character in available fonts
-			local validchar, curfont
-			for k, font in pairs(fontscene.assets) do
-				if font[char] then 
-					validchar = true
-					curfont = k
-					break
-				end
-			end
-			
-			if validchar then
-				charcount = charcount + 1
+			local charsprite = printchar(char)
 				
-				-- sprite per character
-				instance.sprites[charcount] = instance.sprites[charcount]
-					or sprite.init(instance.sprites[charcount], fontscene, curfont, {animation = char})
-				
-				local charsprite = instance.sprites[charcount]
-				
-				local spritedef = fontscene.sprites[curfont]
-				local curfontdef = spritedef.font
-				local animdef = spritedef.animations[char]
-				local framedef = animdef.frames[charsprite.frame]
-				
-				charsprite.x = curx
-				charsprite.y = cury
-				
-				charsprite.realx = curx
-				charsprite.realy = cury
-				charsprite.num = charcount
-				charsprite.char = char
-				
-				curx = curx + framedef.width + curfontdef.spacing
-				
+			if charsprite then
 				func(charsprite, i)
 			end
 		end
@@ -1071,10 +1013,19 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		for i, chunk in ipairs(arg) do
 			if type(chunk) ~= "table" then chunk = {chunk} end
 			
-			-- regular text
+			-- "text" chunk
 			if #chunk == 1 then
-				handlechunk(chunk)
 				
+				if string.left(chunk[1], 1) == "{" and string.right(chunk[1], 1) == "}" then
+					-- inline icon
+					local icon = string.sub(chunk[1], 2, -2)
+					local charsprite = printchar(icon)
+				else
+					-- regular text
+					handlechunk(chunk)
+				end
+			
+			-- {{effects}, "text"} chunk 
 			elseif #chunk == 2 then
 				local effects = chunk[1]
 				if type(effects) == "string" then effects = {effects} end
@@ -1103,9 +1054,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 						if effect[1] == "shake" then
 							local strengthx = effect.strengthx or effect.strength or 1
 							local strengthy = effect.strengthy or effect.strength or 1
+							local a = effect.a or -1
+							local b = effect.b or 1
 							
-							char.x = char.realx + (char.num * math.random(-1, 1) * ((strengthx / 2) / charcount))
-							char.y = char.realy + (char.num * math.random(-1, 1) * ((strengthy / 2) / charcount))
+							char.x = char.realx + (char.num * math.random(a, b) * ((strengthx / 2) / charcount))
+							char.y = char.realy + (char.num * math.random(a, b) * ((strengthy / 2) / charcount))
 						end
 						
 					end
@@ -1119,21 +1072,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	-- loop  through all chunks
 	loopchunks(arg)
 	
-	-- final draw
-	x = x or 0; x = math.round(x)
-	y = y or 0; y = math.round(y)
-	r = r or 0; r = math.rad(math.round(r))
-	sx = sx or 1
-	sy = sy or sx or 1
-	ox = ox or 0
-	oy = oy or 0
-	kx = kx or 0
-	ky = ky or 0
-	
+	-- final draw	
 	love.graphics.push()
 	
 	love.graphics.translate(x, y)
-	love.graphics.rotate(r)
+	love.graphics.rotate(math.rad(r))
 	love.graphics.scale(sx, sy)
 	love.graphics.shear(kx, ky)
 	love.graphics.translate(-ox, -oy)
@@ -1158,3 +1101,4 @@ _prof.hook(gif, "gif")
 _prof.hook(nineslice, "nineslice")
 _prof.hook(spritesheet, "spritesheet")
 _prof.hook("model")
+_prof.hook("text")

@@ -82,7 +82,7 @@ function Checkbox:draw()
         love.graphics.setFont(font)
         y = y + core.verticalOffsetForAlign(self.valign, font, self.h)
         --shadowtext.printf(self.text, x + h, y, w - h, self.align)
-        love.graphics.printf(text(self.text), x + h, y, w - h, self.align)
+        love.graphics.printf(self.text, x + h, y, w - h, self.align)
     end
 end
 
