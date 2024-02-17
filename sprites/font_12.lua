@@ -1,6 +1,6 @@
 local sprite = {}
 
-sprite.filename = "font_freaks12"
+sprite.filename = "font_12"
 
 sprite.animations = {
 	

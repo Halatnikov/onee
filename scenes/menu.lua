@@ -11,8 +11,6 @@ local str = "You"
 local textinput = "i'm freaks"
 
 function scene.init(self)
-	asset.spritefont("font_freaks12")
-	
 	asset.sprite("spr_menu_arrow_16", self)
 	asset.sprite("checkerboard", self)
 	
@@ -103,7 +101,7 @@ function scene.draw(self)
 	sprite.draw(self.arrow, self)
 	
 	queue.add(self.drawlist, 2, function()
-		text.print({"Hello world!", {255,0,255, " you too"}, " yeah"}, "font_freaks12", 100, 100)
+		text.print({"brb ", {"shake", "accidentally"}, {{0,255,0}," inventing"}, " my own ", {{{"shake", strengthy = 3},{0,255,255}}, "scribble"}}, "font_12", 100, 90)
 	end)
 end
 

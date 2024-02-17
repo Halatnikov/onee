@@ -6,6 +6,7 @@ function scene.init(self)
 	
 	-- init fonts
 	fonts.proggy_clean = love.graphics.newFont("fonts/proggy_clean.fnt")
+	onee.font = fonts.proggy_clean -- set default font
 	
 	fonts.controls = love.graphics.newFont("fonts/controls.fnt")
 	text.icons("controls")
@@ -18,7 +19,11 @@ function scene.init(self)
 	
 	fonts.titlecard = love.graphics.newFont("fonts/titlecard.fnt")
 	
-	onee.font = fonts.proggy_clean -- set default font
+	asset.spritefont("font_12")
+	
+	asset.spritefont("font_16")
+	
+	asset.spritefont("font_titlecard")
 	
 	scene_.set("menu")
 end

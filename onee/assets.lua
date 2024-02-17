@@ -1056,6 +1056,8 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 				
 				charsprite.realx = curx
 				charsprite.realy = cury
+				charsprite.num = charcount
+				charsprite.char = char
 				
 				curx = curx + framedef.width + curfontdef.spacing
 				
@@ -1069,22 +1071,48 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		for i, chunk in ipairs(arg) do
 			if type(chunk) ~= "table" then chunk = {chunk} end
 			
+			-- regular text
 			if #chunk == 1 then
-				-- regular text
 				handlechunk(chunk)
 				
-			elseif (#chunk == 3+1 or #chunk == 4+1)
-				and (type(chunk[1]) == "number" and type(chunk[2]) == "number" and type(chunk[3]) == "number") then
+			elseif #chunk == 2 then
+				local effects = chunk[1]
+				if type(effects) == "string" then effects = {effects} end
+				if #effects == 1 then effects = {effects} end
 				
-				-- colored text
-				handlechunk(chunk, function(charsprite)
-					local r, g, b = chunk[1], chunk[2], chunk[3]
-					local a = (type(chunk[4]) == "number") and chunk[4] or 100
-					
-					charsprite.rgb = {r, g, b}
-					charsprite.opacity = a
+				if (#effects == 3 or #effects == 4) then effects = {effects} end -- color alias
+				
+				handlechunk(chunk, function(char, i)
+					for i, effect in ipairs(effects) do
+						local effect = copy(effect)
+						if type(effect) == "string" then effect = {effect} end
+						
+						-- apply color
+						if (#effect == 3 or #effect == 4) and type(effect[1] == "number") then
+							table.insert(effect, 1, "color") -- alias
+						end
+						if effect[1] == "color" then
+							local r, g, b = effect[2], effect[3], effect[4]
+							local a = effect[5] or 100
+							
+							char.rgb = {r, g, b}
+							char.opacity = a
+						end
+						
+						-- shaking text
+						if effect[1] == "shake" then
+							local strengthx = effect.strengthx or effect.strength or 1
+							local strengthy = effect.strengthy or effect.strength or 1
+							
+							char.x = char.realx + (char.num * math.random(-1, 1) * ((strengthx / 2) / charcount))
+							char.y = char.realy + (char.num * math.random(-1, 1) * ((strengthy / 2) / charcount))
+						end
+						
+					end
 				end)
+				
 			end
+			
 		end
 	end
 	
@@ -1118,9 +1146,9 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	love.graphics.pop()
 	
 	-- clean inactive instances
-	for k,v in pairs(fontscene.instances) do
-		if v.dt ~= dt then fontscene.instances[k] = nil end
-	end
+	-- for k,v in pairs(fontscene.instances) do
+		-- if v.dt ~= dt then fontscene.instances[k] = nil end
+	-- end
 end
 end--#endregion
 
