@@ -817,6 +817,8 @@ function asset.spritefont(path)
 	local fontdef = sprite.font
 	font.font = fontdef
 	fontdef.spacing = fontdef.spacing or 0
+	fontdef.linespacing = fontdef.linespacing or 0
+	assert(fontdef.baseheight, "asset.spritefont() | no baseheight specified")
 	
 	-- static character rows helper
 	if fontdef.rows then
@@ -835,8 +837,8 @@ function asset.spritefont(path)
 			local chars = string.split(row.chars)
 			row.x = row.x or 0
 			row.y = row.y or 0
-			row.width = row.width or fontdef.width or imagedata:getWidth()
-			row.height = row.height or fontdef.height or imagedata:getHeight()
+			row.width = row.width or fontdef.basewidth or imagedata:getWidth()
+			row.height = row.height or fontdef.baseheight or imagedata:getHeight()
 			
 			local xoffset = row.x
 			
@@ -932,6 +934,10 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	kx = kx or 0
 	ky = ky or 0
 	
+	limit = limit or nil
+	alignh = alignh or "left"
+	alignv = alignv or "top"
+	
 	local fontscene = font.scene
 	local fontdef = font.font
 	
@@ -944,14 +950,27 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	instance.dt = dt
 	
 	local curx, cury = 0, 0
-	local width, height = 0, 0
-	local charcount = 0
+	local width, height = 0, fontdef.baseheight
 	
+	local charcount = 0
+	local totalchars = 0
+	
+	local lines = {[1] = {}}
 	local curline = 1
 	
 	-- print character function
 	local function printchar(char)
 		local curfont
+		
+		if char == newline then 
+			curline = curline + 1
+			charcount = 0
+			curx = 0
+			cury = cury + fontdef.baseheight + fontdef.linespacing
+			height = height + cury
+			
+			lines[curline] = {}
+		end
 		
 		-- find character in available fonts
 		if fontscene.assets[fontscene.name][char] then -- main font takes priority
@@ -967,17 +986,20 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		
 		if curfont then
 			charcount = charcount + 1
+			totalchars = totalchars + 1
 			
 			-- sprite per character
-			instance.sprites[charcount] = instance.sprites[charcount]
-				or sprite.init(instance.sprites[charcount], fontscene, curfont, {animation = char})
+			instance.sprites[curline] = instance.sprites[curline] or {}
+			instance.sprites[curline][charcount] = instance.sprites[curline][charcount]
+				or sprite.init(instance.sprites[curline][charcount], fontscene, curfont, {animation = char})
 			
-			local charsprite = instance.sprites[charcount]
+			local charsprite = instance.sprites[curline][charcount]
 			
 			local spritedef = fontscene.sprites[curfont]
-			local curfontdef = spritedef.font
 			local animdef = spritedef.animations[char]
 			local framedef = animdef.frames[charsprite.frame]
+			
+			local curfontdef = spritedef.font
 			
 			charsprite.x = curx
 			charsprite.y = cury
@@ -985,9 +1007,12 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			charsprite.realx = curx
 			charsprite.realy = cury
 			charsprite.num = charcount
+			charsprite.numtotal = totalchars
 			charsprite.char = char
 			
 			curx = curx + framedef.width + curfontdef.spacing
+			lines[curline].width = curx
+			lines[curline].charcount = charcount
 			
 			return charsprite
 		end
@@ -1001,7 +1026,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		-- loop through characters
 		for i, char in ipairs(string.split(text)) do
 			local charsprite = printchar(char)
-				
+			
 			if charsprite then
 				func(charsprite, i)
 			end
@@ -1015,11 +1040,48 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			
 			-- "text" chunk
 			if #chunk == 1 then
-				
 				if string.left(chunk[1], 1) == "{" and string.right(chunk[1], 1) == "}" then
 					-- inline icon
 					local icon = string.sub(chunk[1], 2, -2)
-					local charsprite = printchar(icon)
+					local char
+					
+					-- input icons
+					if string.find(icon, "input_") then
+						local button = string.tokenize(icon, "_", 2)
+						
+						if input.mode == "keyboard" then 
+							local prefix = "key_"
+							local config = config.input.keyboard[button]
+							
+							if config then
+								if config.k then
+									icon = prefix..config.k[1]
+								elseif config.m then
+									
+								elseif config.mw then
+									
+								else
+									icon = "null"
+								end
+							else
+								icon = "null"
+							end
+						end
+						
+						char = printchar(icon)
+						if not char then char = printchar("unknown") end
+						
+					else
+						-- regular icons
+						char = printchar(icon)
+					end
+					
+					local spritedef = fontscene.sprites[char.name]
+					local animdef = spritedef.animations[icon]
+					local framedef = animdef.frames[char.frame]
+					
+					-- center icon vertically
+					char.y = char.realy + (fontdef.baseheight - framedef.height) / 2
 				else
 					-- regular text
 					handlechunk(chunk)
@@ -1054,11 +1116,10 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 						if effect[1] == "shake" then
 							local strengthx = effect.strengthx or effect.strength or 1
 							local strengthy = effect.strengthy or effect.strength or 1
-							local a = effect.a or -1
-							local b = effect.b or 1
+							local range = effect.range or {-1, 1}
 							
-							char.x = char.realx + (char.num * math.random(a, b) * ((strengthx / 2) / charcount))
-							char.y = char.realy + (char.num * math.random(a, b) * ((strengthy / 2) / charcount))
+							char.x = char.realx + (char.num * math.random(range[1], range[2]) * ((strengthx / 2) / charcount))
+							char.y = char.realy + (char.num * math.random(range[1], range[2]) * ((strengthy / 2) / charcount))
 						end
 						
 					end
@@ -1069,8 +1130,12 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		end
 	end
 	
-	-- loop  through all chunks
+	-- loop through all chunks
 	loopchunks(arg)
+	
+	instance.height = height
+	instance.lines = lines
+	instance.totalchars = totalchars
 	
 	-- final draw	
 	love.graphics.push()
@@ -1081,9 +1146,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	love.graphics.shear(kx, ky)
 	love.graphics.translate(-ox, -oy)
 	
-	for i, charsprite in pairs(instance.sprites) do
-		sprite.update(charsprite, fontscene)
-		sprite.draw(charsprite, fontscene, {queued = false})
+	for i, line in pairs(instance.sprites) do
+		for i, charsprite in pairs(line) do
+			sprite.update(charsprite, fontscene)
+			sprite.draw(charsprite, fontscene, {queued = false})
+		end
 	end
 	
 	love.graphics.pop()
@@ -1092,6 +1159,8 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	-- for k,v in pairs(fontscene.instances) do
 		-- if v.dt ~= dt then fontscene.instances[k] = nil end
 	-- end
+	
+	return instance -- that way you can do `local the = text.print("returns an instance", 0, 0)`
 end
 end--#endregion
 

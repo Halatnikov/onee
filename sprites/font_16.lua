@@ -9,8 +9,8 @@ sprite.animations = {
 sprite.font = {
 	
 	spacing = 2,
+	baseheight = 20,
 	
-	height = 20,
 	rows = {
 		{chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", y = 0},
 		{chars = "abcdefghijklmnopqrstuvwxyz", y = 21, width = 276},

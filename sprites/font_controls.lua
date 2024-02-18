@@ -47,6 +47,7 @@ end
 sprite.font = {
 	
 	spacing = 2,
+	baseheight = 16,
 	
 }
 

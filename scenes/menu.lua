@@ -101,8 +101,20 @@ function scene.draw(self)
 	sprite.draw(self.arrow, self)
 	
 	queue.add(self.drawlist, 2, function()
-		text.print({"brb ", "{key_a}", {"shake", " accidentally"}, {{0,255,0}," inventing"}, " my own ", {{{"shake", strengthy = 3},{0,255,255}}, "scribble"}}, "font_12", 100, 82)
-		text.print("test", "font_16", 100, 60)
+		-- text.print({"brb ", "{key_a}", {"shake", " accidentally"}, "{unknown}", {{0,255,0}," inventing"}, " my own ", {{{"shake", strengthy = 3},{0,255,255}}, "scribble"}}, "font_12", 100, 5)
+		
+		-- text.print({"TEST", "{input_up}"}, "font_titlecard", 100, 25)
+		
+		-- text.print({"line 1??\n\nlet's see", {"shake", " when the"}}, "font_12", 120, 55)
+		
+		text.print({"TEST", "{input_right}"}, "font_titlecard", 100, 10)
+		
+		text.print({
+			"privet ", {{255,127,237},"ayleen, "}, {{127,255,255},"colored text"},
+			newline.."new line... ", {"shake", "shaking text  "}, {{"shake", strengthx = 5}, "REALLY shaking"},
+			{{"shake", {0,255,0}}, newline.."combining effects "},
+			"{input_a}", "displaying ", "{unknown}", "icons ", "{key_return}", "{null}",
+		}, "font_12", 100, 40)
 	end)
 end
 

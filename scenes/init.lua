@@ -18,6 +18,7 @@ function scene.init(self)
 	font.append("font_16", "font_controls")
 	
 	asset.spritefont("font_titlecard")
+	font.append("font_titlecard", "font_controls")
 	
 	scene_.set("menu")
 end
