@@ -934,7 +934,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	kx = kx or 0
 	ky = ky or 0
 	
-	limit = limit or nil
+	limit = limit or onee.width
 	alignh = alignh or "left"
 	alignv = alignv or "top"
 	
@@ -958,19 +958,25 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	local lines = {[1] = {}}
 	local curline = 1
 	
+	-- new line function
+	local function endline()
+		curline = curline + 1
+		charcount = 0
+		width = width or curx
+		width = curx > width and curx or width
+		curx = 0
+		cury = cury + fontdef.baseheight + fontdef.linespacing
+		height = height + cury
+		
+		lines[curline] = {}
+	end
+	
 	-- print character function
 	local function printchar(char)
 		local curfont
 		
-		if char == newline then 
-			curline = curline + 1
-			charcount = 0
-			curx = 0
-			cury = cury + fontdef.baseheight + fontdef.linespacing
-			height = height + cury
-			
-			lines[curline] = {}
-		end
+		if char == newline then endline() end
+		if curx >= limit then endline() end
 		
 		-- find character in available fonts
 		if fontscene.assets[fontscene.name][char] then -- main font takes priority
@@ -1008,9 +1014,13 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			charsprite.realy = cury
 			charsprite.num = charcount
 			charsprite.numtotal = totalchars
-			charsprite.char = char
 			
-			curx = curx + framedef.width + curfontdef.spacing
+			-- just for convenience
+			charsprite.char = char
+			charsprite.realwidth = framedef.width
+			charsprite.realheight = framedef.height
+			
+			curx = curx + charsprite.realwidth + curfontdef.spacing
 			lines[curline].width = curx
 			lines[curline].charcount = charcount
 			
@@ -1033,106 +1043,124 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		end
 	end
 	
-	-- iterator function
-	local function loopchunks(arg)
-		for i, chunk in ipairs(arg) do
-			if type(chunk) ~= "table" then chunk = {chunk} end
-			
-			-- "text" chunk
-			if #chunk == 1 then
-				if string.left(chunk[1], 1) == "{" and string.right(chunk[1], 1) == "}" then
-					-- inline icon
-					local icon = string.sub(chunk[1], 2, -2)
-					local char
+	-- loop through all chunks
+	for i, chunk in ipairs(arg) do
+		if type(chunk) ~= "table" then chunk = {chunk} end
+		
+		-- "text" chunk
+		if #chunk == 1 then
+			if string.left(chunk[1], 1) == "{" and string.right(chunk[1], 1) == "}" then
+				-- inline icon
+				local icon = string.sub(chunk[1], 2, -2)
+				local char
+				
+				-- input icons
+				if string.find(icon, "input_") then
+					local button = string.tokenize(icon, "_", 2)
 					
-					-- input icons
-					if string.find(icon, "input_") then
-						local button = string.tokenize(icon, "_", 2)
+					if input.mode == "keyboard" then 
+						local prefix = "key_"
+						local config = config.input.keyboard[button]
 						
-						if input.mode == "keyboard" then 
-							local prefix = "key_"
-							local config = config.input.keyboard[button]
-							
-							if config then
-								if config.k then
-									icon = prefix..config.k[1]
-								elseif config.m then
-									
-								elseif config.mw then
-									
-								else
-									icon = "null"
-								end
+						if config then
+							if config.k then
+								icon = prefix..config.k[1]
+							elseif config.m then
+								icon = "unknown"
+							elseif config.mw then
+								icon = "unknown"
 							else
-								icon = "null"
+								icon = "invalid"
 							end
+						else
+							icon = "invalid"
 						end
-						
-						char = printchar(icon)
-						if not char then char = printchar("unknown") end
-						
-					else
-						-- regular icons
-						char = printchar(icon)
 					end
 					
-					local spritedef = fontscene.sprites[char.name]
-					local animdef = spritedef.animations[icon]
-					local framedef = animdef.frames[char.frame]
+					char = printchar(icon)
+					if not char then char = printchar("unknown") end
 					
-					-- center icon vertically
-					char.y = char.realy + (fontdef.baseheight - framedef.height) / 2
 				else
-					-- regular text
-					handlechunk(chunk)
+					-- regular icons
+					char = printchar(icon)
 				end
-			
-			-- {{effects}, "text"} chunk 
-			elseif #chunk == 2 then
-				local effects = chunk[1]
-				if type(effects) == "string" then effects = {effects} end
-				if #effects == 1 then effects = {effects} end
 				
-				if (#effects == 3 or #effects == 4) then effects = {effects} end -- color alias
-				
-				handlechunk(chunk, function(char, i)
-					for i, effect in ipairs(effects) do
-						local effect = copy(effect)
-						if type(effect) == "string" then effect = {effect} end
-						
-						-- apply color
-						if (#effect == 3 or #effect == 4) and type(effect[1] == "number") then
-							table.insert(effect, 1, "color") -- alias
-						end
-						if effect[1] == "color" then
-							local r, g, b = effect[2], effect[3], effect[4]
-							local a = effect[5] or 100
-							
-							char.rgb = {r, g, b}
-							char.opacity = a
-						end
-						
-						-- shaking text
-						if effect[1] == "shake" then
-							local strengthx = effect.strengthx or effect.strength or 1
-							local strengthy = effect.strengthy or effect.strength or 1
-							local range = effect.range or {-1, 1}
-							
-							char.x = char.realx + (char.num * math.random(range[1], range[2]) * ((strengthx / 2) / charcount))
-							char.y = char.realy + (char.num * math.random(range[1], range[2]) * ((strengthy / 2) / charcount))
-						end
-						
-					end
-				end)
-				
+				-- center icon vertically
+				char.y = char.realy + (fontdef.baseheight - char.realheight) / 2
+			else
+				-- regular text
+				handlechunk(chunk)
 			end
+		
+		-- {{effects}, "text"} chunk 
+		elseif #chunk == 2 then
+			local effects = chunk[1]
+			local text = tostring(chunk[2])
+			
+			if type(effects) == "string" then effects = {effects} end
+			if #effects == 1 then effects = {effects} end
+			
+			if (#effects == 3 or #effects == 4) then effects = {effects} end -- color alias
+			
+			handlechunk(chunk, function(char, i)
+				for i, effect in ipairs(effects) do
+					local effect = copy(effect)
+					if type(effect) == "string" then effect = {effect} end
+					
+					-- apply color
+					if (#effect == 3 or #effect == 4) and type(effect[1] == "number") then
+						table.insert(effect, 1, "color") -- alias
+					end
+					if effect[1] == "color" then
+						local r, g, b = effect[2], effect[3], effect[4]
+						local a = effect[5]
+						
+						char.rgb = {r, g, b}
+						char.opacity = a or char.opacity -- no change
+					end
+					
+					-- shaking text
+					if effect[1] == "shake" then
+						local strengthx = effect.strengthx or effect.strength or 1
+						local strengthy = effect.strengthy or effect.strength or 1
+						local range = effect.range or {-1, 1}
+						
+						char.x = char.realx + (char.num * math.random(range[1], range[2]) * ((strengthx / 2) / charcount))
+						char.y = char.realy + (char.num * math.random(range[1], range[2]) * ((strengthy / 2) / charcount))
+					end
+					
+					-- wavy text
+					if effect[1] == "wave" then
+						local speed = effect.speed or 8
+						local strength = effect.strength or 2
+						
+						char.y = char.realy + math.sin(instance.timer * speed + char.num) * strength
+					end
+					
+					-- rainbow cycling text
+					if effect[1] == "rainbow" then
+						local speed = effect.speed or 7
+						local brightness = effect.brightness or 128
+						local size = effect.size or 1
+						
+						local phase = instance.timer * speed
+						local frequency = -pi * 255 / (char.num + (#text * size))
+						
+						local r = math.sin(frequency * i + 2 + phase) * brightness + 128
+						local g = math.sin(frequency * i + 0 + phase) * brightness + 128
+						local b = math.sin(frequency * i + 4 + phase) * brightness + 128
+						
+						char.rgb = {r, g, b}
+					end
+					
+				end
+			end)
 			
 		end
+		
 	end
 	
-	-- loop through all chunks
-	loopchunks(arg)
-	
+	instance.width = width
 	instance.height = height
 	instance.lines = lines
 	instance.totalchars = totalchars
@@ -1160,7 +1188,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		-- if v.dt ~= dt then fontscene.instances[k] = nil end
 	-- end
 	
-	return instance -- that way you can do `local the = text.print("returns an instance", 0, 0)`
+	return instance -- that way you can do `local the = text.print("", 0, 0)`
 end
 end--#endregion
 

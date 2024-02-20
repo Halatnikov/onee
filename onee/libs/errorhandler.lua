@@ -112,7 +112,8 @@ function errorhandler.draw(msg, mode, notraceback)
 		"So, what brings you here?",
 		"things are happening",
 		"Catastrophic failure",
-		"FUCK!!",
+		"FUCK!!!!",
+		"H-hello?... Is anyone here?... It's so dark in there......",
 	}
 
 	local err = {}

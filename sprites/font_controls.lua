@@ -8,7 +8,7 @@ sprite.animations = {
 		speed = 3,
 		strip = {frames = 4, padding = 1, y = 170, width = 16, height = 16},
 	},
-	null = {
+	invalid = {
 		seq = {1,2,3,4},
 		speed = 3,
 		strip = {frames = 4, padding = 1, y = 187, width = 16, height = 16},
