@@ -112,12 +112,12 @@ function scene.draw(self)
 		text.printf({
 			"privet ", {{255,127,237},"ayleen, "}, {{127,255,255},"colored text"},
 			newline, "new line... ", {"shake", "shaking text  "}, {{"shake", strengthx = 5}, "REALLY shaking"},
-			{{"shake", {0,255,0}}, newline.."combining effects "},
+			newline, {{"shake", {0,255,0}}, "combining effects "},
 			"{input_a}", "displaying ", "{unknown}", "icons ", "{key_return}", "{invalid}",
 			newline, {"wave", "wavy text"},
 			newline, {{"rainbow", size = 3}, "rainbow text"},
 			
-		}, "font_12", 100, 40, nil)
+		}, "font_12", 100, 40, nil, "center")
 	end)
 end
 

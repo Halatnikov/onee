@@ -934,7 +934,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	kx = kx or 0
 	ky = ky or 0
 	
-	limit = limit or onee.width
+	limit = limit or nil
 	alignh = alignh or "left"
 	alignv = alignv or "top"
 	
@@ -966,7 +966,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		width = curx > width and curx or width
 		curx = 0
 		cury = cury + fontdef.baseheight + fontdef.linespacing
-		height = height + cury
+		height = cury
 		
 		lines[curline] = {}
 	end
@@ -976,7 +976,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		local curfont
 		
 		if char == newline then endline() end
-		if curx >= limit then endline() end
+		if limit and curx >= limit then endline() end
 		
 		-- find character in available fonts
 		if fontscene.assets[fontscene.name][char] then -- main font takes priority
@@ -1175,10 +1175,21 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	love.graphics.translate(-ox, -oy)
 	
 	for i, line in pairs(instance.sprites) do
+		local xoffset = 0 -- left
+		if alignh == "center" then xoffset = math.round((width - lines[i].width) / 2) end
+		if alignh == "right" then xoffset = math.round((width - lines[i].width)) end
+		
+		local yoffset = 0 -- top
+		if alignv == "center" then yoffset = -math.round(height / 2) end
+		if alignv == "bottom" then yoffset = -math.round(height) end
+		
+		love.graphics.push()
+		love.graphics.translate(xoffset, yoffset)
 		for i, charsprite in pairs(line) do
 			sprite.update(charsprite, fontscene)
 			sprite.draw(charsprite, fontscene, {queued = false})
 		end
+		love.graphics.pop()
 	end
 	
 	love.graphics.pop()
