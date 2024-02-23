@@ -24,8 +24,9 @@ function core.themeForWidget(widget)
     local color = theme.color or uiTheme.color
     local font = theme.font or uiTheme.font or love.graphics.getFont()
     local cornerRadius = theme.cornerRadius or uiTheme.cornerRadius
+	local spritefont = theme.spritefont or uiTheme.spritefont
 
-    return color, font, cornerRadius
+    return color, font, cornerRadius, spritefont
 end
 
 function core.colorForWidgetState(widget, color)

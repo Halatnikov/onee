@@ -223,14 +223,29 @@ function copy(arg)
 end
 
 function table.compare(a, b)
-	if a == b then return true end
-	for k, v in pairs(a) do
-		if a[k] ~= b[k] then return false end
+	a, b = a or {}, b or {}
+    if a == b then return true end
+	local function recursive(a, b)
+		if a == b then return true end
+		if type(a) ~= type(b) then return false end
+		if type(a) ~= "table" then return false end
+		local keys = {}
+
+		for k1, v1 in pairs(a) do
+			local v2 = b[k1]
+			if v2 == nil or recursive(v1, v2) == false then
+				return false
+			end
+			keys[k1] = true
+		end
+
+		for k2 in pairs(b) do
+			if not keys[k2] then return false end
+		end
+		
+		return true
 	end
-	for k, v in pairs(b) do
-		if b[k] ~= a[k] then return false end
-	end
-	return true
+	return recursive(a, b)
 end
 
 function table.clear(arg)

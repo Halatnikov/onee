@@ -1,4 +1,6 @@
 asset = {} -- functions
+atlas = {}
+
 sprite = {}
 model = {
 	anim = {},
@@ -67,21 +69,78 @@ function asset.negative_frames(animdef)
 	end
 end
 
+--!
+function atlas.new(scene)
+	local t = textureAtlas.newDynamicSize(1)
+	t:setMaxSize(2048, 2048)
+	t:setBakeAsPow2(true)
+	
+	t.id = #scene.atlases + 1
+	t.area = 0
+	table.insert(scene.atlases, t)
+end
+
+--!
+function atlas.get(scene)
+	if #scene.atlases == 0 then atlas.new(scene) end
+	return scene.atlases[#scene.atlases]
+end
+
+--!
+function atlas.add(scene, image, name, anim, frame)
+	local current = atlas.get(scene)
+	
+	local width, height = image:getDimensions()
+	current.area = current.area + (width * height)
+	if current.area >= (2048*2048) then
+		current:hardBake()
+		asset.atlas_new(scene)
+		current = atlas.get(scene)
+		current.area = current.area + (width * height)
+	end
+	
+	current:add(image, name.."_"..anim.."_"..frame)
+	current.images[#current.images].width = width
+	current.images[#current.images].height = height
+end
+
+--!
+function atlas.bake(scene)
+	local current = atlas.get(scene)
+	if #current.images > 0 then current:bake() end
+	
+	scene.batches[current.id] = love.graphics.newSpriteBatch(current.image)
+end
+
+--!
+function atlas.draw(scene, args, id, ...)
+	args = args or {}
+	local current
+	
+	for i, atlas in ipairs(scene.atlases) do
+		if atlas.quads[id] then
+			current = atlas
+			break
+		end
+	end
+	
+	if args.queued then 
+		scene.batches[current.id]:add(current.quads[id], ...)
+	else
+		current:draw(id, ...)
+	end
+end
+
 ---------------------------------------------------------------- SPRITES
 
 do--#region SPRITES
 --! LOAD NEW SPRITE ASSET
 function asset.sprite(path, scene, sprite) -- string, table, table=
 	local name = string.tokenize(path, "/", -1)
-	if scene.assets[name] then return end -- already loaded
+	if scene.sprites[name] then return end -- already loaded
 	
 	local time_start = love.timer.getTime()
-	love.graphics.reset(true)
-	window.draw(function()
-		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
-		love.graphics.printf("loading sprite "..path, onee.width/2-150, onee.height-16, 150*2, "center")
-	end)
-	love.graphics.present()
+	onee.loading("loading sprite "..path)
 	
 	sprite = sprite or dofile("sprites/"..path) -- init
 	scene.assets[name] = {}
@@ -107,7 +166,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					imagepath = string.remove(imagepath, path.."/")
 				end
 				
-				gif.add("sprites/"..imagepath..".gif", animdef, scene.assets[name][anim])
+				gif.add("sprites/"..imagepath..".gif", scene, name, anim, animdef, scene.assets[name][anim])
 			
 			-- spritestrip (extension of spritesheet)
 			elseif animdef.strip then
@@ -116,7 +175,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					imagepath = string.remove(imagepath, path.."/")
 				end
 				
-				spritesheet.strip(sprite, "sprites/"..imagepath..".png", animdef, scene.assets[name][anim])
+				spritesheet.strip(sprite, "sprites/"..imagepath..".png", scene, name, anim, animdef, scene.assets[name][anim])
 				
 			-- look in framedef
 			elseif animdef.frames then
@@ -131,7 +190,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 							imagepath = string.remove(imagepath, path.."/")
 						end
 						
-						spritesheet.add(sprite, "sprites/"..imagepath..".png", frame, animdef, framedef, scene.assets[name][anim])
+						spritesheet.add(sprite, "sprites/"..imagepath..".png", scene, name, anim, frame, animdef, framedef, scene.assets[name][anim])
 						
 					-- one image file per frame (default)
 					else
@@ -144,6 +203,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 						local image = love.graphics.newImage("sprites/"..imagepath..".png")
 						
 						scene.assets[name][anim][frame] = image -- new frame entry
+						atlas.add(scene, image, name, anim, frame)
 					end
 					
 				end
@@ -160,7 +220,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 						imagepath = string.remove(imagepath, path.."/")
 					end
 					
-					spritesheet.add(sprite, "sprites/"..imagepath..".png", 1, animdef, framedef, scene.assets[name][anim])
+					spritesheet.add(sprite, "sprites/"..imagepath..".png", scene, name, anim, 1, animdef, framedef, scene.assets[name][anim])
 					
 				-- get single frame from filename
 				else
@@ -174,6 +234,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					local image = love.graphics.newImage("sprites/"..imagepath..".png")
 					
 					scene.assets[name][anim][1] = image -- new frame entry
+					atlas.add(scene, image, name, anim, 1)
 				end
 			end
 			
@@ -201,7 +262,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					image = scene.assets[name][animdef.images][framedef.image]
 				end
 			end
-			assert(image, "asset.sprite() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"")
+			--assert(image, "asset.sprite() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"")
 			
 			-- frame width/height
 			framedef.width = framedef.width or image:getWidth()
@@ -241,6 +302,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	
 	sprite.cached_images = nil
 	scene.sprites[name] = sprite -- done
+	atlas.bake(scene)
 	
 	local time_finish = love.timer.getTime()
 	print("sprite "..path.." took "..math.round(time_finish - time_start, 4))
@@ -420,17 +482,20 @@ function sprite.draw(sprite, scene, args)
 	end
 	
 	-- assigning an image
-	local image
+	local image, atlas_id
 	if not animdef.images then -- unique image
-		image = scene.assets[sprite.name][anim][frame]
+		--image = scene.assets[sprite.name][anim][frame]
+		atlas_id = sprite.name.."_"..anim.."_"..frame
 	else
 		if not framedef.image then -- reused animation
-			image = scene.assets[sprite.name][animdef.images][frame]
+			--image = scene.assets[sprite.name][animdef.images][frame]
+			atlas_id = sprite.name.."_"..animdef.images.."_"..frame
 		else -- reused animation AND a different frame image
-			image = scene.assets[sprite.name][animdef.images][framedef.image]
+			--image = scene.assets[sprite.name][animdef.images][framedef.image]
+			atlas_id = sprite.name.."_"..animdef.images.."_"..framedef.image
 		end
 	end
-	assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
+	-- assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
 	
 	-- finally drawing itself
 	local function draw() end
@@ -454,7 +519,7 @@ function sprite.draw(sprite, scene, args)
 		
 		quad:setViewport(qx, qy, qwidth, qheight, qref_width, qref_height)
 		draw = function()
-			love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+			--love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		end
 		
 	elseif spritedef.nineslice then -- NINE-SLICE SPRITE
@@ -468,14 +533,14 @@ function sprite.draw(sprite, scene, args)
 		framey = nheight * (framedef.y / framedef.height) or 0
 		
 		draw = function()
-			love.graphics.draw( nineslice.draw(sprite, scene, anim, frame, animdef, framedef),
-			x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+			--love.graphics.draw( nineslice.draw(sprite, scene, anim, frame, animdef, framedef),
+			--x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		end
 		
 	else -- REGULAR SPRITE
 		
 		draw = function()
-			love.graphics.draw(image, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+			atlas.draw(scene, args, atlas_id, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		end
 		
 	end
@@ -574,15 +639,10 @@ do--#region 3D MODELS
 --! LOAD NEW 3D MODEL ASSET
 function asset.model(path, scene)
 	local name = string.tokenize(path, "/", -1)
-	if scene.assets[name] then return end -- already loaded
+	if scene.models[name] then return end -- already loaded
 	
 	local time_start = love.timer.getTime()
-	love.graphics.reset(true)
-	window.draw(function()
-		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
-		love.graphics.printf("loading model "..path, onee.width/2-150, onee.height-16, 150*2, "center")
-	end)
-	love.graphics.present()
+	onee.loading("loading model "..path)
 	
 	local model = json.decode(love.filesystem.read("models/"..path.."/"..name..".gltf")) -- init
 	local modeldef = {}
@@ -811,6 +871,10 @@ function asset.spritefont(path)
 		sprites = {},
 		
 		instances = {},
+		
+		atlases = {},
+		batches = {},
+		drawlist = {},
 	}
 	font.scene = table.protect(font.scene, {"scene", "font"})
 	
@@ -942,7 +1006,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	local fontdef = font.font
 	
 	-- update or create instance
-	local id = string.md5(tostring(font)..x..y..r..sx..sy..ox..oy..kx..ky)
+	local id = string.md5(x..y..r..sx..sy..ox..oy..kx..ky)
 	fontscene.instances[id] = fontscene.instances[id] or text.new(id, fontscene)
 	local instance = fontscene.instances[id]
 	
@@ -995,6 +1059,8 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			totalchars = totalchars + 1
 			
 			-- sprite per character
+			if not table.compare(instance.raw, arg) then instance.sprites = {} end
+			
 			instance.sprites[curline] = instance.sprites[curline] or {}
 			instance.sprites[curline][charcount] = instance.sprites[curline][charcount]
 				or sprite.init(instance.sprites[curline][charcount], fontscene, curfont, {animation = char})
@@ -1160,6 +1226,8 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		
 	end
 	
+	instance.raw = arg
+	
 	instance.width = width
 	instance.height = height
 	instance.lines = lines
@@ -1176,18 +1244,23 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	
 	for i, line in pairs(instance.sprites) do
 		local xoffset = 0 -- left
-		if alignh == "center" then xoffset = math.round((width - lines[i].width) / 2) end
-		if alignh == "right" then xoffset = math.round((width - lines[i].width)) end
+		if #lines > 1 then
+			if alignh == "center" then xoffset = math.round((width - lines[i].width) / 2) end
+			if alignh == "right" then xoffset = math.round((width - lines[i].width)) end
+		end
 		
 		local yoffset = 0 -- top
-		if alignv == "center" then yoffset = -math.round(height / 2) end
-		if alignv == "bottom" then yoffset = -math.round(height) end
+		if #lines > 1 then
+			if alignv == "center" then yoffset = -math.round(height / 2) end
+			if alignv == "bottom" then yoffset = -math.round(height) end
+		end
 		
 		love.graphics.push()
 		love.graphics.translate(xoffset, yoffset)
 		for i, charsprite in pairs(line) do
 			sprite.update(charsprite, fontscene)
-			sprite.draw(charsprite, fontscene, {queued = false})
+			local fontscene = fonts[charsprite.name].scene
+			sprite.draw(charsprite, fontscene)
 		end
 		love.graphics.pop()
 	end
@@ -1204,6 +1277,7 @@ end
 end--#endregion
 
 _prof.hook("asset")
+_prof.hook("atlas")
 _prof.hook("sprite")
 _prof.hook(gif, "gif")
 _prof.hook(nineslice, "nineslice")

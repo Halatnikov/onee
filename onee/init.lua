@@ -1,6 +1,6 @@
 onee = {}
-onee.version = "0.0.2-17"
-onee.colors = {
+onee.version = "0.0.2-18"
+onee.colors = {	
 	bg = {8/255, 8/255, 8/255},
 	bg_deep = {16/255, 16/255, 16/255},
 }
@@ -28,6 +28,8 @@ do
 	require("onee/libs/timer")
 	require("onee/libs/urfs")
 	require("onee/libs/json")
+	
+	require("onee/libs/runtime-textureatlas")
 	require("onee/libs/gifload")
 	require("onee/libs/gltf")
 	love.joystick.loadGamepadMappings("onee/libs/gamecontrollerdb.txt")
@@ -53,12 +55,12 @@ do
 	onee.time_start = os.time()
 	onee.allow_update = true
 	onee.width, onee.height = love.config.window.width, love.config.window.height
-	windowwidth, windowheight = onee.width, onee.height
 	
 	_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
 	jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
 	jit.version_revision = string.left(jit.version_rolling, 2)
 	
+	windowwidth, windowheight = onee.width, onee.height
 	dt = love.timer.getDelta()
 	
 	-- :o
@@ -109,6 +111,9 @@ function onee.draw()
 	
 	window.draw(function()
 		scene.draw()
+		for i,font in ipairs(fonts) do
+			
+		end
 		debug.draw()
 		yui.draw()
 	end)

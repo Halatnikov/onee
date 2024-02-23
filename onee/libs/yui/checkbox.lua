@@ -11,8 +11,6 @@ local BASE = (...):gsub('checkbox$', '')
 local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
-local shadowtext = require 'onee/libs/yui/gear.shadowtext'
-
 local Checkbox = setmetatable({
     __call = function(cls, args) return cls:new(args) end
 }, Widget)
@@ -26,7 +24,6 @@ Checkbox.__index = Checkbox
 -- @field text (string) text displayed inside the Checkbox
 -- @field[opt='center'] valign (string) vertical alignment 'top', 'bottom', 'center'
 -- @field[opt='center'] align (string) horizontal alignment, 'left', 'center', 'right'
--- @field notranslate (boolean) don't translate text
 -- @table CheckboxAttributes
 
 
@@ -71,17 +68,15 @@ function Checkbox:draw()
     core.drawBox(x+h/10,y+h/10,h*.8,h*.8, c, cornerRadius)
     love.graphics.setColor(c.fg)
     if self.checked then
-        --love.graphics.setLineStyle('smooth')
         love.graphics.setLineWidth(3)
-        --love.graphics.setLineJoin('bevel')
         love.graphics.line(x+h*0.2,y+h*0.55, x+h*0.45,y+h*0.75, x+h*0.8,y+h*0.2)
     end
 
     -- Most checkboxes have no text, so test for performance
     if self.text ~= "" then
-        love.graphics.setFont(font)
         y = y + core.verticalOffsetForAlign(self.valign, font, self.h)
-        --shadowtext.printf(self.text, x + h, y, w - h, self.align)
+		
+        love.graphics.setFont(font)
         love.graphics.printf(self.text, x + h, y, w - h, self.align)
     end
 end

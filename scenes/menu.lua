@@ -32,17 +32,17 @@ function scene.init(self)
 	
 	menu.spacer()
 	
-	menu.label("{unknown}{key_pause}Thingies")
+	menu.label("Thingies")
 	
-	menu.button("{input_a}Button{unknown}", "that is a button", function(self)
+	menu.button("Button", "that is a button", function(self)
 		print("yes indeed")
 	end)
 	
-	menu.checkbox("Checkbox", "{unknown}description Checkbox wOw", bool)
+	menu.checkbox("Checkbox", "description Checkbox wOw", bool)
 	
 	menu.slider("Slider", nil, num, 0, 10, 1)
 	
-	menu.choice("Multi-choice", nil, str, {{"Have", "have"}, {"Yo{null}u", "you"}, {"Ever", "ever"}}, false)
+	menu.choice("Multi-choice", nil, str, {{"Have", "have"}, {"You", "you"}, {"Ever", "ever"}}, false)
 	
 	menu.textinput("Text input", "aaaaaaaaaaaaaaaaaaaa", textinput)
 	

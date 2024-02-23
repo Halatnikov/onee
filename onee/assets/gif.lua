@@ -1,8 +1,7 @@
 local gif = {}
 
 ----------------------------------------------------------------
-
-function gif.add(path, animdef, export)
+function gif.add(path, scene, name, anim, animdef, export)
 	local file = love.filesystem.read(path)
 	assert(file, "gif.add() | incorrect gif path \""..path.."\"")
 	
@@ -81,7 +80,10 @@ function gif.add(path, animdef, export)
 			end
 		end)
 		
-		export[i] = love.graphics.newImage(canvas:newImageData()) -- new frame entry
+		local image = love.graphics.newImage(canvas:newImageData())
+		
+		export[i] = image -- new frame entry
+		atlas.add(scene, image, name, anim, i)
 	end
 	
 	canvas = nil -- clear from memory

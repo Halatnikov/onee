@@ -64,15 +64,21 @@ end
 
 function Button:draw()
     local x,y,w,h = self.x,self.y,self.w,self.h
-    local color, font, cornerRadius = core.themeForWidget(self)
+    local color, font, cornerRadius, spritefont = core.themeForWidget(self)
     local c = core.colorForWidgetState(self, color)
 
     core.drawBox(x,y,w,h, c, cornerRadius)
-    love.graphics.setColor(c.fg)
-    love.graphics.setFont(font)
-
-    y = y + core.verticalOffsetForAlign(self.valign, font, h)
-	love.graphics.printf(self.text, x+2, y, w-4, self.align)
+	if not spritefont then
+		y = y + core.verticalOffsetForAlign(self.valign, font, h)
+		
+		love.graphics.setColor(c.fg)
+		love.graphics.setFont(font)
+		love.graphics.printf(self.text, x+2, y, w-4, self.align)
+	end
+	if spritefont then
+		love.graphics.setColor(color.normal.fg)
+		text.printf(self.text, spritefont, x+2, y, w-4, self.align, self.valign)
+	end
 end
 
 return Button

@@ -18,6 +18,16 @@ function onee.love(name, func)
 	end
 end
 
+--! default loading screen
+function onee.loading(text)
+	love.graphics.reset(true)
+	window.draw(function()
+		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
+		love.graphics.printf(text, onee.width/2-150, onee.height-16, 150*2, "center")
+	end)
+	love.graphics.present()
+end
+
 love.graphics.reset_ = love.graphics.reset
 
 --! modified love.graphics.reset() for my needs

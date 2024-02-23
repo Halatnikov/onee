@@ -29,6 +29,8 @@ function scene.set(path, data, name)
 		sprites = {},
 		models = {},
 		
+		atlases = {},
+		batches = {},
 		drawlist = {},
 		
 		init = noop,
@@ -50,11 +52,12 @@ function scene.set(path, data, name)
 end
 
 -- SCENES UPDATE LOOP
-function scene.update()
-	assert(table.length(scenes) > 0, "scene.update() | No scene initialized!")
+function scene.update(source)
+	source = source or scenes
+	assert(table.length(source) > 0, "scene.update() | No scene initialized!")
 	_prof.push("scene.update")
 	
-	for id, scene in ipairs(scenes) do
+	for id, scene in ipairs(source) do
 		_prof.push(scene.name)
 		if scene.active then
 			_prof.mark("scene")
@@ -72,11 +75,16 @@ function scene.update()
 end
 
 -- SCENES DRAW LOOP
-function scene.draw()
+function scene.draw(source)
+	source = source or scenes
 	_prof.push("scene.draw")
-	for id, scene in ipairs(scenes) do
+	for id, scene in ipairs(source) do
 		_prof.push(scene.name)
 		scene.drawlist = {} -- new frame
+		for i, batch in ipairs(scene.batches) do
+			batch:clear()
+		end
+		
 		if scene.visible then
 			_prof.mark("scene")
 			scene.draw(scene) -- scene
@@ -89,6 +97,9 @@ function scene.draw()
 			
 			_prof.mark("final scene draw")
 			queue.execute(scene.drawlist)
+			for i, batch in ipairs(scene.batches) do
+				love.graphics.draw(batch)
+			end
 		end
 		_prof.pop()
 	end
