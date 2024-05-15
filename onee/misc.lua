@@ -6,8 +6,7 @@ onee.love_callbacks = {}
 function onee.love(name, func)
 	onee.love_callbacks[name] = onee.love_callbacks[name] or {}
 	
-	local new = onee.love_callbacks[name] == {} and true
-	if new then table.insert(onee.love_callbacks[name], love[name]) end
+	if onee.love_callbacks[name] == {} then table.insert(onee.love_callbacks[name], love[name]) end
 	
 	table.insert(onee.love_callbacks[name], func)
 	

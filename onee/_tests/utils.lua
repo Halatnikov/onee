@@ -110,8 +110,7 @@ end)
 
 group("table library extension", function()
 	
-	a = {"a","c","b"}
-	b = {"a","c","b"}
+	local a, b = {"a","c","b"}, {"a","c","b"}
 	print(a==b)
 	print(table.compare(a,b))
 	test("copy(arg) - deep-copying a table", function()

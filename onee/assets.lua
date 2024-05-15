@@ -813,7 +813,7 @@ function model.draw(model, scene)
 	-- handle the canvas
 	local x = model.x or model.canvas.x or 0; x = math.round(x)
 	local y = model.y or model.canvas.y or 0; y = math.round(y)
-	local angle = model.canvas.angle or 0; angle = math.rad(angle)
+	local angle = model.canvas.angle or 0; angle = math.rad(math.round(angle))
 	local scalex = model.canvas.scalex or 1
 	local scaley = model.canvas.scaley or 1
 	local xoffset = model.canvas.xoffset or 0
@@ -1174,7 +1174,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 					if type(effect) == "string" then effect = {effect} end
 					
 					-- apply color
-					if (#effect == 3 or #effect == 4) and type(effect[1] == "number") then
+					if (#effect == 3 or #effect == 4) and type(effect[1]) == "number" then
 						table.insert(effect, 1, "color") -- alias
 					end
 					if effect[1] == "color" then
@@ -1260,7 +1260,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		for i, charsprite in pairs(line) do
 			sprite.update(charsprite, fontscene)
 			local fontscene = fonts[charsprite.name].scene
-			sprite.draw(charsprite, fontscene)
+			sprite.draw(charsprite, fontscene, {queued = false})
 		end
 		love.graphics.pop()
 	end
