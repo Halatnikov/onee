@@ -1,5 +1,4 @@
 asset = {} -- functions
-atlas = {}
 
 sprite = {}
 model = {
@@ -69,68 +68,6 @@ function asset.negative_frames(animdef)
 	end
 end
 
---!
-function atlas.new(scene)
-	local t = textureAtlas.newDynamicSize(1)
-	t:setMaxSize(2048, 2048)
-	t:setBakeAsPow2(true)
-	
-	t.id = #scene.atlases + 1
-	t.area = 0
-	table.insert(scene.atlases, t)
-end
-
---!
-function atlas.get(scene)
-	if #scene.atlases == 0 then atlas.new(scene) end
-	return scene.atlases[#scene.atlases]
-end
-
---!
-function atlas.add(scene, image, name, anim, frame)
-	local current = atlas.get(scene)
-	
-	local width, height = image:getDimensions()
-	current.area = current.area + (width * height)
-	if current.area >= (2048*2048) then
-		current:hardBake()
-		asset.atlas_new(scene)
-		current = atlas.get(scene)
-		current.area = current.area + (width * height)
-	end
-	
-	current:add(image, name.."_"..anim.."_"..frame)
-	current.images[#current.images].width = width
-	current.images[#current.images].height = height
-end
-
---!
-function atlas.bake(scene)
-	local current = atlas.get(scene)
-	if #current.images > 0 then current:bake() end
-	
-	scene.batches[current.id] = love.graphics.newSpriteBatch(current.image)
-end
-
---!
-function atlas.draw(scene, args, id, ...)
-	args = args or {}
-	local current
-	
-	for i, atlas in ipairs(scene.atlases) do
-		if atlas.quads[id] then
-			current = atlas
-			break
-		end
-	end
-	
-	if args.queued then 
-		scene.batches[current.id]:add(current.quads[id], ...)
-	else
-		current:draw(id, ...)
-	end
-end
-
 ---------------------------------------------------------------- SPRITES
 
 do--#region SPRITES
@@ -148,8 +85,6 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	
 	-- first pass
 	for anim, animdef in pairs(sprite.animations) do
-		--print(anim)
-		
 		-- determine image types
 		if sprite.gif then animdef.gif = true end
 		
@@ -203,7 +138,6 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 						local image = love.graphics.newImage("sprites/"..imagepath..".png")
 						
 						scene.assets[name][anim][frame] = image -- new frame entry
-						atlas.add(scene, image, name, anim, frame)
 					end
 					
 				end
@@ -234,7 +168,6 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					local image = love.graphics.newImage("sprites/"..imagepath..".png")
 					
 					scene.assets[name][anim][1] = image -- new frame entry
-					atlas.add(scene, image, name, anim, 1)
 				end
 			end
 			
@@ -262,7 +195,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					image = scene.assets[name][animdef.images][framedef.image]
 				end
 			end
-			--assert(image, "asset.sprite() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"")
+			assert(image, "asset.sprite() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..name.."\"")
 			
 			-- frame width/height
 			framedef.width = framedef.width or image:getWidth()
@@ -302,7 +235,6 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	
 	sprite.cached_images = nil
 	scene.sprites[name] = sprite -- done
-	atlas.bake(scene)
 	
 	local time_finish = love.timer.getTime()
 	print("sprite "..path.." took "..math.round(time_finish - time_start, 4))
@@ -330,12 +262,12 @@ function sprite.init(sprite, scene, name, data)
 		anim_end = noop,
 	}
 	
-	if scene.sprites[name].tiled then
+	if spritedef.tiled then
 		t.tiled = {
 			quad = love.graphics.newQuad(0,0,0,0,0,0),
 		}
 	
-	elseif scene.sprites[name].nineslice then
+	elseif spritedef.nineslice then
 		t.nineslice = {
 			qleft = love.graphics.newQuad(0,0,0,0,0,0),
 			qright = love.graphics.newQuad(0,0,0,0,0,0),
@@ -482,20 +414,17 @@ function sprite.draw(sprite, scene, args)
 	end
 	
 	-- assigning an image
-	local image, atlas_id
+	local image
 	if not animdef.images then -- unique image
-		--image = scene.assets[sprite.name][anim][frame]
-		atlas_id = sprite.name.."_"..anim.."_"..frame
+		image = scene.assets[sprite.name][anim][frame]
 	else
 		if not framedef.image then -- reused animation
-			--image = scene.assets[sprite.name][animdef.images][frame]
-			atlas_id = sprite.name.."_"..animdef.images.."_"..frame
+			image = scene.assets[sprite.name][animdef.images][frame]
 		else -- reused animation AND a different frame image
-			--image = scene.assets[sprite.name][animdef.images][framedef.image]
-			atlas_id = sprite.name.."_"..animdef.images.."_"..framedef.image
+			image = scene.assets[sprite.name][animdef.images][framedef.image]
 		end
 	end
-	-- assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
+	assert(image, "sprite.draw() | no image loaded for frame "..frame.." of animation \""..anim.."\" in \""..sprite.name.."\"")
 	
 	-- finally drawing itself
 	local function draw() end
@@ -519,7 +448,7 @@ function sprite.draw(sprite, scene, args)
 		
 		quad:setViewport(qx, qy, qwidth, qheight, qref_width, qref_height)
 		draw = function()
-			--love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+			love.graphics.draw(image, quad, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		end
 		
 	elseif spritedef.nineslice then -- NINE-SLICE SPRITE
@@ -533,14 +462,14 @@ function sprite.draw(sprite, scene, args)
 		framey = nheight * (framedef.y / framedef.height) or 0
 		
 		draw = function()
-			--love.graphics.draw( nineslice.draw(sprite, scene, anim, frame, animdef, framedef),
-			--x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+			love.graphics.draw( nineslice.draw(sprite, scene, anim, frame, animdef, framedef),
+			x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		end
 		
 	else -- REGULAR SPRITE
 		
 		draw = function()
-			atlas.draw(scene, args, atlas_id, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
+			love.graphics.draw(image, x, y, angle, scalex, scaley, framex, framey, skewx, skewy)
 		end
 		
 	end
@@ -872,8 +801,6 @@ function asset.spritefont(path)
 		
 		instances = {},
 		
-		atlases = {},
-		batches = {},
 		drawlist = {},
 	}
 	font.scene = table.protect(font.scene, {"scene", "font"})
@@ -1277,7 +1204,6 @@ end
 end--#endregion
 
 _prof.hook("asset")
-_prof.hook("atlas")
 _prof.hook("sprite")
 _prof.hook(gif, "gif")
 _prof.hook(nineslice, "nineslice")

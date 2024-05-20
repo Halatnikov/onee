@@ -29,8 +29,6 @@ function scene.set(path, data, name)
 		sprites = {},
 		models = {},
 		
-		atlases = {},
-		batches = {},
 		drawlist = {},
 		
 		init = noop,
@@ -78,12 +76,10 @@ end
 function scene.draw(source)
 	source = source or scenes
 	_prof.push("scene.draw")
+	
 	for id, scene in ipairs(source) do
 		_prof.push(scene.name)
 		scene.drawlist = {} -- new frame
-		for i, batch in ipairs(scene.batches) do
-			batch:clear()
-		end
 		
 		if scene.visible then
 			_prof.mark("scene")
@@ -97,9 +93,6 @@ function scene.draw(source)
 			
 			_prof.mark("final scene draw")
 			queue.execute(scene.drawlist)
-			for i, batch in ipairs(scene.batches) do
-				love.graphics.draw(batch)
-			end
 		end
 		_prof.pop()
 	end

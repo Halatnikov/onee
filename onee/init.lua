@@ -111,9 +111,6 @@ function onee.draw()
 	
 	window.draw(function()
 		scene.draw()
-		for i,font in ipairs(fonts) do
-			
-		end
 		debug.draw()
 		yui.draw()
 	end)

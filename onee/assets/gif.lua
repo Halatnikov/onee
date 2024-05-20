@@ -83,7 +83,6 @@ function gif.add(path, scene, name, anim, animdef, export)
 		local image = love.graphics.newImage(canvas:newImageData())
 		
 		export[i] = image -- new frame entry
-		atlas.add(scene, image, name, anim, i)
 	end
 	
 	canvas = nil -- clear from memory

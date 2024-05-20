@@ -19,7 +19,6 @@ function spritesheet.add(sprite, path, scene, name, anim, frame, animdef, framed
 	local image = love.graphics.newImage(output)
 	
 	export[frame] = image
-	atlas.add(scene, image, name, anim, frame)
 	
 	output = nil -- clear from memory
 	collectgarbage()

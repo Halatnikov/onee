@@ -324,7 +324,6 @@ end
 local add_type, add_key, add_value
 
 function imgui.table_fancy_edit(arg)
-	
 	local mt = getmetatable(arg)
 	if mt then imgui.table(mt, "metatable", {fancy = true, edit = true}, 1) end
 	
