@@ -76,7 +76,7 @@ function Button:draw()
 		love.graphics.printf(self.text, x+2, y, w-4, self.align)
 	end
 	if spritefont then
-		love.graphics.setColor(color.normal.fg)
+		love.graphics.setColor(c.fg)
 		text.printf(self.text, spritefont, x+2, y, w-4, self.align, self.valign)
 	end
 end

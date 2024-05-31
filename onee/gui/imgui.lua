@@ -102,7 +102,6 @@ local function _int(arg, default) -- int* pointer
 end
 
 local function _float(arg, default) -- float* pointer
-	
 	return _convert(arg, default, "float")
 end
 
@@ -564,12 +563,14 @@ function imgui.window.menubar()
 		------------------------------------------------ about button
 		if gui.MenuItem_Bool("?") then
 			gui.SetNextWindowPos(gui.ImVec2_Float(windowwidth/2,windowheight/2), nil, gui.ImVec2_Float(0.5, 0.5))
-			gui.OpenPopup_Str("")
+			gui.OpenPopup_Str("onee "..onee.version)
 		end
 		
 		-- about dialog
-		if gui.BeginPopupModal("", nil, gui.love.WindowFlags("AlwaysAutoResize", "NoMove", "NoResize")) then
-			gui.Text("i'm freaks")
+		if gui.BeginPopupModal("onee "..onee.version, nil, gui.love.WindowFlags("AlwaysAutoResize", "NoMove", "NoResize")) then
+			gui.Text("LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")"..
+				newline..
+				newline.."i'm freaks")
 			gui.Separator()
 			if gui.Button("me too", gui.ImVec2_Float(120, 0)) then
 				gui.CloseCurrentPopup()
@@ -814,8 +815,6 @@ function imgui.window.main()
 			
 			-- window size
 			gui.Text("Window size: "..windowwidth.."x"..windowheight)
-			
-			gui.TextWrapped("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~\\")
 			
 			--newly declared globals tree
 			if gui.TreeNodeEx_Str("Newly declared globals", gui.love.TreeNodeFlags("SpanAvailWidth")) then

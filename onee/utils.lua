@@ -53,15 +53,6 @@ function math.choose(...)
 	return arg[math.random(#arg)]
 end
 
-function math.randomfake(min, max, precision)
-	if not (min and max) then min, max = 0, 1 end
-	max = max or min
-	precision = precision or 4
-	local time = love.timer.getTime()
-	time = math.floor((time - math.floor(time)) * 10^precision)
-	return time % 2 == 0 and max or min
-end
-
 function math.average(...)
 	local arg = type(...) == "table" and ... or {...}
 	local sum = 0
@@ -89,6 +80,7 @@ function math.loop(a, b, t)
 end
 
 function math.loop_pingpong(a, b, t)
+	-- t in seconds from a to b to a
 	local len = b - a
 	if b < a then a, b = b, a
 		len = b - a
@@ -212,11 +204,13 @@ function copy(arg)
         elseif ref[arg] then
             return ref[arg]
         end
+		
         local new = {}
         ref[arg] = new
         for k,v in pairs(arg) do
             new[recursive(k)] = recursive(v)
         end
+		
         return setmetatable(new, recursive(getmetatable(arg)))
     end
     return recursive(arg)
@@ -248,8 +242,21 @@ function table.compare(a, b)
 	return recursive(a, b)
 end
 
+function table.length(arg)
+	local i = 0
+	for k,v in pairs(arg) do i = i + 1 end
+	return i
+end
+
 function table.clear(arg)
 	for k,v in pairs(arg) do v = nil end
+end
+
+function table.fill(v, min, max)
+	if not max then min, max = 1, min end
+	local t = {}
+	for i = min, max do table.insert(t, v) end
+	return t
 end
 
 function table.append(a, b)
@@ -279,21 +286,13 @@ function table.find(arg, result, result2)
 	end
 end
 
-function table.length(arg)
-	local i = 0
-	for k,v in pairs(arg) do i = i + 1 end
-	return i
-end
-
 function table.maxn(arg, v)
 	local maxn
-	if not v then -- keys
-		for k,v in pairs(arg) do
+	for k,v in pairs(arg) do
+		if not v then -- keys
 			maxn = maxn or k
 			maxn = k > maxn and k or maxn
-		end
-	else -- values
-		for k,v in pairs(arg) do
+		else -- values
 			maxn = maxn or v
 			maxn = v > maxn and v or maxn
 		end
@@ -305,13 +304,11 @@ table.maxk = table.maxn -- alias
 
 function table.minn(arg, v)
 	local minn
-	if not v then -- keys
-		for k,v in pairs(arg) do
+	for k,v in pairs(arg) do
+		if not v then -- keys
 			minn = minn or k
 			minn = k < minn and k or minn
-		end
-	else -- values
-		for k,v in pairs(arg) do
+		else -- values
 			minn = minn or v
 			minn = v < minn and v or minn
 		end
@@ -326,42 +323,29 @@ function table.reverse(arg)
 end
 
 function table.sortby(arg, k, descending)
-	if not descending then
-		table.sort(arg, function(a,b)
-			if not (a[k] and b[k]) then return end
+	table.sort(arg, function(a,b)
+		if not (a[k] and b[k]) then return end
+		if not descending then
 			if type(a) ~= type(b) then return tostring(a[k]) < tostring(b[k]) end
 			return a[k] < b[k]
-		end)
-	else
-		table.sort(arg, function(a,b)
-			if not (a[k] and b[k]) then return end
+		else
 			if type(a) ~= type(b) then return tostring(a[k]) > tostring(b[k]) end
 			return a[k] > b[k]
-		end)
-	end
+		end
+	end)
 end
 
 function table.sortv(arg, descending)
-	if not descending then
-		table.sort(arg, function(a,b)
-			if not (arg[a] and arg[b]) then return end
+	table.sort(arg, function(a,b)
+		if not (arg[a] and arg[b]) then return end
+		if not descending then
 			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
 			return arg[a] < arg[b]
-		end)
-	else
-		table.sort(arg, function(a,b)
-			if not (arg[a] and arg[b]) then return end
+		else
 			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) > tostring(arg[b]) end
 			return arg[a] > arg[b]
-		end)
-	end
-end
-
-function table.fill(v, min, max)
-	if not max then min, max = 1, min end
-	local t = {}
-	for i = min, max do table.insert(t, v) end
-	return t
+		end
+	end)
 end
 
 function table.mostcommon(arg)

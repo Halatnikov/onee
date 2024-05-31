@@ -216,8 +216,6 @@ end
 --TODO: make this support ... arguments and then just check if they're all strings or something
 -- don't print to console if it has a category maybe
 
--- maybe i should just make a log() function, this doesn't seem like a good idea
---print_ = print
 --!
 function log(arg)
 	--debug.table(debug.getinfo(2)) --get name of the function that called this somehow
@@ -260,9 +258,6 @@ function debug.test(arg)
 		lust.summary[#lust.summary].output = data
 	end
 	env.output = lust.output
-	
-	-- mock random
-	env.math.random = math.randomfake
 	
 	-- set up custom assertions
 	local paths = lust.paths

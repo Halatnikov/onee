@@ -119,7 +119,7 @@ function yui.new.debug()
 			-- close debug menu
 			gui.Button {
 				w = width, h = height, align = "right",
-				text = onee.version.." -",
+				text = onee.version.." - ",
 				onHit = function(self)
 					yui.open.debug_button = true
 					yui.open.debug = nil
@@ -155,7 +155,7 @@ function yui.new.debug()
 			gui.Checkbox {
 				checked = debug_draw_collisions,
 				text = "Draw collisions",
-				onChange = function()
+				onChange = function(self)
 					debug_draw_collisions = not debug_draw_collisions
 				end,
 			},
@@ -163,7 +163,7 @@ function yui.new.debug()
 			gui.Checkbox {
 				checked = debug_draw_sprites,
 				text = "Draw sprite BBoxes",
-				onChange = function()
+				onChange = function(self)
 					debug_draw_sprites = not debug_draw_sprites
 				end,
 			},
@@ -171,7 +171,7 @@ function yui.new.debug()
 			gui.Checkbox {
 				checked = debug_yui,
 				text = "yui debug",
-				onChange = function()
+				onChange = function(self)
 					debug_yui = not debug_yui
 				end,
 			},

@@ -71,7 +71,7 @@ function menu.push(name, params)
 					local height = font:getHeight()
 					
 					love.graphics.setColor(0, 0, 0, 0.75)
-					love.graphics.rectangle("fill", 0, onee.height - (height * #wraps) - 4, onee.width, 64)
+					love.graphics.rectangle("fill", 0, onee.height - (height * #wraps) - (4*2 * #wraps) - 4, onee.width, 64)
 					love.graphics.reset()
 					--love.graphics.printf(description, 4, onee.height - (height * #wraps) - 2, onee.width - 4)
 					text.printf(description, "font_16", 4, onee.height - 20 - 2, nil, nil, "bottom")
