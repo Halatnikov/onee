@@ -1,6 +1,7 @@
 local gif = {}
 
 ----------------------------------------------------------------
+
 function gif.add(path, scene, name, anim, animdef, export)
 	local file = love.filesystem.read(path)
 	assert(file, "gif.add() | incorrect gif path \""..path.."\"")

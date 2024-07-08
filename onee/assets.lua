@@ -774,12 +774,7 @@ function asset.spritefont(path)
 	if fonts[name] then return end -- already loaded
 	
 	local time_start = love.timer.getTime()
-	love.graphics.reset(true)
-	window.draw(function()
-		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
-		love.graphics.printf("preprocessing font "..path, onee.width/2-150, onee.height-16, 150*2, "center")
-	end)
-	love.graphics.present()
+	onee.loading("preprocessing font "..path)
 	
 	local sprite = dofile("sprites/"..path) -- init
 	fonts[name] = {}
@@ -790,6 +785,7 @@ function asset.spritefont(path)
 	
 	local font = fonts[name]
 	
+	font.spritefont = true
 	-- mini scene for storing assets
 	font.scene = {
 		scene = true,
@@ -1171,13 +1167,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	
 	for i, line in pairs(instance.sprites) do
 		local xoffset = 0 -- left
+		local yoffset = 0 -- top
 		if #lines > 1 then
 			if alignh == "center" then xoffset = math.round((width - lines[i].width) / 2) end
 			if alignh == "right" then xoffset = math.round((width - lines[i].width)) end
-		end
-		
-		local yoffset = 0 -- top
-		if #lines > 1 then
+			
 			if alignv == "center" then yoffset = -math.round(height / 2) end
 			if alignv == "bottom" then yoffset = -math.round(height) end
 		end

@@ -20,7 +20,6 @@ function debug.enable(enabled)
 		debug_draw_collisions = true
 		debug_draw_sprites = false
 		debug_hotswap = true
-		debug_mobile = true
 		debug_yui = false
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
@@ -62,7 +61,6 @@ function debug.enable(enabled)
 		debug_draw_collisions = false
 		debug_draw_sprites = false
 		debug_hotswap = false
-		debug_mobile = false
 		debug_yui = false
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)

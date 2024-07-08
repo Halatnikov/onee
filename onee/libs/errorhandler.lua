@@ -127,7 +127,7 @@ function errorhandler.draw(msg, mode, notraceback)
 	table.insert(err, "\n")
 	for l in trace:gmatch("(.-)\n") do
 		if not (l:match("boot.lua") or l:match("errorhandler.lua") or l:match("lurker/init.lua")) then
-			l = l:gsub("stack traceback:", "Traceback\n")
+			l = l:gsub("stack traceback:", "Traceback:\n")
 			table.insert(err, l)
 		end
 	end
@@ -145,7 +145,7 @@ function errorhandler.draw(msg, mode, notraceback)
 	err = err.."\n"
 	
 	if mode == "lurker" then
-		err = err.."\n[lurker]   If you fix the problem and update the file, the program will attempt to resume"
+		err = err.."\n[hotswap]   If you fix the problem and update the file, the program will attempt to resume"
 	end
 
 	local fullErrorText = err

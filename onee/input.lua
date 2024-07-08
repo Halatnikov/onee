@@ -1,6 +1,7 @@
 input = {
 	mode = "keyboard",
 	time = {},
+	pressed = {},
 	
 	mouse_wheel = 0,
 	mouse_istouch = {},
@@ -10,6 +11,7 @@ input = {
 for k in pairs(config.input.keyboard) do 
 	input[k] = false
 	input.time[k] = 0
+	input.pressed[k] = false
 end
 
 ---------------------------------------------------------------- 
@@ -20,6 +22,7 @@ function input.update()
 	-- begin loop
 	for key in pairs(input.time) do 
 		input[key] = false -- reset key states
+		input.pressed[key] = false
 	end
 	if input.ignore then return end
 	
@@ -91,14 +94,11 @@ function input.update()
 	-- touch screen mode
 	if mobile then
 		local touches = love.touch.getTouches()
-		if debug_mobile and love.mouse.isDown(1) then touches = {1} end
 		
 		for key, entry in pairs(config.input.touch) do
 			for i, shape in pairs(entry) do
 				for j, id in ipairs(touches) do
-					local touchx, touchy
-					if not debug_mobile then touchx, touchy = love.touch.getPosition(id) end
-					if debug_mobile then touchx, touchy = love.mouse.getPosition() end
+					local touchx, touchy = love.touch.getPosition(id)
 					
 					if shape.circle then
 						local x = shape.circle[1]
@@ -140,10 +140,11 @@ function input.update()
 	
 	-- end loop
 	for key in pairs(input.time) do 
-		if input[key] then 
-			input.time[key] = input.time[key] + 1	-- key is held, count time
+		if input[key] then
+			if input.time[key] < 1 then input.pressed[key] = true end -- key pressed once
+			input.time[key] = input.time[key] + 1 -- key is held, count time
 		else
-			input.time[key] = 0						-- key was released
+			input.time[key] = 0 -- key was released
 		end
 	end
 	input.mouse_wheel = 0 -- reset mouse wheel
@@ -158,8 +159,7 @@ function input.draw()
 		for key, entry in pairs(config.input.touch) do
 			for i, shape in pairs(entry) do
 				if shape.circle then
-					local x = shape.circle[1]
-					local y = shape.circle[2]
+					local x, y = shape.circle[1], shape.circle[2]
 					local radius = shape.circle[3]
 					
 					if shape.centerx then x = (windowwidth/2) + x end
@@ -167,20 +167,14 @@ function input.draw()
 					if math.sign(x) == -1 then x = windowwidth + x end
 					if math.sign(y) == -1 then y = windowheight + y end
 					
-					if not input[key] == true then
-						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.circle("line",x,y,radius)
-						love.graphics.printf(shape.text or "", x-(radius/2), y-8, radius, "center")
-					else
-						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.circle("fill",x,y,radius)
-						love.graphics.printf(shape.text or "", x-(radius/1.33), y-10, radius, "center", 0, 1.5, 1.5)
-					end
+					love.graphics.setColor(1,1,1,0.5)
+					local fill = input[key] and "fill" or "line"
+					love.graphics.circle(fill, x, y, radius)
+					love.graphics.printf(shape.text or "", x-(radius/2), y-8, radius, "center")
 				end
 				
 				if shape.rect then
-					local x = shape.rect[1]
-					local y = shape.rect[2]
+					local x, y = shape.rect[1], shape.rect[2]
 					local width = shape.rect[3]
 					local height = shape.rect[4] or width
 					
@@ -189,15 +183,10 @@ function input.draw()
 					if math.sign(x) == -1 then x = windowwidth + x end
 					if math.sign(y) == -1 then y = windowheight + y end
 					
-					if not input[key] == true then
-						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.rectangle("line",x,y,width,height)
-						love.graphics.printf(shape.text or "", x, y+(height/2)-8, width, "center")
-					else
-						love.graphics.setColor(1,1,1,0.5)
-						love.graphics.rectangle("fill",x,y,width,height)
-						love.graphics.printf(shape.text or "", x-(width/4), y+(height/2)-10, width, "center", 0, 1.5, 1.5)
-					end
+					love.graphics.setColor(1,1,1,0.5)
+					local fill = input[key] and "fill" or "line"
+					love.graphics.rectangle(fill, x, y, width, height)
+					love.graphics.printf(shape.text or "", x, y+(height/2)-8, width, "center")
 				end
 				
 				love.graphics.reset()

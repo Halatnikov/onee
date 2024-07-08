@@ -34,7 +34,11 @@ function scene.set(path, data, name)
 		init = noop,
 		delete = noop,
 		update = noop,
+		update_pre = noop,
+		update_post = noop,
 		draw = noop,
+		draw_pre = noop,
+		draw_post = noop,
 	}
 	
 	if files.exists("scenes/"..path..".lua") then table.append(t, dofile("scenes/"..path)) end

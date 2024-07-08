@@ -1,5 +1,5 @@
 onee = {}
-onee.version = "0.0.2-18"
+onee.version = "0.0.2-19"
 onee.colors = {	
 	bg = {8/255, 8/255, 8/255},
 	bg_deep = {16/255, 16/255, 16/255},
@@ -114,7 +114,7 @@ function onee.draw()
 		debug.draw()
 		yui.draw()
 	end)
-		
+	
 	input.draw()
 	debug.draw_post()
 	

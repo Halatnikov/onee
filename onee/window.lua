@@ -62,7 +62,7 @@ end
 
 --! get mouse position relative to the game
 function window.mouse()
-	local x = (love.mouse.getX() - window.x) * window.gamescale
-	local y = (love.mouse.getY() - window.y) * window.gamescale
+	local x = math.floor((love.mouse.getX() - window.x) * window.gamescale)
+	local y = math.floor((love.mouse.getY() - window.y) * window.gamescale)
 	return x, y
 end

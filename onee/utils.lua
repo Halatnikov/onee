@@ -319,11 +319,11 @@ function table.minv(arg) return table.minn(arg, true) end -- alias
 table.mink = table.minn -- alias
 
 function table.reverse(arg)
-	table.sort(arg, function(a,b) return a > b end)
+	return table.sort(arg, function(a,b) return a > b end)
 end
 
 function table.sortby(arg, k, descending)
-	table.sort(arg, function(a,b)
+	return table.sort(arg, function(a,b)
 		if not (a[k] and b[k]) then return end
 		if not descending then
 			if type(a) ~= type(b) then return tostring(a[k]) < tostring(b[k]) end
@@ -336,7 +336,7 @@ function table.sortby(arg, k, descending)
 end
 
 function table.sortv(arg, descending)
-	table.sort(arg, function(a,b)
+	return table.sort(arg, function(a,b)
 		if not (arg[a] and arg[b]) then return end
 		if not descending then
 			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
@@ -400,6 +400,8 @@ function table.protect(arg, blacklist)
 	setmetatable(proxy, mt)
 	return proxy
 end
+
+---------------------------------------------------------------- ITERATORS
 
 pairs_ = pairs
 function pairs(arg)

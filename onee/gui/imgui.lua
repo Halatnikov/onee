@@ -201,6 +201,7 @@ function imgui.table_entries(arg, settings, level)
 				if type(v) == "table" then
 					imgui.table(v, tostring(k), settings, level)
 				else
+					v = not (v == noop) and v or "function: noop"
 					gui.Text(tostring(k)..": "..tostring(v))
 				end
 			end
@@ -248,8 +249,7 @@ function imgui.table_fancy_entry(arg, k, v, settings)
 			arg[k] = (ffi.string(_v) == ".") and "" or ffi.string(_v)
 		end
 		
-	elseif type(v) == "userdata" and type(k) == "number" and v:type() == "Image" then
-		-- attempt to make sure we're in assets
+	elseif type(v) == "userdata" and string.left(tostring(v), 6) == "Image:" then
 		gui.Image(v, gui.ImVec2_Float(v:getWidth()*settings.imagescale, v:getHeight()*settings.imagescale))
 		gui.SameLine()
 		gui.Text(tostring(k))
@@ -260,6 +260,7 @@ function imgui.table_fancy_entry(arg, k, v, settings)
 			gui.TableSetupColumn("2")
 			
 			gui.TableNextRow()
+			v = not (v == noop) and v or "function: noop"
 			gui.TableSetColumnIndex(0); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), tostring(v))
 			gui.TableSetColumnIndex(1); gui.Text(tostring(k))
 			
@@ -831,6 +832,7 @@ function imgui.window.main()
 				end
 				gui.TreePop()
 			end
+			
 			--loaded requires tree
 			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
 				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
@@ -987,24 +989,33 @@ function imgui.window.main()
 		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode.."###input") then
 			
 			-- mouse table
-			if gui.BeginTable("input_mouse", 2) then
+			if gui.BeginTable("input_mouse", 3, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+				gui.TableSetupColumn("")
 				gui.TableSetupColumn("mouse x")
 				gui.TableSetupColumn("mouse y")
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text(tostring(mousex))
-				gui.TableSetColumnIndex(1); gui.Text(tostring(mousey))
+				gui.TableSetColumnIndex(0); gui.Text("window")
+				gui.TableSetColumnIndex(1); gui.Text(tostring(mousex))
+				gui.TableSetColumnIndex(2); gui.Text(tostring(mousey))
+				
+				local x, y = window.mouse()
+				gui.TableNextRow()
+				gui.TableSetColumnIndex(0); gui.Text("game canvas")
+				gui.TableSetColumnIndex(1); gui.Text(tostring(x))
+				gui.TableSetColumnIndex(2); gui.Text(tostring(y))
 				
 				gui.EndTable()
 			end
 			
 			-- current inputs table
 			gui.Separator()
-			if gui.BeginTable("input_keys", 3, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+			if gui.BeginTable("input_keys", 4, gui.love.TableFlags("RowBg", "BordersInnerV")) then
 				gui.TableSetupColumn("")
+				gui.TableSetupColumn("held")
+				gui.TableSetupColumn("time")
 				gui.TableSetupColumn("pressed")
-				gui.TableSetupColumn("held time")
 				gui.TableHeadersRow()
 				
 				for k,v in kpairs(config.input.keyboard) do
@@ -1017,6 +1028,12 @@ function imgui.window.main()
 						gui.TextColored(gui.ImVec4_Float(1,0,0,1),tostring(input[k]))
 					end
 					gui.TableSetColumnIndex(2); gui.Text(tostring(input.time[k]))
+					gui.TableSetColumnIndex(3)
+					if input.pressed[k] then
+						gui.TextColored(gui.ImVec4_Float(0,1,0,1),tostring(input.pressed[k]))
+					else
+						gui.TextColored(gui.ImVec4_Float(1,0,0,1),tostring(input.pressed[k]))
+					end
 				end
 				
 				gui.EndTable()

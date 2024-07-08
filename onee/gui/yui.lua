@@ -77,11 +77,11 @@ function yui.debug_draw(ui)
 		end
 	end
 	draw_recursive(ui)
-	if ui.focused then
-		local v = ui.focused
-		local x,y = window.mouse()
-		love.graphics.print(math.round(v.x).." "..math.round(v.y).." "..v.w.." "..v.h, x+16, y)
-	end
+	-- if ui.focused then
+		-- local v = ui.focused
+		-- local x,y = window.mouse()
+		-- love.graphics.print(math.round(v.x).." "..math.round(v.y).." "..v.w.." "..v.h, x+16, y)
+	-- end
 end
 
 -- UIs
