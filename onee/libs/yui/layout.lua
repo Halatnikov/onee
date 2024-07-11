@@ -236,19 +236,21 @@ function Layout:onPointerInput(px,py, clicked, down)
 end
 
 function Layout:update(dt)
+	if not self.ui.active then return end
     for _,widget in ipairs(self.stack) do
 		widget:beforeUpdate()
-        widget:update(dt)
+		widget:update(dt)
 		widget:onUpdate()
     end
 end
 
 function Layout:draw()
+	if not self.ui.visible then return end
     -- Draw all children according to their order (topmost last)
     for _,widget in ipairs(self.stack) do
 		widget:beforeDraw()
-        widget:draw()
-        widget:onDraw()
+		widget:draw()
+		widget:onDraw()
     end
 end
 

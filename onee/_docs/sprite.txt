@@ -2,7 +2,7 @@
 
 tiled
 [enables the sprite to be tiled, can be a boolean, a string, or a table] 
-[valid values: true (same as TILE.TILE), TILE.TILE, TILE.MIRROR, TILE.ONCE, TILE.EDGES (default: false)]
+[valid values: true (same as TILE.TILE), TILE.MIRROR, TILE.ONCE, TILE.EDGES (default: false)]
 
 nineslice
 
@@ -44,10 +44,8 @@ animations
 		[speed of the animation in fps (default: 0)]
 		
 		x
-		[defines x origin point for all frames, but frame's x still takes priority]
-		
 		y
-		[defines y origin point for all frames, but frame's y still takes priority]
+		[defines origin point for all frames, but frame's origin still takes priority]
 		
 		sheet
 		
@@ -88,10 +86,8 @@ animations
 			[you can use `[frame] = asset.add_frames(count, x,y,length)` as a shortcut]
 				
 				x
-				[x origin point of the frame (default: 0)]
-				
 				y
-				[y origin point of the frame (default: 0)]
+				[origin point of the frame (default: 0)]
 				
 				length
 				[frame length multiplier: <1 is faster, >1 is slower (default: 1)] 
@@ -169,10 +165,8 @@ speed
 [overwrite the current animation speed in fps, resets when the animation changes]
 
 x
-[x position (default: 0)]
-
 y
-[y position (default: 0)]
+[position (default: 0)]
 
 z
 
@@ -198,10 +192,8 @@ opacity
 [opacity of the sprite from 0 to 100 (default: 100)]
 
 skewx
-[x skew factor of the sprite (default: 0)]
-
 skewy
-[y skew factor of the sprite (default: 0)]
+[skew factor of the sprite (default: 0)]
 
 tiled
 [requires sprite.tiled]
@@ -210,10 +202,8 @@ tiled
 	[quad that controls tiling of this sprite]
 
 	x
-	[x offset of the tiling (default: 0)]
-
 	y
-	[y offset of the tiling (default: 0)]
+	[offset of the tiling (default: 0)]
 
 	width
 	[width of the tiling, can be used independently of scalex and width (default: frame width)]
@@ -232,6 +222,5 @@ nineslice
 	canvas
 	
 	width
-	
 	height
 

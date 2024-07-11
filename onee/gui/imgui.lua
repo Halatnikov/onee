@@ -5,19 +5,19 @@ imgui = {
 
 -- init
 local gui
-if (love._os == "Windows" or love._os == "Linix") and debug_mode then 
+if onee.libtype and debug_mode then
+	if not files.exists("libs/cimgui."..onee.libtype) then
+		love.filesystem.write("libs/cimgui."..onee.libtype, love.filesystem.read("onee/libs/cimgui-love/cimgui."..onee.libtype))
+	end
+	
 	imgui_ = require("onee/libs/cimgui-love")
-	gui = imgui_ or nil
+	gui = imgui_
 	
 	gui.love.Init()
-	gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
-	
+	--gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
 	
 	imgui.open.menubar = true
 	imgui.open.main = true
-	
-	--imgui.open.profiler = true
-	--imgui.open.docs = true
 	
 end
 
@@ -25,7 +25,7 @@ end
 function imgui.update()
 	if not gui then return end
 	
-	gui.love.Update(tick)
+	gui.love.Update(dt)
     gui.NewFrame()
 end
 
@@ -41,42 +41,34 @@ function imgui.draw()
 end
 
 -- event redirection
-function imgui.mousemoved(x, y, dx, dy, istouch)
+onee.love("mousemoved", function(x, y, dx, dy, istouch)
 	if not gui then return end
     gui.love.MouseMoved(x, y)
-end
-function imgui.mousepressed(x, y, button, istouch, presses)
+end)
+onee.love("mousepressed", function(x, y, button, istouch, presses)
 	if not gui then return end
     gui.love.MousePressed(button)
-end
-function imgui.mousereleased(x, y, button, istouch)
+end)
+onee.love("mousereleased", function(x, y, button, istouch)
 	if not gui then return end
     gui.love.MouseReleased(button)
-end
-function imgui.wheelmoved(x, y)
+end)
+onee.love("wheelmoved", function(x, y)
 	if not gui then return end
     gui.love.WheelMoved(x, y)
-end
-function imgui.keypressed(key, scancode, isrepeat)
+end)
+onee.love("keypressed", function(key, scancode, isrepeat)
 	if not gui then return end
     gui.love.KeyPressed(key)
-end
-function imgui.keyreleased(key, scancode)
+end)
+onee.love("keyreleased", function(key, scancode)
 	if not gui then return end
     gui.love.KeyReleased(key)
-end
-function imgui.textinput(text)
+end)
+onee.love("textinput", function(text)
 	if not gui then return end
 	gui.love.TextInput(text)
-end
-
-onee.love("mousemoved", imgui.mousemoved)
-onee.love("mousepressed", imgui.mousepressed)
-onee.love("mousereleased", imgui.mousereleased)
-onee.love("wheelmoved", imgui.wheelmoved)
-onee.love("keypressed", imgui.keypressed)
-onee.love("keyreleased", imgui.keyreleased)
-onee.love("textinput", imgui.textinput)
+end)
 
 -- data types conversion
 local ffi = require("ffi")
@@ -202,7 +194,7 @@ function imgui.table_entries(arg, settings, level)
 					imgui.table(v, tostring(k), settings, level)
 				else
 					v = not (v == noop) and v or "function: noop"
-					gui.Text(tostring(k)..": "..tostring(v))
+					gui.TextWrapped(tostring(k)..": "..tostring(v))
 				end
 			end
 		end
@@ -397,7 +389,7 @@ function imgui.table_fancy_edit(arg)
 end
 end--#endregion
 
-local freeze = false; local advance_frame = false; local old_frame
+local stepframe = false; local advance_frame = false; local old_frame
 
 local instance_selected, object_selected, asset_selected, sprite_selected, model_selected
 
@@ -419,18 +411,18 @@ function imgui.window.menubar()
 				scene.set(scenes[1].name)
 			end
 			-- advance frame controls shortcut
-			if gui.SmallButton(freeze and "|>" or "||") then
-				freeze = not freeze
+			if gui.SmallButton(stepframe and "|>" or "||") then
+				stepframe = not stepframe
 				onee.allow_update = not onee.allow_update
 			end
-			if freeze then -- (only show these when frozen)
+			if stepframe then -- (only show these when frozen)
 				gui.SameLine()
 				if gui.SmallButton(">") then
 					old_frame = frames
 					advance_frame = true
 				end
 				gui.SameLine()
-				gui.Text("FROZEN")
+				gui.Text("STEP FRAME")
 			end
 			
 			if advance_frame then -- (one frame forward)
@@ -587,6 +579,8 @@ function imgui.window.menubar()
 			gui.Text(string.format("%02.2f FPS %02.2fms", fps, 1000*dt))
 			local date = os.date("*t")
 			gui.Text(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
+			gui.Text(string.format("internet time @%d", date.beats))
+			gui.ProgressBar(date.beats - math.floor(date.beats), gui.ImVec2_Float(128,1),"")
 			
 			gui.EndTooltip()
 		end
@@ -720,18 +714,18 @@ function imgui.window.main()
 		end
 		-- advance frame controls
 		gui.SameLine()
-		if gui.Button(freeze and "|>" or "||") then
-			freeze = not freeze
+		if gui.Button(stepframe and "|>" or "||") then
+			stepframe = not stepframe
 			onee.allow_update = not onee.allow_update
 		end
-		if freeze then -- (only show these when frozen)
+		if stepframe then -- (only show these when frozen)
 			gui.SameLine()
 			if gui.Button(">") then
 				old_frame = frames
 				advance_frame = true
 			end
 			gui.SameLine()
-			gui.Text("FROZEN")
+			gui.Text("STEP FRAME")
 		end
 		
 		if advance_frame then -- (one frame forward)
@@ -758,6 +752,46 @@ function imgui.window.main()
 		local _v = _bool(debug_yui)
 		gui.Checkbox("yui debug", _v)
 		debug_yui = _v[0]
+		
+		------------------------------------------------ SETTINGS HEADER
+		if gui.CollapsingHeader_BoolPtr("Settings") then
+			gui.SeparatorText("Window")
+			
+			local _v = _float(window.scale)
+			gui.SetNextItemWidth(128)
+			if gui.InputFloat("scale", _v, 1, 1) then
+				window.scale = _v[0]
+			end
+			
+			local _v = _float(window.internal)
+			gui.SetNextItemWidth(128)
+			if gui.InputFloat("internal scale", _v, 1, 1) then
+				window.internal = math.clamp(0.01, _v[0], inf)
+			end
+			
+			gui.SetNextItemWidth(128)
+			if gui.BeginCombo("scaling mode", string.lower(table.find(window.SCALING, window.mode))) then
+				if gui.Selectable_Bool("none") then window.mode = window.SCALING.NONE end
+				if gui.Selectable_Bool("integer") then window.mode = window.SCALING.INTEGER end
+				gui.EndCombo()
+			end
+			
+			if gui.TreeNodeEx_Str("internal", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				local _v = _int({onee.width, onee.height})
+				gui.SetNextItemWidth(128+64)
+				if gui.DragInt2("canvas width & height", _v) then
+					onee.width = _v[0]
+					onee.height = _v[1]
+				end
+				
+				
+				gui.TreePop()
+			end
+			
+			if gui.Button("Update window") then
+				window.update()
+			end
+		end
 		
 		------------------------------------------------ SCENE STACK HEADER
 		if gui.CollapsingHeader_BoolPtr("Scene stack") then

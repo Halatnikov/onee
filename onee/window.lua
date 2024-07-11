@@ -1,12 +1,17 @@
 window = {}
 
+window.SCALING = {
+	NONE = "none",
+	INTEGER = "integer",
+}
+
 -- init
 do
 	window.x, window.y = 0, 0
 	window.scale = 0
 
 	window.internal = 1
-	window.mode = ""
+	window.mode = window.SCALING.NONE
 	
 	window.gamescale = 1
 	window.canvas = nil
@@ -20,7 +25,7 @@ function window.update(width, height)
 	local refheight = onee.height * window.internal
 	
 	window.scale = math.min(width / onee.width, height / onee.height)
-	if window.mode == "integer" then 
+	if window.mode == window.SCALING.INTEGER then 
 		window.scale = math.floor((window.scale * window.internal) / window.internal)
 	end
 	

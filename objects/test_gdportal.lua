@@ -47,7 +47,7 @@ function object.update(self, scene)
 	
 	self.particles:setEmissionArea("uniform", 32*scalex, 128*scaley)
 	self.particles:setSizes(0.75*scalex, 0.1*scalex)
-	self.particles:update(tick)
+	self.particles:update(dt)
 	
 	for k,v in pairs(self.sprites) do sprite.update(v, scene) end
 end

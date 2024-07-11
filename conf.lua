@@ -4,11 +4,12 @@ function love.conf(t)
 	t.identity = "onee" -- savedata folder
 	t.version = "11.3" -- minimum love2d version
 	
-	t.window.width = 640
-    t.window.height = 360
+	t.width = 640
+    t.height = 360
 	t.gammacorrect = true
 	
 	t.externalstorage = true -- android
+	t.window = nil
 	
 	love.config = t -- expose config
 	debug_mode = true
@@ -18,7 +19,7 @@ config = {
 	graphics = {
 		scale = 1,
 		scale_internal = 1,
-		scale_mode = "",
+		scale_mode = "none",
 	},
 	input = {
 		keyboard = {

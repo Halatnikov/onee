@@ -4,7 +4,7 @@ end
 
 -- main loop
 function love.update(dt)
-	onee.update(dt)
+	onee.update()
 end
 
 function love.draw()

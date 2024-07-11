@@ -20,18 +20,18 @@ function docroc.process(filename)
 	local source = love.filesystem.read(filename)
 	
 	local comments = {}
-	source:gsub('%s*%-%-!(.-)\n([%s%w\n][^\n]*)', function(chunk, context)
-		chunk = chunk:gsub('^%s*%-*%s*', ''):gsub('\n%s*%-*%s*', ' ')
-		chunk = chunk:gsub('^[^@]', '@raw %1')
-		context = context:match('[^\n]+')
+	source:gsub("%s*%-%-!(.-)\n([%s%w\n][^\n]*)", function(chunk, context)
+		chunk = chunk:gsub("^%s*%-*%s*", ""):gsub("\n%s*%-*%s*", " ")
+		chunk = chunk:gsub("^[^@]", "@raw %1")
+		context = context:match("[^\n]+")
 
 		local tags = {}
-		chunk:gsub('@(%w+)%s?([^@]*)', function(name, body)
-			body = body:gsub('(%s+)$', '')
+		chunk:gsub("@(%w+)%s?([^@]*)", function(name, body)
+			body = body:gsub("(%s+)$", "")
 			local processor = docroc.processors[name]
 			if not processor then print("docroc.process() | unknown tag - "..name) end
 			local tag = processor and processor(body) or {}
-			body = body:gsub('%-%-%s*(.*)$', '')
+			body = body:gsub("%-%-%s*(.*)$", "")
 			tag.tag = name
 			tag._raw = body
 			tags[name] = tags[name] or {}
@@ -122,7 +122,7 @@ end
 
 processor["function"] = function(body)
 	local name = body:match("^%s*([%w%p]+)")
-	local description = body:match('%-%-%s*(.*)$')
+	local description = body:match("%-%-%s*(.*)$")
 	
 	return {
 		name = name,
@@ -131,18 +131,18 @@ processor["function"] = function(body)
 end
 
 processor["param"] = function(body)
-	local name = body:match('^%s*(%w+)') or body:match('^%s*%b()%s*(%w+)')
-	local description = body:match('%-%-%s*(.*)$')
+	local name = body:match("^%s*(%w+)") or body:match("^%s*%b()%s*(%w+)")
+	local description = body:match("%-%-%s*(.*)$")
 	local type, optional, default
-	body:gsub('^%s*(%b())', function(match)
-		type = match:sub(2, -2):gsub('(%=)(.*)', function(_, value)
+	body:gsub("^%s*(%b())", function(match)
+		type = match:sub(2, -2):gsub("(%=)(.*)", function(_, value)
 			optional = true
 			value = string.trim(value)
 			default = #value ~= 0 and value or nil
-			return ''
+			return ""
 		end)
 		type = #type ~= 0 and type or nil
-		return ''
+		return ""
 	end)
 	
 	return {
@@ -155,12 +155,12 @@ processor["param"] = function(body)
 end
 
 processor["returns"] = function(body)
-	local name = body:match('^%s*(%w+)') or body:match('^%s*%b()%s*(%w+)')
-	local description = body:match('%-%-%s*(.*)$')
+	local name = body:match("^%s*(%w+)") or body:match("^%s*%b()%s*(%w+)")
+	local description = body:match("%-%-%s*(.*)$")
 	local type
-	body:gsub('^%s*(%b())', function(match)
+	body:gsub("^%s*(%b())", function(match)
 		type = match:sub(2, -2)
-		return ''
+		return ""
 	end)
 	
 	return {

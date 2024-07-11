@@ -273,29 +273,31 @@ function Ui:navigate(where)
 end
 
 function Ui:update(dt)
+	if not self.active then return end
     local root = self[1]
     local snap = self.device:snapshot()
 
-    -- Update timer related effects
-    self.timer:update(dt)
-
-    -- Regular event propagation
-    eventpropagate(self, snap)
-
-    -- Perform regular lifetime updates
+	-- Update timer related effects
+	self.timer:update(dt)
+	
+	-- Regular event propagation
+	eventpropagate(self, snap)
+	
+	-- Perform regular lifetime updates
 	root:beforeUpdate()
-    root:update(dt)
+	root:update(dt)
 	root:onUpdate()
 end
 
 function Ui:draw()
+	if not self.visible then return end
     local root = self[1]
-
-    love.graphics.push('all')
+	
+	love.graphics.push('all')
 		root:beforeDraw()
-        root:draw()
+		root:draw()
 		root:onDraw()
-    love.graphics.pop()
+	love.graphics.pop()
 end
 
 return Ui

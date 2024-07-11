@@ -299,7 +299,7 @@ function sprite.update(sprite, scene)
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	
 	-- update animations
-	sprite.timer = sprite.timer + tick
+	sprite.timer = sprite.timer + dt
 	
 	-- animation was changed from outside
 	if sprite.animation ~= sprite.animation_old then
@@ -367,10 +367,10 @@ end
 function sprite.draw(sprite, scene, args)
 	assert((sprite and sprite.sprite), "sprite.draw() | not a valid sprite")
 	
-	if not sprite.visible then return end
-	
 	local spritedef = scene.sprites[sprite.name]
 	assert(spritedef, "sprite.draw() | no such sprite \""..sprite.name.."\"")
+	
+	if not sprite.visible then return end
 	
 	args = args or {}
 	if args.queued == nil then args.queued = true end
@@ -695,12 +695,12 @@ function model.update(model, scene)
 		
 		-- loop
 		if animdef.loop then
-			if playing[i].time >= (playing[i].maxTime - tick) then
+			if playing[i].time >= (playing[i].maxTime - dt) then
 				playing[i].time = 0
 			end
 		end
 		
-		model.instance:updateAnimation(i, tick * speed)
+		model.instance:updateAnimation(i, dt * speed)
 	end
 	
 	-- viewport/"camera" position

@@ -13,39 +13,34 @@ do
 end
 
 -- event redirection
-function yui.keypressed(key, scan, isrepeat)
+onee.love("keypressed", function(key, scan, isrepeat)
 	for k,v in pairs(yui) do
 		if type(yui[k]) == "table" and yui[k].yui == true then
 			yui[k]:keypressed(key, scan, isrepeat)
 		end
 	end
-end
-function yui.keyreleased(key, scan)
+end)
+onee.love("keyreleased", function(key, scan)
 	for k,v in pairs(yui) do
 		if type(yui[k]) == "table" and yui[k].yui == true then
 			yui[k]:keyreleased(key, scan)
 		end
 	end
-end
-function yui.textinput(text)
+end)
+onee.love("textinput", function(text)
 	for k,v in pairs(yui) do
 		if type(yui[k]) == "table" and yui[k].yui == true then
 			yui[k]:textinput(text)
 		end
 	end
-end
-function yui.textedited(text, start, len)
+end)
+onee.love("textedited", function(text, start, len)
 	for k,v in pairs(yui) do
 		if type(yui[k]) == "table" and yui[k].yui == true then
 			yui[k]:textedited(text, start, len)
 		end
 	end
-end
-
-onee.love("keypressed", yui.keypressed)
-onee.love("keyreleased", yui.keyreleased)
-onee.love("textinput", yui.textinput)
-onee.love("textedited", yui.textedited)
+end)
 
 -- main loop
 function yui.draw()
@@ -56,8 +51,8 @@ function yui.draw()
 	for k,v in pairs(yui) do
 		if type(v) == "table" and v.yui == true then
 			if yui.open[k] == true then
-				if v.active then v:update(tick) end
-				if v.visible then v:draw() end
+				v:update(dt)
+				v:draw()
 				if debug_yui then yui.debug_draw(v) end
 			else
 				yui[k] = nil

@@ -248,10 +248,6 @@ function table.length(arg)
 	return i
 end
 
-function table.clear(arg)
-	for k,v in pairs(arg) do v = nil end
-end
-
 function table.fill(v, min, max)
 	if not max then min, max = 1, min end
 	local t = {}
@@ -539,6 +535,7 @@ end
 
 os.date_ = os.date
 function os.date(format, time)
+	time = time or os.time()
 	if format == "*t" then
 		local t = os.date_("*t",time)
 		-- default fields: year, month, day, hour, min, sec, wday, yday, isdst
@@ -550,6 +547,7 @@ function os.date(format, time)
 		t.period = os.date_("%p",time) -- am, pm
 		t.week = tonumber(os.date_("%W",time))
 		t.yearshort = tonumber(os.date_("%y",time))
+		t.beats = (time + 3600) % 86400 / 86.4 -- swatch internet time
 		return t
 	end
 	return os.date_(format, time)

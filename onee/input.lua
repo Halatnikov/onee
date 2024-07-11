@@ -200,28 +200,24 @@ end
 ---------------------------------------------------------------- 
 
 -- update gamepad list
-function love.joystickadded()
+onee.love("joystickadded", function()
 	input.gamepads = love.joystick.getJoysticks()
-end
-function love.joystickremoved()
+end)
+onee.love("joystickremoved", function()
 	input.gamepads = love.joystick.getJoysticks()
-end
+end)
 
 -- mouse wheel input
-function input.wheelmoved(x,y) 
+onee.love("wheelmoved", function(x,y) 
 	input.mouse_wheel = y
-end
+end)
 
 -- differentiate between mouse and touch inputs (workaround)
-function input.mousepressed(x,y,button,istouch)
+onee.love("mousepressed", function(x,y,button,istouch)
 	input.mouse_istouch[button] = istouch
-end
-function input.mousereleased(x,y,button,istouch)
+end)
+onee.love("mousereleased", function(x,y,button,istouch)
 	input.mouse_istouch[button] = nil
-end
-
-onee.love("mousepressed", input.mousepressed)
-onee.love("mousereleased", input.mousereleased)
-onee.love("wheelmoved", input.wheelmoved)
+end)
 
 _prof.hook("input")

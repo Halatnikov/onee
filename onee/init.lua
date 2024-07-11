@@ -1,5 +1,5 @@
 onee = {}
-onee.version = "0.0.2-19"
+onee.version = "0.0.2-20"
 onee.colors = {	
 	bg = {8/255, 8/255, 8/255},
 	bg_deep = {16/255, 16/255, 16/255},
@@ -14,21 +14,29 @@ do
 	-- love2d shenanigans
 	mobile = (love._os == "Android" or love._os == "iOS")
 	
-	love.window.setMode(love.config.window.width, love.config.window.height, {
+	love.window.setMode(love.config.width, love.config.height, {
 		vsync = 0, resizable = true, fullscreen = mobile,
-		minwidth = love.config.window.width, minheight = love.config.window.height,
+		minwidth = love.config.width, minheight = love.config.height,
 	})
+	
+	love.window.setTitle(love.config.title)
 	
 	love.graphics.setDefaultFilter("nearest", "nearest", 0)
 	love.graphics.setLineStyle("rough")
 	love.graphics.clear()
 	love.graphics.present() -- black screen
+	
+	-- for loading external dlls
+	onee.libtype = love._os == "Windows" and "dll" or (love._os == "Linux" or love._os == "Android") and "so"
+	if onee.libtype then
+		package.cpath = package.cpath..";"..love.filesystem.getSaveDirectory().."/libs/?."..onee.libtype
+		love.filesystem.createDirectory("libs")
+	end
 
 	-- libraries (user)
-	require("onee/libs/timer")
 	require("onee/libs/urfs")
+	require("onee/libs/timer")
 	require("onee/libs/json")
-	
 	require("onee/libs/runtime-textureatlas")
 	require("onee/libs/gifload")
 	require("onee/libs/gltf")
@@ -54,14 +62,11 @@ do
 	tick = 1 / framerate
 	onee.time_start = os.time()
 	onee.allow_update = true
-	onee.width, onee.height = love.config.window.width, love.config.window.height
+	onee.width, onee.height = love.config.width, love.config.height
 	
 	_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
 	jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
 	jit.version_revision = string.left(jit.version_rolling, 2)
-	
-	windowwidth, windowheight = onee.width, onee.height
-	dt = love.timer.getDelta()
 	
 	-- :o
 	debug.enable(debug_mode)
@@ -72,12 +77,13 @@ do
 	print(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	
 	-- off we go
+	window.update() -- init game canvas
 	scene.set("init")
 end
 
 ---------------------------------------------------------------- MAIN LOOP
 
-function onee.update(dt_)
+function onee.update()
 	_prof.push("frame")
 	_prof.push("onee.update")
 	
@@ -85,10 +91,8 @@ function onee.update(dt_)
 	onee.before_update = (onee.before_update or 0) + tick
 	
 	-- update сonstants
-	windowwidth = love.graphics.getWidth()
-	windowheight = love.graphics.getHeight()
-	mousex = love.mouse.getX()
-	mousey = love.mouse.getY()
+	windowwidth, windowheight = love.graphics.getWidth(), love.graphics.getHeight()
+	mousex, mousey = love.mouse.getX(), love.mouse.getY()
 	
 	if onee.allow_update then
 		-- update сonstants that require the game running
@@ -121,8 +125,8 @@ function onee.draw()
 	-- reset the graphics state constantly
 	love.graphics.reset(true)
 	
-	-- frame limiter end
 	_prof.mark("sleeping...")
+	-- frame limiter end
 	onee.after_draw = love.timer.getTime()
 	if onee.before_update <= onee.after_draw then onee.before_update = onee.after_draw end
 	love.timer.sleep(onee.before_update - onee.after_draw)

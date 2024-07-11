@@ -14,8 +14,8 @@ function debug.enable(enabled)
 		-- gui (debug)
 		require("onee/gui/imgui")
 		
-		love.setDeprecationOutput(true)
 		love.window.setTitle(love.config.title.." (debug)")
+		love.setDeprecationOutput(true)
 		
 		debug_draw_collisions = true
 		debug_draw_sprites = false
@@ -28,6 +28,7 @@ function debug.enable(enabled)
 		
 		function lurker.postswap(f)
 			_prof.hook = noop
+			--onee.love = noop
 			
 			window.update()
 		end
@@ -56,7 +57,6 @@ function debug.enable(enabled)
 		love.window.setTitle(love.config.title)
 		
 		_prof.hook = noop
-		onee.love = noop
 		
 		debug_draw_collisions = false
 		debug_draw_sprites = false
@@ -189,7 +189,7 @@ end
 
 ---------------------------------------------------------------- MISC
 
-function debug.keypressed(k, scancode, isrepeat)
+onee.love("keypressed", function(k, scancode, isrepeat)
 	if not debug_mode then return end
 	--print(k)
 	--press l to learn
@@ -203,8 +203,7 @@ function debug.keypressed(k, scancode, isrepeat)
 		if k == "g" then log(string.random(150)) end
 	end
 	
-end
-onee.love("keypressed", debug.keypressed)
+end)
 
 --! pretty print a table
 function debug.table(arg, mode, indent)
@@ -229,7 +228,7 @@ log("test")
 
 --! run a test
 function debug.test(arg)
-	-- set up the test environment
+	------------ set up the test environment
 	local env = {}
 	env = copy(_G) -- add globals, techically isolated for that test only?
 	
@@ -239,9 +238,9 @@ function debug.test(arg)
 	env.before, env.after = lust.before, lust.after
 	env.spy = lust.spy
 
-	env.group, env.test, env.assert = env.describe, env.it, env.expect
+	env.group, env.test, env.assert = env.describe, env.it, env.expect -- aliases
 	
-	-- set up custom functions
+	------------ set up custom functions
 	
 	-- force fail test
 	function lust.fail(msg)
@@ -257,7 +256,7 @@ function debug.test(arg)
 	end
 	env.output = lust.output
 	
-	-- set up custom assertions
+	------------ set up custom assertions
 	local paths = lust.paths
 	
 	-- assert().pass()
@@ -308,7 +307,7 @@ function debug.test(arg)
 	
 	env.paths = paths
 	
-	-- run test
+	------------ run test
 	local time_start = love.timer.getTime()
 	log("RUNNING TEST \""..arg.."\"")
 	dofile("onee/_tests/"..arg, env)
