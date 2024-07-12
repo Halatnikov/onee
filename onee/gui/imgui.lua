@@ -193,7 +193,7 @@ function imgui.table_entries(arg, settings, level)
 				if type(v) == "table" then
 					imgui.table(v, tostring(k), settings, level)
 				else
-					v = not (v == noop) and v or "function: noop"
+					v = v == noop and "function: noop" or v
 					gui.TextWrapped(tostring(k)..": "..tostring(v))
 				end
 			end
@@ -252,7 +252,7 @@ function imgui.table_fancy_entry(arg, k, v, settings)
 			gui.TableSetupColumn("2")
 			
 			gui.TableNextRow()
-			v = not (v == noop) and v or "function: noop"
+			v = v == noop and "function: noop" or v
 			gui.TableSetColumnIndex(0); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), tostring(v))
 			gui.TableSetColumnIndex(1); gui.Text(tostring(k))
 			
@@ -767,12 +767,13 @@ function imgui.window.main()
 			gui.SetNextItemWidth(128)
 			if gui.InputFloat("internal scale", _v, 1, 1) then
 				window.internal = math.clamp(0.01, _v[0], inf)
+				window.update()
 			end
 			
 			gui.SetNextItemWidth(128)
 			if gui.BeginCombo("scaling mode", string.lower(table.find(window.SCALING, window.mode))) then
-				if gui.Selectable_Bool("none") then window.mode = window.SCALING.NONE end
-				if gui.Selectable_Bool("integer") then window.mode = window.SCALING.INTEGER end
+				if gui.Selectable_Bool("none") then window.mode = window.SCALING.NONE; window.update() end
+				if gui.Selectable_Bool("integer") then window.mode = window.SCALING.INTEGER; window.update() end
 				gui.EndCombo()
 			end
 			
@@ -981,7 +982,8 @@ function imgui.window.main()
 			
 			------------------------ love.graphics.getRendererInfo() tree
 			if gui.TreeNodeEx_Str("love.graphics.getRendererInfo()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				local renderer = {}; renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
+				local renderer = {}
+				renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 				
 				if gui.BeginTable("performance_renderer", 2, gui.love.TableFlags("RowBg", "BordersInnerV", "Resizable")) then
 					gui.TableSetupColumn("k")
@@ -1054,20 +1056,14 @@ function imgui.window.main()
 				
 				for k,v in kpairs(config.input.keyboard) do
 					gui.TableNextRow()
-					gui.TableSetColumnIndex(0); gui.Text(k)
+					gui.TableSetColumnIndex(0)
+					gui.Text(k)
 					gui.TableSetColumnIndex(1)
-					if input[k] then
-						gui.TextColored(gui.ImVec4_Float(0,1,0,1),tostring(input[k]))
-					else
-						gui.TextColored(gui.ImVec4_Float(1,0,0,1),tostring(input[k]))
-					end
-					gui.TableSetColumnIndex(2); gui.Text(tostring(input.time[k]))
+					gui.TextColored(input[k] and gui.ImVec4_Float(0,1,0,1) or gui.ImVec4_Float(1,0,0,1),tostring(input[k]))
+					gui.TableSetColumnIndex(2)
+					gui.Text(tostring(input.time[k]))
 					gui.TableSetColumnIndex(3)
-					if input.pressed[k] then
-						gui.TextColored(gui.ImVec4_Float(0,1,0,1),tostring(input.pressed[k]))
-					else
-						gui.TextColored(gui.ImVec4_Float(1,0,0,1),tostring(input.pressed[k]))
-					end
+					gui.TextColored(input.pressed[k] and gui.ImVec4_Float(0,1,0,1) or gui.ImVec4_Float(1,0,0,1),tostring(input.pressed[k]))
 				end
 				
 				gui.EndTable()

@@ -162,7 +162,7 @@ function instance.new(name, scene, data) -- string, table, table=
 
 	assert(scene.objects[name], "instance.new() | can't create instance, object \""..name.."\" doesn't exist!")
 	
-	local id = name.."_"..string.random(6)
+	local id = name.."_"..string.random(8)
 	local object = scene.objects[name]
 	
 	local t = { -- init

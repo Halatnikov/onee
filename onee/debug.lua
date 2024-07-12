@@ -28,7 +28,7 @@ function debug.enable(enabled)
 		
 		function lurker.postswap(f)
 			_prof.hook = noop
-			--onee.love = noop
+			onee.love = noop
 			
 			window.update()
 		end

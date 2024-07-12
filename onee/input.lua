@@ -101,14 +101,13 @@ function input.update()
 					local touchx, touchy = love.touch.getPosition(id)
 					
 					if shape.circle then
-						local x = shape.circle[1]
-						local y = shape.circle[2]
+						local x, y = shape.circle[1], shape.circle[2]
 						local radius = shape.circle[3]
 						
 						if shape.centerx then x = (windowwidth/2) + x end
 						if shape.centery then y = (windowheight/2) + y end
-						if math.sign(x) == -1 then x = windowwidth + x end
-						if math.sign(y) == -1 then y = windowheight + y end
+						if math.sign(x) == -1 and not shape.centerx then x = windowwidth + x end
+						if math.sign(y) == -1 and not shape.centery then y = windowheight + y end
 						
 						if collision.point_circ(touchx,touchy, x,y,radius) then
 							input.mode = "touch"
@@ -117,15 +116,14 @@ function input.update()
 					end
 					
 					if shape.rect then
-						local x = shape.rect[1]
-						local y = shape.rect[2]
+						local x, y = shape.rect[1], shape.rect[2]
 						local width = shape.rect[3]
 						local height = shape.rect[4] or width
 						
 						if shape.centerx then x = (windowwidth/2) + x end
 						if shape.centery then y = (windowheight/2) + y end
-						if math.sign(x) == -1 then x = windowwidth + x end
-						if math.sign(y) == -1 then y = windowheight + y end
+						if math.sign(x) == -1 and not shape.centerx then x = windowwidth + x end
+						if math.sign(y) == -1 and not shape.centery then y = windowheight + y end
 						
 						if collision.point_rect(touchx,touchy, x,y,width,height) then
 							input.mode = "touch"
@@ -164,8 +162,8 @@ function input.draw()
 					
 					if shape.centerx then x = (windowwidth/2) + x end
 					if shape.centery then y = (windowheight/2) + y end
-					if math.sign(x) == -1 then x = windowwidth + x end
-					if math.sign(y) == -1 then y = windowheight + y end
+					if math.sign(x) == -1 and not shape.centerx then x = windowwidth + x end
+					if math.sign(y) == -1 and not shape.centery then y = windowheight + y end
 					
 					love.graphics.setColor(1,1,1,0.5)
 					local fill = input[key] and "fill" or "line"
@@ -180,8 +178,8 @@ function input.draw()
 					
 					if shape.centerx then x = (windowwidth/2) + x end
 					if shape.centery then y = (windowheight/2) + y end
-					if math.sign(x) == -1 then x = windowwidth + x end
-					if math.sign(y) == -1 then y = windowheight + y end
+					if math.sign(x) == -1 and not shape.centerx then x = windowwidth + x end
+					if math.sign(y) == -1 and not shape.centery then y = windowheight + y end
 					
 					love.graphics.setColor(1,1,1,0.5)
 					local fill = input[key] and "fill" or "line"

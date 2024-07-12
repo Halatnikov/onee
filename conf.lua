@@ -6,9 +6,8 @@ function love.conf(t)
 	
 	t.width = 640
     t.height = 360
-	t.gammacorrect = true
 	
-	t.externalstorage = true -- android
+	t.gammacorrect = true
 	t.window = nil
 	
 	love.config = t -- expose config

@@ -13,7 +13,6 @@ do
 	window.internal = 1
 	window.mode = window.SCALING.NONE
 	
-	window.gamescale = 1
 	window.canvas = nil
 end
 
@@ -28,8 +27,6 @@ function window.update(width, height)
 	if window.mode == window.SCALING.INTEGER then 
 		window.scale = math.floor((window.scale * window.internal) / window.internal)
 	end
-	
-	window.gamescale = 1 / window.scale / window.internal
 	
 	window.x = math.floor((width - (window.scale * onee.width)) / 2)
 	window.y = math.floor((height - (window.scale * onee.height)) / 2)
@@ -67,7 +64,7 @@ end
 
 --! get mouse position relative to the game
 function window.mouse()
-	local x = math.floor((love.mouse.getX() - window.x) * window.gamescale)
-	local y = math.floor((love.mouse.getY() - window.y) * window.gamescale)
+	local x = math.floor((love.mouse.getX() - window.x) * (1 / window.scale))
+	local y = math.floor((love.mouse.getY() - window.y) * (1 / window.scale))
 	return x, y
 end

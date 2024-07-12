@@ -1,8 +1,6 @@
 local scene_ = scene
 local scene = {}
 
-local gui = yui_
-
 local menu = dofile("common/menu_simple")
 
 local bool = true
@@ -40,14 +38,15 @@ function scene.init(self)
 	
 	menu.checkbox("Checkbox", "description Checkbox wOw", bool)
 	
-	menu.slider("Slider", nil, num, 0, 10, 1)
+	menu.slider("Slider", "", num, 0, 10, 1)
 	
-	menu.choice("Multi-choice", nil, str, {{"Have", "have"}, {"You", "you"}, {"Ever", "ever"}}, false)
+	menu.choice("Multi-choice", "", str, {{"Have", "have"}, {"You", "you"}, {"Ever", "ever"}}, false)
 	
 	menu.textinput("Text input", "aaaaaaaaaaaaaaaaaaaa", textinput)
 	
-	menu.disabled("Disabled")
+	menu.button("Disabled", "", nil, false)
 	
+	local gui = yui_
 	table.insert(menu.root, gui.Columns {
 		description = "a custom entry for demonstration",
 		
@@ -101,12 +100,6 @@ function scene.draw(self)
 	sprite.draw(self.arrow, self)
 	
 	queue.add(self.drawlist, 2, function()
-		-- text.print({"brb ", "{key_a}", {"shake", " accidentally"}, "{unknown}", {{0,255,0}," inventing"}, " my own ", {{{"shake", strengthy = 3},{0,255,255}}, "scribble"}}, "font_12", 100, 5)
-		
-		-- text.print({"TEST", "{input_up}"}, "font_titlecard", 100, 25)
-		
-		-- text.print({"line 1??\n\nlet's see", {"shake", " when the"}}, "font_12", 120, 55)
-		
 		text.print({"TEST", "{input_right}"}, "font_titlecard", 100, 10)
 		
 		text.printf({
@@ -116,7 +109,6 @@ function scene.draw(self)
 			"{input_a}", "displaying ", "{unknown}", "icons ", "{key_return}", "{invalid}",
 			newline, {"wave", "wavy text"},
 			newline, {{"rainbow", size = 3}, "rainbow text"},
-			
 		}, "font_12", 100, 40, nil, "center")
 	end)
 end

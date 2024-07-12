@@ -9,7 +9,7 @@ do
 	yui_ = require("onee/libs/yui")
 	gui = yui_
 
-	if mobile and debug_mode then yui.open.debug_button = true end
+	if (mobile or not onee.libtype) and debug_mode then yui.open.debug_button = true end
 end
 
 -- event redirection

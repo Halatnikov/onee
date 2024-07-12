@@ -144,9 +144,7 @@ function Choice:draw()
         -- draw < and > arrows, desaturate color if arrow is disabled
         local cc = color.hovered
 
-        --love.graphics.setLineStyle('smooth')
         love.graphics.setLineWidth(3)
-        --love.graphics.setLineJoin('bevel')
 
         local r, g, b = cc.fg[1], cc.fg[2], cc.fg[3]
         local a = (self.nowrap and self.index == 1) and 0 or 1

@@ -1,5 +1,5 @@
 onee = {}
-onee.version = "0.0.2-20"
+onee.version = "0.0.2-21"
 onee.colors = {	
 	bg = {8/255, 8/255, 8/255},
 	bg_deep = {16/255, 16/255, 16/255},
@@ -27,7 +27,7 @@ do
 	love.graphics.present() -- black screen
 	
 	-- for loading external dlls
-	onee.libtype = love._os == "Windows" and "dll" or (love._os == "Linux" or love._os == "Android") and "so"
+	onee.libtype = jit.arch == "x64" and (love._os == "Windows" and "dll" or love._os == "Linux" and "so")
 	if onee.libtype then
 		package.cpath = package.cpath..";"..love.filesystem.getSaveDirectory().."/libs/?."..onee.libtype
 		love.filesystem.createDirectory("libs")
@@ -72,7 +72,7 @@ do
 	debug.enable(debug_mode)
 	
 	-- :)
-	print("LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version)
+	print("love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version)
 	local date = os.date("*t")
 	print(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	

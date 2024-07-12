@@ -53,16 +53,16 @@ function love.errorhandler(msg)
 			elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
 				copyToClipboard()
 			elseif e == "touchpressed" then
-				local name = love.window.getTitle()
-				if #name == 0 or name == "Untitled" then name = "Game" end
-				local buttons = {"OK", "Cancel"}
+				local buttons = {"Yes", "Cancel", "Restart"}
 				if love.system then
-					buttons[3] = "Copy to clipboard"
+					buttons[4] = "Copy to clipboard"
 				end
-				local pressed = love.window.showMessageBox("Quit "..name.."?", "", buttons)
+				local pressed = love.window.showMessageBox("Quit?", "", buttons)
 				if pressed == 1 then
 					return 1
 				elseif pressed == 3 then
+					return "restart"
+				elseif pressed == 4 then
 					copyToClipboard()
 				end
 			end
@@ -87,7 +87,6 @@ function errorhandler.draw(msg, mode, notraceback)
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.origin()
 	
-	msg = tostring(msg)
 	local trace = notraceback and "" or debug.traceback()
 
 	local sanitizedmsg = {}
@@ -138,7 +137,7 @@ function errorhandler.draw(msg, mode, notraceback)
 	err = err:gsub("%[string \"(.-)\"%]", "%1")
 	
 	err = err.."\n"
-	err = err.."\nonee v"..onee.version
+	err = err.."\nonee "..(onee.version or "???")..", love2d "..(love._version or "???")
 	err = err.."\n"
 	err = err.."\nPress Ctrl+C to copy to clipboard"
 	err = err.."\nPress Esc to quit or Space to restart"

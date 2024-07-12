@@ -53,6 +53,7 @@ function menu.push(name, params)
 	menu.y = params.y or menu.y
 	menu.w = params.w or menu.w
 	menu.h = params.h or menu.h
+	menu.padding = params.padding or menu.padding
 	menu.theme = params.theme or menu.theme
 	
 	yui.open[menu.name] = true
@@ -65,7 +66,7 @@ function menu.push(name, params)
 				local focused = self.ui.focused
 				local description = focused.description
 				
-				if description then
+				if description and not (#description == 0) then
 					local font = fonts.freaks16 or onee.font
 					local width, wraps = font:getWrap(description, onee.width - 4)
 					local height = font:getHeight()
@@ -116,13 +117,19 @@ function menu.spacer(size, t)
 end
 
 --!
-function menu.button(label, description, func, t)
+function menu.button(label, description, func, enabled, t)
 	local item = gui.Button {
-		align = "left",
+		w = menu.w, align = "left",
 		text = label or "",
 		description = description,
 		onHit = func or noop,
 	}
+	
+	if enabled == nil then enabled = true end
+	if enabled == false then
+		item.theme = menu.themes.disabled
+		item.onHit = noop
+	end
 	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
@@ -130,7 +137,7 @@ end
 
 --!
 function menu.disabled(label, description, t)
-	return menu.button(label, description, nil, table.append({theme = menu.themes.disabled}, t or {}))
+	return menu.button(label, description, nil, false, t)
 end
 
 --!
@@ -168,7 +175,7 @@ function menu.slider(label, description, var, min, max, step, t)
 		gui.Columns {
 			padding = 16,
 			gui.Slider {
-				w = menu.w/2/2, h = menu.h, theme = menu.themes.default,
+				w = (menu.w/2/2)-8, h = menu.h, theme = menu.themes.default,
 				
 				min = min, max = max, step = step or 1,
 				value = var,

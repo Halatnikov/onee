@@ -476,7 +476,7 @@ function color.hsl(h, s, l, a)
 	a = a or 1
 	if s <= 0 then return l, l, l, a end
 	h = h * 6
-	local c = (1 - math.abs( 2 * l - 1)) * s
+	local c = (1 - math.abs( 2 * 1 - 1)) * s
 	local x = (1 - math.abs( h % 2 - 1)) * c
 	local m = (1 - 0.5 * c)
 	local r, g, b
@@ -485,7 +485,7 @@ function color.hsl(h, s, l, a)
 	elseif h < 3 then r, g, b = 0, c, x
 	elseif h < 4 then r, g, b = 0, x, c
 	elseif h < 5 then r, g, b = x, 0, c
-	else r, g, b = c, 0, x
+	else              r, g, b = c, 0, x
 	end 
 	return r + m, g + m, b + m, a
 end
@@ -496,25 +496,22 @@ function gradient(type, colors, x, y, r, w, h, ox, oy, kx, ky)
 	type = type or "horizontal"
 	r = math.rad(r or 0)
 	
+	local vertices = {}
 	if type == "horizontal" then
-		local vertices = {}
-		for i = 1, #colors do
+		for i, color in ipairs(colors) do
 			local x = (i - 1) / (#colors - 1)
-			vertices[#vertices + 1] = {x, 1, x, 1, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
-			vertices[#vertices + 1] = {x, 0, x, 0, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
+			table.insert(vertices, {x, 1, x, 1, color[1], color[2], color[3], color[4] or 1})
+			table.insert(vertices, {x, 0, x, 0, color[1], color[2], color[3], color[4] or 1})
 		end
-		
-		love.graphics.draw(love.graphics.newMesh(vertices, "strip", "static"), x, y, r, w, h, ox, oy, kx, ky)
 	elseif type == "vertical" then
-		local vertices = {}
-		for i = 1, #colors do
+		for i, color in ipairs(colors) do
 			local y = (i - 1) / (#colors - 1)
-			vertices[#vertices + 1] = {1, y, 1, y, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
-			vertices[#vertices + 1] = {0, y, 0, y, colors[i][1], colors[i][2], colors[i][3], colors[i][4] or 1}
+			table.insert(vertices, {1, y, 1, y, color[1], color[2], color[3], color[4] or 1})
+			table.insert(vertices, {0, y, 0, y, color[1], color[2], color[3], color[4] or 1})
 		end
-		
-		love.graphics.draw(love.graphics.newMesh(vertices, "strip", "static"), x, y, r, w, h, ox, oy, kx, ky)
 	end
+	
+	love.graphics.draw(love.graphics.newMesh(vertices, "strip", "static"), x, y, r, w, h, ox, oy, kx, ky)
 end
 
 ---------------------------------------------------------------- MISC
