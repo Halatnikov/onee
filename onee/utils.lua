@@ -248,6 +248,10 @@ function table.length(arg)
 	return i
 end
 
+function table.reverse(arg)
+	return table.sort(arg, function(a,b) return a > b end)
+end
+
 function table.fill(v, min, max)
 	if not max then min, max = 1, min end
 	local t = {}
@@ -313,10 +317,6 @@ function table.minn(arg, v)
 end
 function table.minv(arg) return table.minn(arg, true) end -- alias
 table.mink = table.minn -- alias
-
-function table.reverse(arg)
-	return table.sort(arg, function(a,b) return a > b end)
-end
 
 function table.sortby(arg, k, descending)
 	return table.sort(arg, function(a,b)
@@ -476,11 +476,11 @@ function color.hsl(h, s, l, a)
 	a = a or 1
 	if s <= 0 then return l, l, l, a end
 	h = h * 6
-	local c = (1 - math.abs( 2 * 1 - 1)) * s
+	local c = (1 - math.abs( 2 * l - 1)) * s
 	local x = (1 - math.abs( h % 2 - 1)) * c
 	local m = (1 - 0.5 * c)
 	local r, g, b
-	if h < 1 then r, g, b = c, x, 0
+	if h < 1 then     r, g, b = c, x, 0
 	elseif h < 2 then r, g, b = x, c, 0
 	elseif h < 3 then r, g, b = 0, c, x
 	elseif h < 4 then r, g, b = 0, x, c
@@ -491,6 +491,13 @@ function color.hsl(h, s, l, a)
 end
 
 ---------------------------------------------------------------- DRAWING
+
+function love.graphics.stack(func, stack)
+	stack = stack or "transform"
+	love.graphics.push()
+	func()
+	love.graphics.pop()
+end
 
 function gradient(type, colors, x, y, r, w, h, ox, oy, kx, ky)
 	type = type or "horizontal"

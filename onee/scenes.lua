@@ -171,25 +171,26 @@ function instance.new(name, scene, data) -- string, table, table=
 		object = name,
 		id = id,
 		id_i = table.length(scene.instances) + 1,
-		
 		active = true,
 		visible = true,
 		
 		init = noop,
 		delete = noop,
 		update = noop,
+		update_pre = noop,
+		update_post = noop,
 		draw = noop,
+		draw_pre = noop,
+		draw_post = noop,
 	}
 	
 	if object.data then table.append(t, object.data) end
 	
 	if data then table.append(t, data) end -- additional data
 	
-	function t.destroy()
-		instance.delete(t.id, scene)
-	end
+	t.destroy = function() instance.delete(t.id, scene) end
 	
-	t = table.protect(t, {"instance", "object", "scene", "id", "id_i"})
+	t = table.protect(t, {"instance", "object", "scene", "id", "id_i", "destroy"})
 	
 	scene.instances[id] = t -- done
 	

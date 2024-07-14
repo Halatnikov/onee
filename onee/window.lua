@@ -62,9 +62,21 @@ function window.pop()
 	love.graphics.pop()
 end
 
+--!
+function window.tocanvas(x, y)
+	local x = math.floor((x - window.x) / window.scale)
+	local y = math.floor((y - window.y) / window.scale)
+	return x, y
+end
+
+--!
+function window.towindow(x, y)
+	local x = math.floor((x * window.scale) + window.x)
+	local y = math.floor((y * window.scale) + window.y)
+	return x, y
+end
+
 --! get mouse position relative to the game
 function window.mouse()
-	local x = math.floor((love.mouse.getX() - window.x) * (1 / window.scale))
-	local y = math.floor((love.mouse.getY() - window.y) * (1 / window.scale))
-	return x, y
+	return window.tocanvas(love.mouse.getPosition())
 end

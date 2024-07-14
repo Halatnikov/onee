@@ -2,9 +2,12 @@ input = {
 	mode = "keyboard",
 	time = {},
 	pressed = {},
+	released = {},
 	
 	mouse_wheel = 0,
 	mouse_istouch = {},
+	
+	touch_active = true,
 }
 
 -- initialize the table
@@ -12,17 +15,18 @@ for k in pairs(config.input.keyboard) do
 	input[k] = false
 	input.time[k] = 0
 	input.pressed[k] = false
+	input.released[k] = false
 end
 
 ---------------------------------------------------------------- 
 
 -- MAIN LOOP
 function input.update()
-	
 	-- begin loop
 	for key in pairs(input.time) do 
 		input[key] = false -- reset key states
 		input.pressed[key] = false
+		input.released[key] = false
 	end
 	if input.ignore then return end
 	
@@ -55,11 +59,11 @@ function input.update()
 	
 	-- gamepad mode
 	if input.gamepads then
-		for p=1,#input.gamepads do -- loop through all connected gamepads
+		for i, gamepad in pairs(input.gamepads) do -- loop through all connected gamepads
 			for key, entry in pairs(config.input.gamepad) do
 				-- gamepad buttons
 				if entry.b then
-					if input.gamepads[p]:isGamepadDown(entry.b) then
+					if gamepad:isGamepadDown(entry.b) then
 						input.mode = "gamepad"
 						input[key] = true
 					end
@@ -67,7 +71,7 @@ function input.update()
 				-- gamepad hats (dpad)
 				if entry.hat then
 					for i in pairs(entry.hat) do
-						if string.match(input.gamepads[p]:getHat(1), entry.hat[i]) then
+						if string.match(gamepad:getHat(1), entry.hat[i]) then
 							input.mode = "gamepad"
 							input[key] = true
 						end
@@ -80,8 +84,8 @@ function input.update()
 						local axis = entry.axis[i][1]
 						local dir = entry.axis[i][2]	
 					
-						if (math.abs(input.gamepads[p]:getGamepadAxis(axis)) > config.input.gamepad_deadzone)
-						and math.sign(input.gamepads[p]:getGamepadAxis(axis)) == dir then 
+						if (math.abs(gamepad:getGamepadAxis(axis)) > config.input.gamepad_deadzone)
+						and math.sign(gamepad:getGamepadAxis(axis)) == dir then 
 							input.mode = "gamepad"
 							input[key] = true 
 						end
@@ -92,12 +96,12 @@ function input.update()
 	end
 	
 	-- touch screen mode
-	if mobile then
+	if mobile and input.touch_active then
 		local touches = love.touch.getTouches()
 		
 		for key, entry in pairs(config.input.touch) do
 			for i, shape in pairs(entry) do
-				for j, id in ipairs(touches) do
+				for j, id in pairs(touches) do
 					local touchx, touchy = love.touch.getPosition(id)
 					
 					if shape.circle then
@@ -142,18 +146,17 @@ function input.update()
 			if input.time[key] < 1 then input.pressed[key] = true end -- key pressed once
 			input.time[key] = input.time[key] + 1 -- key is held, count time
 		else
+			if input.time[key] > 1 then input.released[key] = true end
 			input.time[key] = 0 -- key was released
 		end
 	end
 	input.mouse_wheel = 0 -- reset mouse wheel
-	
 end
 
 -- DRAW LOOP
 function input.draw()
-	
 	-- draw touch screen buttons
-	if mobile then
+	if mobile and input.touch_active then
 		for key, entry in pairs(config.input.touch) do
 			for i, shape in pairs(entry) do
 				if shape.circle then
@@ -192,7 +195,6 @@ function input.draw()
 			end
 		end
 	end
-	
 end
 
 ---------------------------------------------------------------- 

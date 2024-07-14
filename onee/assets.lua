@@ -294,7 +294,6 @@ function sprite.update(sprite, scene)
 	
 	local spritedef = scene.sprites[sprite.name]
 	assert(spritedef, "sprite.update() | no such sprite \""..sprite.name.."\"")
-	
 	local animdef = spritedef.animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	
@@ -377,9 +376,9 @@ function sprite.draw(sprite, scene, args)
 	if args.queued == false then sprite.queued = false end
 	
 	-- basics
-	local x = sprite.x or 0; x = math.round(x)
-	local y = sprite.y or 0; y = math.round(y)
-	local angle = sprite.angle or 0; angle = math.rad(math.round(angle))
+	local x = sprite.x or 0; x = math.floor(x)
+	local y = sprite.y or 0; y = math.floor(y)
+	local angle = sprite.angle or 0; angle = math.rad(math.floor(angle))
 	local scalex = sprite.scalex or sprite.scale or 1
 	local scaley = sprite.scaley or sprite.scale or 1
 	local skewx = sprite.skewx or 0
@@ -661,10 +660,11 @@ end
 function model.update(model, scene)
 	assert((model and model.model), "model.update() | not a valid 3d model")
 	
-	if not model.active then return end
-	
 	local modeldef = scene.models[model.name]
 	assert(modeldef, "model.update() | no such model \""..model.name.."\"")
+	
+	if mobile then return end
+	if not model.active then return end
 	
 	local width = model.canvas.width or onee.width
 	local height = model.canvas.height or onee.height
@@ -733,6 +733,7 @@ end
 function model.draw(model, scene)
 	assert((model and model.model), "model.draw() | not a valid 3d model")
 	
+	if mobile then return end
 	if not model.visible then return end
 	
 	-- the model itself
@@ -740,9 +741,9 @@ function model.draw(model, scene)
 	model.projection:draw()
 	
 	-- handle the canvas
-	local x = model.x or model.canvas.x or 0; x = math.round(x)
-	local y = model.y or model.canvas.y or 0; y = math.round(y)
-	local angle = model.canvas.angle or 0; angle = math.rad(math.round(angle))
+	local x = model.x or model.canvas.x or 0; x = math.floor(x)
+	local y = model.y or model.canvas.y or 0; y = math.floor(y)
+	local angle = model.canvas.angle or 0; angle = math.rad(math.floor(angle))
 	local scalex = model.canvas.scalex or 1
 	local scaley = model.canvas.scaley or 1
 	local xoffset = model.canvas.xoffset or 0
@@ -911,9 +912,9 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	if type(arg) == "string" then arg = {arg} end
 	if type(font) == "string" then font = fonts[font] end
 	
-	x = x or 0; x = math.round(x)
-	y = y or 0; y = math.round(y)
-	r = r or 0; r = math.round(r)
+	x = x or 0; x = math.floor(x)
+	y = y or 0; y = math.floor(y)
+	r = r or 0; r = math.floor(r)
 	sx = sx or 1
 	sy = sy or sx or 1
 	ox = ox or 0
@@ -921,7 +922,6 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	kx = kx or 0
 	ky = ky or 0
 	
-	limit = limit or nil
 	alignh = alignh or "left"
 	alignv = alignv or "top"
 	
@@ -945,25 +945,22 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	local lines = {[1] = {}}
 	local curline = 1
 	
-	-- new line function
-	local function endline()
-		curline = curline + 1
-		charcount = 0
-		width = width or curx
-		width = curx > width and curx or width
-		curx = 0
-		cury = cury + fontdef.baseheight + fontdef.linespacing
-		height = cury
-		
-		lines[curline] = {}
-	end
-	
 	-- print character function
 	local function printchar(char)
 		local curfont
 		
-		if char == newline then endline() end
-		if limit and curx >= limit then endline() end
+		-- new line
+		if (char == newline) or (limit and curx >= limit) then
+			curline = curline + 1
+			charcount = 0
+			width = width or curx
+			width = curx > width and curx or width
+			curx = 0
+			cury = cury + fontdef.baseheight + fontdef.linespacing
+			height = cury
+			
+			lines[curline] = {}
+		end
 		
 		-- find character in available fonts
 		if fontscene.assets[fontscene.name][char] then -- main font takes priority
@@ -981,7 +978,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			charcount = charcount + 1
 			totalchars = totalchars + 1
 			
-			-- sprite per character
+			-- text was updated, clear sprites
 			if not table.compare(instance.raw, arg) then instance.sprites = {} end
 			
 			instance.sprites[curline] = instance.sprites[curline] or {}
@@ -1017,136 +1014,85 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		end
 	end
 	
-	-- main function
-	local function handlechunk(chunk, func)
-		local text = tostring(chunk[#chunk])
-		func = func or noop
-			
-		-- loop through characters
-		for i, char in ipairs(string.split(text)) do
-			local charsprite = printchar(char)
-			
-			if charsprite then
-				func(charsprite, i)
-			end
-		end
-	end
-	
 	-- loop through all chunks
 	for i, chunk in ipairs(arg) do
-		if type(chunk) ~= "table" then chunk = {chunk} end
+		chunk = copy(chunk)
 		
-		-- "text" chunk
-		if #chunk == 1 then
-			if string.left(chunk[1], 1) == "{" and string.right(chunk[1], 1) == "}" then
-				-- inline icon
-				local icon = string.sub(chunk[1], 2, -2)
-				local char
+		if type(chunk) ~= "table" then chunk = {chunk} end -- "aaa" -> {"aaa"}
+		if #chunk == 1 then chunk = {{}, chunk[1]} end -- {"aaa"} -> {{effects}, "aaa"}
+		
+		local effects = copy(chunk[1])
+		local data = tostring(chunk[2])
+		
+		if type(effects) == "string" then effects = {effects} end -- "shake" -> {"shake"}
+		if #effects == 1 then effects = {effects} end -- {"shake"} -> {{"shake"}}
+		
+		-- inline icon
+		if string.left(data, 1) == "{" and string.right(data, 1) == "}" then
+			local icon = string.sub(data, 2, -2)
+			local char
+			
+			-- input icons
+			if string.find(icon, "input_") then
+				local button = string.tokenize(icon, "_", 2)
 				
-				-- input icons
-				if string.find(icon, "input_") then
-					local button = string.tokenize(icon, "_", 2)
+				if input.mode == "keyboard" then 
+					local prefix = "key_"
+					local config = config.input.keyboard[button]
 					
-					if input.mode == "keyboard" then 
-						local prefix = "key_"
-						local config = config.input.keyboard[button]
-						
-						if config then
-							if config.k then
-								icon = prefix..config.k[1]
-							elseif config.m then
-								icon = "unknown"
-							elseif config.mw then
-								icon = "unknown"
-							else
-								icon = "invalid"
-							end
+					if config then
+						if config.k then
+							icon = prefix..config.k[1]
+						elseif config.m then
+							icon = "unknown"
+						elseif config.mw then
+							icon = "unknown"
 						else
 							icon = "invalid"
 						end
+					else
+						icon = "invalid"
 					end
-					
-					char = printchar(icon)
-					if not char then char = printchar("unknown") end
-					
-				else
-					-- regular icons
-					char = printchar(icon)
 				end
 				
-				-- center icon vertically
-				char.y = char.realy + (fontdef.baseheight - char.realheight) / 2
+				char = printchar(icon)
+				if not char then char = printchar("unknown") end
+				
+			-- regular icons
 			else
-				-- regular text
-				handlechunk(chunk)
+				char = printchar(icon)
 			end
+			
+			-- center icon vertically
+			char.y = char.realy + (fontdef.baseheight - char.realheight) / 2
 		
-		-- {{effects}, "text"} chunk 
-		elseif #chunk == 2 then
-			local effects = chunk[1]
-			local text = tostring(chunk[2])
-			
-			if type(effects) == "string" then effects = {effects} end
-			if #effects == 1 then effects = {effects} end
-			
-			if (#effects == 3 or #effects == 4) then effects = {effects} end -- color alias
-			
-			handlechunk(chunk, function(char, i)
-				for i, effect in ipairs(effects) do
-					local effect = copy(effect)
-					if type(effect) == "string" then effect = {effect} end
-					
-					-- apply color
-					if (#effect == 3 or #effect == 4) and type(effect[1]) == "number" then
-						table.insert(effect, 1, "color") -- alias
-					end
-					if effect[1] == "color" then
-						local r, g, b = effect[2], effect[3], effect[4]
-						local a = effect[5]
-						
-						char.rgb = {r, g, b}
-						char.opacity = a or char.opacity -- no change
+		-- regular text
+		else	
+			-- loop through characters
+			for i, char in ipairs(string.split(data)) do
+				local charsprite = printchar(char)
+				if charsprite then 
+					-- color alias (as only effect)
+					if (#effects == 3 or #effects == 4) and type(effects[1]) == "number" then
+						effects = {effects}
 					end
 					
-					-- shaking text
-					if effect[1] == "shake" then
-						local strengthx = effect.strengthx or effect.strength or 1
-						local strengthy = effect.strengthy or effect.strength or 1
-						local range = effect.range or {-1, 1}
+					-- apply effects
+					for i, effect in ipairs(effects) do
+						if type(effect) == "string" then effect = {effect} end -- "shake" -> {"shake"}
 						
-						char.x = char.realx + (char.num * math.random(range[1], range[2]) * ((strengthx / 2) / charcount))
-						char.y = char.realy + (char.num * math.random(range[1], range[2]) * ((strengthy / 2) / charcount))
+						-- color alias (with other effects)
+						if (#effect == 3 or #effect == 4) and type(effect[1]) == "number" then
+							table.insert(effect, 1, "color")
+						end
+						
+						local handler = text.effects[effect[1]]
+						if handler then handler(instance, data, effect, charsprite) end
 					end
-					
-					-- wavy text
-					if effect[1] == "wave" then
-						local speed = effect.speed or 8
-						local strength = effect.strength or 2
-						
-						char.y = char.realy + math.sin(instance.timer * speed + char.num) * strength
-					end
-					
-					-- rainbow cycling text
-					if effect[1] == "rainbow" then
-						local speed = effect.speed or 7
-						local brightness = effect.brightness or 128
-						local size = effect.size or 1
-						
-						local phase = instance.timer * speed
-						local frequency = -pi * 255 / (char.num + (#text * size))
-						
-						local r = math.sin(frequency * i + 2 + phase) * brightness + 128
-						local g = math.sin(frequency * i + 0 + phase) * brightness + 128
-						local b = math.sin(frequency * i + 4 + phase) * brightness + 128
-						
-						char.rgb = {r, g, b}
-					end
-					
 				end
-			end)
-			
+			end
 		end
-		
+
 	end
 	
 	instance.raw = arg
@@ -1157,36 +1103,34 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	instance.totalchars = totalchars
 	
 	-- final draw	
-	love.graphics.push()
-	
-	love.graphics.translate(x, y)
-	love.graphics.rotate(math.rad(r))
-	love.graphics.scale(sx, sy)
-	love.graphics.shear(kx, ky)
-	love.graphics.translate(-ox, -oy)
-	
-	for i, line in pairs(instance.sprites) do
-		local xoffset = 0 -- left
-		local yoffset = 0 -- top
-		if #lines > 1 then
-			if alignh == "center" then xoffset = math.round((width - lines[i].width) / 2) end
-			if alignh == "right" then xoffset = math.round((width - lines[i].width)) end
-			
-			if alignv == "center" then yoffset = -math.round(height / 2) end
-			if alignv == "bottom" then yoffset = -math.round(height) end
-		end
+	love.graphics.stack(function()
+		love.graphics.translate(x, y)
+		love.graphics.rotate(math.rad(r))
+		love.graphics.scale(sx, sy)
+		love.graphics.shear(kx, ky)
+		love.graphics.translate(-ox, -oy)
 		
-		love.graphics.push()
-		love.graphics.translate(xoffset, yoffset)
-		for i, charsprite in pairs(line) do
-			sprite.update(charsprite, fontscene)
-			local fontscene = fonts[charsprite.name].scene
-			sprite.draw(charsprite, fontscene, {queued = false})
+		for i, line in pairs(instance.sprites) do
+			local xoffset = 0 -- left
+			local yoffset = 0 -- top
+			if #lines > 1 then
+				if alignh == "center" then xoffset = math.floor((width - lines[i].width) / 2) end
+				if alignh == "right" then xoffset = math.floor((width - lines[i].width)) end
+				
+				if alignv == "center" then yoffset = -math.floor(height / 2) end
+				if alignv == "bottom" then yoffset = -math.floor(height) end
+			end
+			
+			love.graphics.stack(function()
+				love.graphics.translate(xoffset, yoffset)
+				for i, charsprite in pairs(line) do
+					sprite.update(charsprite, fontscene)
+					local fontscene = fonts[charsprite.name].scene
+					sprite.draw(charsprite, fontscene, {queued = false})
+				end
+			end)
 		end
-		love.graphics.pop()
-	end
-	
-	love.graphics.pop()
+	end)
 	
 	-- clean inactive instances
 	-- for k,v in pairs(fontscene.instances) do
@@ -1195,6 +1139,53 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	
 	return instance -- that way you can do `local the = text.print("", 0, 0)`
 end
+
+-- text effects
+text.effects = {}
+
+-- apply color
+text.effects["color"] = function(instance, data, effect, charsprite)
+	charsprite.rgb = {effect[2], effect[3], effect[4]}
+	charsprite.opacity = effect[5] or charsprite.opacity -- no change
+end
+
+-- shaking text
+text.effects["shake"] = function(instance, data, effect, charsprite)
+	local strengthx = effect.strengthx or effect.strength or 1
+	local strengthy = effect.strengthy or effect.strength or 1
+	local range = effect.range or {-1, 1}
+	
+	charsprite.x = charsprite.realx + (math.random(range[1], range[2]) * ((strengthx / 2)))
+	charsprite.y = charsprite.realy + (math.random(range[1], range[2]) * ((strengthy / 2)))
+end
+
+-- wavy text
+text.effects["wave"] = function(instance, data, effect, charsprite)
+	local speedy = effect.speed or effect.speedy or 8
+	local strengthy = effect.strength or effect.strengthy or 2
+	local speedx = effect.speedx or 0
+	local strengthx = effect.strengthx or 0
+	
+	charsprite.x = charsprite.realx + math.sin(instance.timer * speedx + charsprite.num) * strengthy
+	charsprite.y = charsprite.realy + math.sin(instance.timer * speedy + charsprite.num) * strengthy
+end
+
+-- rainbow cycling text
+text.effects["rainbow"] = function(instance, data, effect, charsprite)
+	local speed = effect.speed or 7
+	local brightness = effect.brightness or 128
+	local size = effect.size or 1
+	
+	local phase = instance.timer * speed
+	local frequency = -pi * 255 / (charsprite.num + (#data * size))
+	
+	local r = math.sin(frequency + 2 + phase) * brightness + 128
+	local g = math.sin(frequency + 0 + phase) * brightness + 128
+	local b = math.sin(frequency + 4 + phase) * brightness + 128
+	
+	charsprite.rgb = {r, g, b}
+end
+
 end--#endregion
 
 _prof.hook("asset")

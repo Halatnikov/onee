@@ -785,7 +785,6 @@ function imgui.window.main()
 					onee.height = _v[1]
 				end
 				
-				
 				gui.TreePop()
 			end
 			
@@ -1047,11 +1046,12 @@ function imgui.window.main()
 			
 			-- current inputs table
 			gui.Separator()
-			if gui.BeginTable("input_keys", 4, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+			if gui.BeginTable("input_keys", 5, gui.love.TableFlags("RowBg", "BordersInnerV")) then
 				gui.TableSetupColumn("")
 				gui.TableSetupColumn("held")
 				gui.TableSetupColumn("time")
 				gui.TableSetupColumn("pressed")
+				gui.TableSetupColumn("released")
 				gui.TableHeadersRow()
 				
 				for k,v in kpairs(config.input.keyboard) do
@@ -1064,6 +1064,8 @@ function imgui.window.main()
 					gui.Text(tostring(input.time[k]))
 					gui.TableSetColumnIndex(3)
 					gui.TextColored(input.pressed[k] and gui.ImVec4_Float(0,1,0,1) or gui.ImVec4_Float(1,0,0,1),tostring(input.pressed[k]))
+					gui.TableSetColumnIndex(4)
+					gui.TextColored(input.released[k] and gui.ImVec4_Float(0,1,0,1) or gui.ImVec4_Float(1,0,0,1),tostring(input.released[k]))
 				end
 				
 				gui.EndTable()

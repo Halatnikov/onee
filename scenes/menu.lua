@@ -9,6 +9,8 @@ local str = "You"
 local textinput = "i'm freaks"
 
 function scene.init(self)
+	input.touch_active = false
+	
 	asset.sprite("spr_menu_arrow_16", self)
 	asset.sprite("checkerboard", self)
 	
@@ -77,6 +79,7 @@ end
 
 function scene.delete(self)
 	menu.close()
+	input.touch_active = true
 end
 
 function scene.update(self)
