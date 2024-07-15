@@ -1021,7 +1021,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		if type(chunk) ~= "table" then chunk = {chunk} end -- "aaa" -> {"aaa"}
 		if #chunk == 1 then chunk = {{}, chunk[1]} end -- {"aaa"} -> {{effects}, "aaa"}
 		
-		local effects = copy(chunk[1])
+		local effects = chunk[1]
 		local data = tostring(chunk[2])
 		
 		if type(effects) == "string" then effects = {effects} end -- "shake" -> {"shake"}
@@ -1037,16 +1037,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 				local button = string.tokenize(icon, "_", 2)
 				
 				if input.mode == "keyboard" then 
-					local prefix = "key_"
 					local config = config.input.keyboard[button]
 					
 					if config then
 						if config.k then
-							icon = prefix..config.k[1]
-						elseif config.m then
-							icon = "unknown"
-						elseif config.mw then
-							icon = "unknown"
+							icon = "key_"..config.k[1]
 						else
 							icon = "invalid"
 						end

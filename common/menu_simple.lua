@@ -6,7 +6,7 @@ menu.themes = {
 	default = {
 		cornerRadius = 0,
 		font = nil,
-		--spritefont = "font_12",
+		spritefont = "font_12",
 		color = {
 			normal = {bg = {0.25, 0.25, 0.25}, fg = {0.75, 0.75, 0.75}},
 			hovered = {bg = {0.19, 0.6, 0.73}, fg = {1, 1, 1}},
@@ -17,7 +17,7 @@ menu.themes = {
 	textonly = {
 		cornerRadius = 0,
 		font = nil,
-		--spritefont = "font_12",
+		spritefont = "font_12",
 		color = {
 			normal = {bg = {0,0,0,0}, fg = {1,1,1}},
 			hovered = {bg = {0,0,0,0}, fg = {1,1,1}},
@@ -28,7 +28,7 @@ menu.themes = {
 	disabled = {
 		cornerRadius = 0,
 		font = nil,
-		--spritefont = "font_12",
+		spritefont = "font_12",
 		color = {
 			normal = {bg = {0,0,0,0}, fg = {0,0,0}},
 			hovered = {bg = {0,0,0,0}, fg = {0,0,0}},

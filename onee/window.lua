@@ -24,9 +24,7 @@ function window.update(width, height)
 	local refheight = onee.height * window.internal
 	
 	window.scale = math.min(width / onee.width, height / onee.height)
-	if window.mode == window.SCALING.INTEGER then 
-		window.scale = math.floor((window.scale * window.internal) / window.internal)
-	end
+	if window.mode == window.SCALING.INTEGER then window.scale = math.floor(window.scale) end
 	
 	window.x = math.floor((width - (window.scale * onee.width)) / 2)
 	window.y = math.floor((height - (window.scale * onee.height)) / 2)

@@ -407,8 +407,8 @@ function imgui.window.menubar()
 				love.event.quit("restart")
 			end
 			-- reset scene shortcut
-			if gui.MenuItem_Bool("Reset scene", "`") then
-				scene.set(scenes[1].name)
+			if gui.MenuItem_Bool("Reset scene", "F3") then
+				scene.set(scenes[1].path)
 			end
 			-- advance frame controls shortcut
 			if gui.SmallButton(stepframe and "|>" or "||") then

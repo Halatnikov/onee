@@ -47,7 +47,7 @@ function debug.enable(enabled)
 		setmetatable(_G, {
 			__newindex = function (t, k, v)
 				table.insert(debug.globals, k)
-				if v == nil then table.remove(debug.globals, table.find(k)) end -- TODO
+				if v == nil then table.remove(debug.globals, table.find(k)) end
 				rawset(t, k, v)
 			end
 		})
@@ -55,6 +55,7 @@ function debug.enable(enabled)
 	else
 		
 		love.window.setTitle(love.config.title)
+		love.setDeprecationOutput(false)
 		
 		_prof.hook = noop
 		
@@ -195,10 +196,9 @@ onee.love("keypressed", function(k, scancode, isrepeat)
 	--press l to learn
 	
 	if k == "f2" then love.event.quit("restart") end
+	if k == "f3" then scene.set(scenes[1].path) end
 	
 	if not input.ignore then
-		if k == "q" or k == "f3" then scene.set(scenes[1].name) end
-		 
 		if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
 		if k == "g" then log(string.random(150)) end
 	end

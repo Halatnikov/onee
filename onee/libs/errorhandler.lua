@@ -7,9 +7,9 @@ end
 
 function love.errorhandler(msg)
 	msg = tostring(msg)
-
+	
 	error_printer(msg)
-
+	
 	if not love.window or not love.graphics or not love.event then
 		return
 	end
@@ -22,6 +22,7 @@ function love.errorhandler(msg)
 	end
 
 	-- Reset state.
+	if love.audio then love.audio.stop() end
 	if love.mouse then
 		love.mouse.setVisible(true)
 		love.mouse.setGrabbed(false)
@@ -36,9 +37,8 @@ function love.errorhandler(msg)
 			v:setVibration()
 		end
 	end
-	if love.audio then love.audio.stop() end
 	
-	local draw, copyToClipboard = errorhandler.draw(msg, "love")
+	local draw, copyToClipboard = errorhandler.draw(msg)
 	
 	return function()
 		love.event.pump()
@@ -52,12 +52,11 @@ function love.errorhandler(msg)
 				return "restart"
 			elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
 				copyToClipboard()
-			elseif e == "touchpressed" then
+			elseif e == "touchpressed" or (e == "mousepressed" and c == 1) then
 				local buttons = {"Yes", "Cancel", "Restart"}
-				if love.system then
-					buttons[4] = "Copy to clipboard"
-				end
-				local pressed = love.window.showMessageBox("Quit?", "", buttons)
+				if love.system then table.insert(buttons, "Copy to clipboard") end
+				
+				local pressed = love.window.showMessageBox("", "Quit?", buttons)
 				if pressed == 1 then
 					return 1
 				elseif pressed == 3 then
@@ -82,7 +81,6 @@ errorhandler.print = error_printer
 
 function errorhandler.draw(msg, mode, notraceback)
 	
-	love.graphics.reset(true)
 	local font = love.graphics.setNewFont(14)
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.origin()

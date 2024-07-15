@@ -43,8 +43,12 @@ function math.wrap(min, arg, max)
     return arg > max and min or arg < min and max or arg
 end
 
+function math.gridsnap(arg, step)
+	return math.floor(arg / step) * step
+end
+
 function math.round(arg, decimals)
-	decimals = 10 ^ math.abs(decimals or 0)
+	decimals = 10 ^ (decimals or 0)
     return math.floor(arg * decimals + 0.5) / decimals
 end
 
@@ -494,7 +498,7 @@ end
 
 function love.graphics.stack(func, stack)
 	stack = stack or "transform"
-	love.graphics.push()
+	love.graphics.push(stack)
 	func()
 	love.graphics.pop()
 end

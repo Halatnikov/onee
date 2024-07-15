@@ -1,5 +1,5 @@
 onee = {}
-onee.version = "0.0.2-21"
+onee.version = "0.0.2-22"
 onee.colors = {	
 	bg = {8/255, 8/255, 8/255},
 	bg_deep = {16/255, 16/255, 16/255},
@@ -26,11 +26,13 @@ do
 	love.graphics.clear()
 	love.graphics.present() -- black screen
 	
+	love.filesystem.createDirectory("/")
+	
 	-- for loading external dlls
 	onee.libtype = jit.arch == "x64" and (love._os == "Windows" and "dll" or love._os == "Linux" and "so")
 	if onee.libtype then
-		package.cpath = package.cpath..";"..love.filesystem.getSaveDirectory().."/libs/?."..onee.libtype
 		love.filesystem.createDirectory("libs")
+		package.cpath = package.cpath..";"..love.filesystem.getSaveDirectory().."/libs/?."..onee.libtype
 	end
 
 	-- libraries (user)

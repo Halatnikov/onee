@@ -18,6 +18,7 @@ function scene.set(path, data, name)
 	local t = { -- init
 		scene = true,
 		name = name,
+		path = path,
 		id = 1,
 		active = true,
 		visible = true,
@@ -114,6 +115,7 @@ function object.new(path, scene, data, name)
 	local t = { -- init
 		object = true,
 		name = name,
+		path = path,
 		scene = scene.name,
 		instances = 0,
 	}
