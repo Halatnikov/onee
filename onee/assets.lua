@@ -388,8 +388,8 @@ function sprite.draw(sprite, scene, args)
 	local z = sprite.z or 0
 	
 	-- opacity and tinting
-	local rgb = sprite.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
-	local opacity = sprite.opacity or 100; opacity = opacity/100
+	local color = sprite.rgb or {255,255,255}
+	local opacity = sprite.opacity or 100
 	
 	-- animation shenanigans
 	local anim = sprite.animation
@@ -475,17 +475,17 @@ function sprite.draw(sprite, scene, args)
 	
 	if args.queued then
 		queue.add(scene.drawlist, z, function()
-			love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+			love.graphics.setColor(rgb(color, opacity))
 			draw()
 			love.graphics.reset()
 		end)
 	elseif args.ignorescale then
 		window.pop()
-		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+		love.graphics.setColor(rgb(color, opacity))
 		draw()
 		window.push()
 	else
-		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+		love.graphics.setColor(rgb(color, opacity))
 		draw()
 		love.graphics.reset()
 	end
@@ -502,14 +502,14 @@ function sprite.debug_draw(sprite, scene)
 	
 	if not sprite.debug then
 		sprite.debug = {
-			rgb = {math.random(0,255), math.random(0,255), math.random(0,255)},
+			rgb = {color.random()},
 			highlighted = false,
 		}
 	end
 	
 	local mode = sprite.debug.highlighted and "fill" or "line"
 	
-	love.graphics.setColor(sprite.debug.rgb[1]/255, sprite.debug.rgb[2]/255, sprite.debug.rgb[3]/255, 0.5)
+	love.graphics.setColor(rgb(sprite.debug.rgb, 0.5))
 	love.graphics.setLineWidth(3)
 	
 	local x = sprite.x or 0 
@@ -753,11 +753,11 @@ function model.draw(model, scene)
 	local z = model.canvas.z or 0
 	
 	-- opacity and tinting
-	local rgb = model.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
-	local opacity = model.opacity or 100; opacity = opacity/100
+	local color = model.rgb or {255,255,255}
+	local opacity = model.opacity or 100
 	
 	queue.add(scene.drawlist, z, function()
-		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+		love.graphics.setColor(rgb(color, opacity))
 		love.graphics.draw(model.canvas.main, x, y, angle, scalex, scaley, xoffset, yoffset, skewx, skewy)
 		love.graphics.reset()
 	end)

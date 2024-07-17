@@ -1076,9 +1076,9 @@ function imgui.window.main()
 		------------------------------------------------ GLOBAL VARIABLES
 		imgui.table(_G, "Global variables")
 		
-		imgui.table(fonts, "i'm too lazy, fonts", {fancy=true,imagescale=1})
-		
 		imgui.table(debug.getregistry(), "debug.getregistry()")
+		
+		imgui.table(fonts, "i'm too lazy, fonts", {fancy=true,imagescale=1})
 		
 		gui.End()
 	end

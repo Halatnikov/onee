@@ -54,14 +54,14 @@ function collision.debug_draw(collision)
 	
 	if not collision.debug then
 		collision.debug = {
-			rgb = {math.random(0,255), math.random(0,255), math.random(0,255)},
+			rgb = {color.random()},
 			highlighted = false,
 		}
 	end
 	
 	local mode = collision.debug.highlighted and "fill" or "line"
 	
-	love.graphics.setColor(collision.debug.rgb[1]/255, collision.debug.rgb[2]/255, collision.debug.rgb[3]/255, 0.5)
+	love.graphics.setColor(rgb(collision.debug.rgb, 0.5))
 	-- LINE
 	if collision.line then
 		love.graphics.line(collision.x, collision.y, collision.line.x, collision.line.y)
@@ -82,7 +82,7 @@ function collision.debug_draw(collision)
 		love.graphics.line(collision.x, collision.y-4, collision.x, collision.y+4)
 		love.graphics.circle(mode, collision.x, collision.y, 6)
 	end
-	love.graphics.setColor(1,1,1,1)
+	love.graphics.reset()
 	
 end
 

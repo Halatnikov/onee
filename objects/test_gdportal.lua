@@ -70,14 +70,14 @@ function object.draw(self, scene)
 	local angle = self.angle or 0; angle = math.rad(angle)
 	local scalex = self.scalex or self.scale or 1
 	local scaley = self.scaley or self.scale or 1
-	local rgb = self.rgb or {255,255,255}; rgb = {rgb[1]/255, rgb[2]/255, rgb[3]/255}
-	local opacity = self.opacity or 100; opacity = opacity/100
+	local color = self.rgb or {255,255,255}
+	local opacity = self.opacity or 100
 	
 	local pwidth, pheight = 32*scalex, 128*scaley
 	local px, py = point.rotate((x - 64 - pwidth - (pwidth/2)), y, math.deg(angle), x, y)
 	
 	queue.add(scene.drawlist, -1, function()
-		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+		love.graphics.setColor(rgb(color, opacity))
 		love.graphics.draw(self.canvas.back, x, y, angle, scalex, scaley, framex, framey)
 		
 		love.graphics.setBlendMode("add")
@@ -85,7 +85,7 @@ function object.draw(self, scene)
 		love.graphics.reset()
 	end)
 	queue.add(scene.drawlist, 2, function()
-		love.graphics.setColor(rgb[1], rgb[2], rgb[3], opacity)
+		love.graphics.setColor(rgb(color, opacity))
 		love.graphics.draw(self.canvas.front, x, y, angle, scalex, scaley, framex, framey)
 		love.graphics.reset()
 	end)

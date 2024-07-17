@@ -39,13 +39,13 @@ function window.draw(func)
 	if not window.canvas then return end
 	
 	window.canvas:renderTo(function()
-		love.graphics.clear(onee.colors.bg[1], onee.colors.bg[2], onee.colors.bg[3])
+		love.graphics.clear(rgb(onee.colors.bg))
 		window.push()
 		func()
 		window.pop()
 	end)
 	
-	love.graphics.clear(onee.colors.bg_deep[1], onee.colors.bg_deep[2], onee.colors.bg_deep[3])
+	love.graphics.clear(rgb(onee.colors.bg_deep))
 	love.graphics.draw(window.canvas, window.x, window.y, 0, window.scale / window.internal)
 end
 

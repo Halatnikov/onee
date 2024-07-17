@@ -32,9 +32,9 @@ local theme = {
 	spritefont = nil,
 
     color = {
-        normal   = {bg = { 0.25, 0.25, 0.25}, fg = {0.73, 0.73, 0.73}},
-        hovered  = {bg = { 0.19, 0.6, 0.73}, fg = {1, 1, 1}},
-        active   = {bg = { 1, 0.6, 0}, fg = {1, 1, 1}}
+        normal   = {bg = {0.25, 0.25, 0.25}, fg = {0.73, 0.73, 0.73}},
+        hovered  = {bg = {0.19, 0.6, 0.73}, fg = {1, 1, 1}},
+        active   = {bg = {1, 0.6, 0}, fg = {1, 1, 1}}
     }
 }
 

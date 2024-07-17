@@ -18,7 +18,7 @@
 -- @table WidgetAttributes
 local BASE = (...):gsub('widget$', '')
 
-local rectunion = require(BASE..'gear.rect').union
+local core = require(BASE..'core')
 
 local Widget = {
     __call = function(cls, args) return cls:new(args) end
@@ -96,7 +96,7 @@ function Widget:recalculateBounds()
         local rx,ry,rw,rh = widget.x,widget.y,-1,-1
 
         for _,w in ipairs(widget) do
-            rx,ry,rw,rh = rectunion(rx,ry,rw,rh, w.x,w.y,w.w,w.h)
+            rx,ry,rw,rh = core.rectunion(rx,ry,rw,rh, w.x,w.y,w.w,w.h)
         end
 
         widget.x = rx

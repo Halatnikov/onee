@@ -11,8 +11,6 @@ local BASE = (...):gsub('choice$', '')
 local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
-local clamp = require(BASE..'gear.algo').clamp
-
 local Choice = setmetatable({
     __call = function(cls, args) return cls:new(args) end
 }, Widget)
@@ -57,7 +55,7 @@ end
 
 function Choice:checkIndex()
     if self.nowrap then
-        self.index = clamp(self.index, 1, #self.choices)
+        self.index = math.min(math.max(self.index, 1), #self.choices)
     else
         if self.index < 1 then
             self.index = #self.choices

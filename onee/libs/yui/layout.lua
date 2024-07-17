@@ -14,12 +14,7 @@
 local BASE = (...):gsub('layout$', '')
 
 local Widget = require(BASE..'widget')
-
-local gear = require(BASE..'gear')
-
-local isinstance = gear.meta.isinstance
-local rectunion = gear.rect.union
-local pointinrect = gear.rect.pointinside
+local core = require(BASE..'core')
 
 local Layout = setmetatable({
     __call = function(cls, args) return cls:new(args) end
@@ -111,12 +106,12 @@ function Layout:layoutWidgets()
 		
 		widget.description = widget.description or self.description
 
-        if isinstance(widget, Layout) then
+        if core.isinstance(widget, Layout) then
             widget:layoutWidgets()
         end
 
         local w,h = calcsize(sizes, widget)
-        rx,ry,rw,rh = rectunion(rx,ry,rw,rh, nx,ny,w,h)
+        rx,ry,rw,rh = core.rectunion(rx,ry,rw,rh, nx,ny,w,h)
 
         nx,ny = self.advance(nx,ny, w,h, pad)
 
@@ -154,7 +149,7 @@ local function scanforward(layout, from)
         local w = layout[i]
 
         if not w.nofocus then
-            return isinstance(w, Layout) and scanforward(w) or w
+            return core.isinstance(w, Layout) and scanforward(w) or w
         end
     end
 end
@@ -165,7 +160,7 @@ local function scanbackwards(layout, from)
         local w = layout[i]
 
         if not w.nofocus then
-            return isinstance(w, Layout) and scanforward(w) or w
+            return core.isinstance(w, Layout) and scanforward(w) or w
         end
     end
 end
@@ -228,7 +223,7 @@ function Layout:onPointerInput(px,py, clicked, down)
         local widget = stack[i]
         local x,y,w,h = widget.x,widget.y,widget.w,widget.h
 
-        if pointinrect(px,py, x,y,w,h) then
+        if core.pointinrect(px,py, x,y,w,h) then
             widget:onPointerInput(px,py, clicked, down)
             break
         end

@@ -157,7 +157,7 @@ function debug.draw_post()
 	imgui.draw()
 	
 	local h = math.loop(0, 1, 4)
-	love.graphics.setColor(color.hsl(h, 1, 0.5))
+	love.graphics.setColor(hsl(h, 1, 0.5))
 	if debug_hotswap then
 		love.graphics.printf("HOTSWAP", windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
 	end

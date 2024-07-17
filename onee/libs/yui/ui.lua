@@ -15,11 +15,9 @@ local Layout = require(BASE..'layout')
 local Columns = require(BASE..'columns')
 local Rows = require(BASE..'rows')
 local theme = require(BASE..'theme')
-local gear = require(BASE..'gear')
+local core = require(BASE..'core')
 
-local Timer = gear.Timer
-local isinstance = gear.meta.isinstance
-local pointinrect = gear.rect.pointinside
+local Timer = require(BASE..'timer')
 
 local Ui = {
     theme = theme  -- fallback theme
@@ -31,12 +29,12 @@ Ui.__index = Ui
 local function resolveautofocus(widget)
     local firstfocus, cancelfocus
 
-    if isinstance(widget, Layout) then
+    if core.isinstance(widget, Layout) then
         for _,w in ipairs(widget) do
             local firstf, cancelf
 
             if not w.nofocus then
-                if isinstance(w, Layout) then
+                if core.isinstance(w, Layout) then
                     firstf, cancelf = resolveautofocus(w)
                 else
                     if w.firstfocus then
@@ -89,13 +87,13 @@ function Ui:new(args)
     self.timer = Timer:new()
 
     local root = self[1]
-    if not isinstance(root, Widget) then
+    if not core.isinstance(root, Widget) then
         error("Ui:new() bad root Widget type: "..type(root)..".")
     end
 
     root.x,root.y = self.x,self.y
     root.ui = self
-    if isinstance(root, Layout) then
+    if core.isinstance(root, Layout) then
         root:layoutWidgets()
     else
         assert(type(root.w) == 'number', "Ui:new() root Widget must have a numeric width.")
@@ -107,7 +105,7 @@ function Ui:new(args)
 
     local firstfocus, cancelfocus = resolveautofocus(root)
     if not firstfocus then
-        firstfocus = isinstance(root, Layout) and
+        firstfocus = core.isinstance(root, Layout) and
                      root:first() or
                      root
     end
@@ -181,7 +179,7 @@ local function eventpropagate(ui, snap)
         local root = ui[1]
         local x,y,w,h = root.x,root.y,root.w,root.h
 
-        if snap.pointer and pointinrect(snap.px,snap.py, x,y,w,h) then
+        if snap.pointer and core.pointinrect(snap.px,snap.py, x,y,w,h) then
             root:onPointerInput(snap.px,snap.py, snap.clicked, snap.pointing)
         end
     end
@@ -202,7 +200,7 @@ end
 local function containerof(widget, cls)
     repeat
         widget = widget.parent
-        if isinstance(widget, cls) then
+        if core.isinstance(widget, cls) then
             return widget
         end
     until widget == nil
@@ -216,7 +214,7 @@ local function findprev(ui, cls, widget)
         if container == nil then
             -- All the way up, either return the original
             -- widget or wraparound to the bottom
-            return isinstance(child, cls) and child:last() or widget
+            return core.isinstance(child, cls) and child:last() or widget
         end
 
         local w = container:before(child)
@@ -235,7 +233,7 @@ local function findnext(ui, cls, widget)
     while true do
         local container = containerof(child, cls)
         if container == nil then
-            return isinstance(child, cls) and child:first() or widget
+            return core.isinstance(child, cls) and child:first() or widget
         end
 
         local w = container:after(child)

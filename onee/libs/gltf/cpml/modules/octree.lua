@@ -579,7 +579,7 @@ function OctreeNode:draw_bounds(cube, depth)
 	depth = depth or 0
 	local tint = depth / 7 -- Will eventually get values > 1. Color rounds to 1 automatically
 
-	love.graphics.setColor(tint * 255, 0, (1 - tint) * 255)
+	love.graphics.setColor(tint, 0, (1 - tint))
 	local m = mat4()
 		:translate(self.center)
 		:scale(vec3(self.adjLength, self.adjLength, self.adjLength))
@@ -593,7 +593,7 @@ function OctreeNode:draw_bounds(cube, depth)
 		child:draw_bounds(cube, depth + 1)
 	end
 
-	love.graphics.setColor(255, 255, 255)
+	love.graphics.setColor(1, 1, 1)
 end
 
 --- Draws the bounds of all objects in the tree visually for debugging.
@@ -601,7 +601,7 @@ end
 -- @param filter a function returning true or false to determine visibility.
 function OctreeNode:draw_objects(cube, filter)
 	local tint = self.baseLength / 20
-	love.graphics.setColor(0, (1 - tint) * 255, tint * 255, 63)
+	love.graphics.setColor(0, (1 - tint), tint, 63)
 
 	for _, object in ipairs(self.objects) do
 		if filter and filter(object.data) or not filter then
@@ -618,7 +618,7 @@ function OctreeNode:draw_objects(cube, filter)
 		child:draw_objects(cube, filter)
 	end
 
-	love.graphics.setColor(255, 255, 255)
+	love.graphics.setColor(1, 1, 1)
 end
 
 Node = setmetatable({

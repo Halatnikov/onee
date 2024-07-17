@@ -155,7 +155,7 @@ function errorhandler.draw(msg, mode, notraceback)
 	local function draw()
 		if not love.graphics.isActive() then return end
 		local pos = 70
-		love.graphics.clear(89/255, 157/255, 220/255)
+		love.graphics.clear(89/255, 157/255, 220/255) -- best not mess with this
 		love.graphics.printf(err, font, pos, pos, love.graphics.getWidth() - pos)
 		love.graphics.reset(true)
 	end
