@@ -8,12 +8,14 @@
 --- An Ui manages a hierarchy of Widgets.
 -- The @{Ui} draws its widgets according to their layout and position, manages input focus, and
 -- dispatches events to the appropriate widgets depending on their class and activity status.
+
 local BASE = (...):gsub('ui$', '')
 
 local Widget = require(BASE..'widget')
 local Layout = require(BASE..'layout')
 local Columns = require(BASE..'columns')
 local Rows = require(BASE..'rows')
+
 local theme = require(BASE..'theme')
 local core = require(BASE..'core')
 
@@ -23,7 +25,6 @@ local Ui = {
     theme = theme  -- fallback theme
 }
 Ui.__index = Ui
-
 
 -- Scan UI for the LAST widgets with 'cancelfocus' or 'firstfocus' flags
 local function resolveautofocus(widget)
@@ -69,7 +70,6 @@ end
 -- @field theme (@{yui.theme.Theme|Theme}) custom global Ui theme, defaults to @{yui.theme}
 -- @table UiAttributes
 
-
 --- Ui constructor
 -- @param args (@{UiAttributes}) widget attributes
 function Ui:new(args)
@@ -80,10 +80,10 @@ function Ui:new(args)
 	self.active = true
 	self.visible = true
 	
-    self.device = self.device or require(BASE..'love').new()
     self.x = self.x or 0
     self.y = self.y or 0
-    self.pointerActive = true
+	
+    self.device = self.device or require(BASE..'love').new()
     self.timer = Timer:new()
 
     local root = self[1]
@@ -271,7 +271,6 @@ function Ui:navigate(where)
 end
 
 function Ui:update(dt)
-	if not self.active then return end
     local root = self[1]
     local snap = self.device:snapshot()
 
@@ -279,7 +278,7 @@ function Ui:update(dt)
 	self.timer:update(dt)
 	
 	-- Regular event propagation
-	eventpropagate(self, snap)
+	if self.active then eventpropagate(self, snap) end
 	
 	-- Perform regular lifetime updates
 	root:beforeUpdate()

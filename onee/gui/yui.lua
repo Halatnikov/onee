@@ -1,6 +1,6 @@
 yui = {
 	open = {},
-	new = {},
+	create = {},
 }
 
 -- init
@@ -15,37 +15,37 @@ end
 -- event redirection
 onee.love("keypressed", function(key, scan, isrepeat)
 	for k,v in pairs(yui) do
-		if type(yui[k]) == "table" and yui[k].yui == true then
-			yui[k]:keypressed(key, scan, isrepeat)
+		if type(v) == "table" and v.yui == true then
+			v:keypressed(key, scan, isrepeat)
 		end
 	end
 end)
 onee.love("keyreleased", function(key, scan)
 	for k,v in pairs(yui) do
-		if type(yui[k]) == "table" and yui[k].yui == true then
-			yui[k]:keyreleased(key, scan)
+		if type(v) == "table" and v.yui == true then
+			v:keyreleased(key, scan)
 		end
 	end
 end)
 onee.love("textinput", function(text)
 	for k,v in pairs(yui) do
-		if type(yui[k]) == "table" and yui[k].yui == true then
-			yui[k]:textinput(text)
+		if type(v) == "table" and v.yui == true then
+			v:textinput(text)
 		end
 	end
 end)
 onee.love("textedited", function(text, start, len)
 	for k,v in pairs(yui) do
-		if type(yui[k]) == "table" and yui[k].yui == true then
-			yui[k]:textedited(text, start, len)
+		if type(v) == "table" and v.yui == true then
+			v:textedited(text, start, len)
 		end
 	end
 end)
 
 -- main loop
-function yui.draw()
+function yui.draw_()
 	for k,v in pairs(yui.open) do
-		if not yui[k] then yui[k] = yui.new[k]() end
+		if not yui[k] then yui[k] = yui.create[k]() end
 	end
 	
 	for k,v in pairs(yui) do
@@ -72,15 +72,105 @@ function yui.debug_draw(ui)
 		end
 	end
 	draw_recursive(ui)
-	-- if ui.focused then
-		-- local v = ui.focused
-		-- local x,y = window.mouse()
-		-- love.graphics.print(math.round(v.x).." "..math.round(v.y).." "..v.w.." "..v.h, x+16, y)
-	-- end
 end
 
+-----------------------------------------------
+function yui.new(root, data)
+	local t = {
+		yui_instance = true,
+		stack = {},
+	}
+	
+	t.keypressed = function(key, scan, isrepeat)
+		for i, child in ipairs(t.stack) do
+			child:keypressed(key, scan, isrepeat)
+		end
+	end
+	t.keyreleased = function(key, scan)
+		for i, child in ipairs(t.stack) do
+			child:keyreleased(key, scan)
+		end
+	end
+	t.textinput = function(text)
+		for i, child in ipairs(t.stack) do
+			child:textinput(text)
+		end
+	end
+	t.textedited = function(text, start, len)
+		for i, child in ipairs(t.stack) do
+			child:textedited(text, start, len)
+		end
+	end
+	
+	onee.love("keypressed", t.keypressed)
+	onee.love("keyreleased", t.keyreleased)
+	onee.love("textinput", t.textinput)
+	onee.love("textedited", t.textedited)
+	
+	table.append(t, data) -- additional data
+	
+	if root then
+		root.instance = t
+		table.insert(t.stack, gui.Ui:new(root))
+	end
+	
+	return t
+end
+
+function yui.add(yui, child)
+	assert((yui and yui.yui_instance), "yui.add() | not a valid yui instance!")
+	
+	child.instance = yui
+	table.insert(yui.stack, gui.Ui:new(child))
+	
+	for i, child in ipairs(yui.stack) do
+		child.active = i == #yui.stack and true or false
+		child.focused.active = child.focused.active and false or nil
+	end
+end
+
+function yui.remove(yui)
+	assert((yui and yui.yui_instance), "yui.remove() | not a valid yui instance!")
+	
+	table.remove(yui.stack)
+	
+	for i, child in ipairs(yui.stack) do
+		child.active = i == #yui.stack and true or false
+		child.focused.active = child.focused.active and false or nil
+	end
+end
+
+function yui.update(yui)
+	assert((yui and yui.yui_instance), "yui.update() | not a valid yui instance!")
+	
+	for i, child in ipairs(yui.stack) do
+		child:update(dt)
+	end
+end
+
+local yui_ = yui
+function yui.draw(yui, scene)
+	assert((yui and yui.yui_instance), "yui.draw() | not a valid yui instance!")
+	
+	if not scene then
+		for i, child in ipairs(yui.stack) do
+			child:draw()
+			if debug_yui then yui_.debug_draw(child) end
+		end
+	else
+		queue.add(scene.drawlist, yui.z or 1, function()
+			for i, child in ipairs(yui.stack) do
+				child:draw()
+				if debug_yui then yui_.debug_draw(child) end
+			end
+		end)
+	end
+end
+
+-----------------------------------------------------------------
+
 -- UIs
-function yui.new.debug_button()
+function yui.create.debug_button()
 	local ui = {
 		x = onee.width-20-4, y = 4,
 		gui.Rows {
@@ -99,7 +189,7 @@ function yui.new.debug_button()
 	return gui.Ui:new(ui)
 end
 
-function yui.new.debug()
+function yui.create.debug()
 	local width, height = 192, 20
 	local padding = 4
 	local ui = {

@@ -7,6 +7,7 @@
 local BASE = (...):gsub('label$', '')
 
 local Widget = require(BASE..'widget')
+
 local core = require(BASE..'core')
 
 -- Labels don't accept focus
@@ -36,14 +37,13 @@ function Label:new(args)
     return self
 end
 
-function Label:onPointerInput(_,_, clicked)
+function Label:onPointerInput()
     if self.focus then self:grabFocus() end
 end
 
 function Label:draw()
     local x,y,w,h = self.xx or self.x, self.yy or self.y, self.w, self.h
     local color, font, cornerRadius, spritefont = core.themeForWidget(self)
-
 
 	if not spritefont then
 		y = y + core.verticalOffsetForAlign(self.valign, font, h)
@@ -55,7 +55,7 @@ function Label:draw()
 	
 	if spritefont then
 		love.graphics.setColor(color.normal.fg)
-		text.printf(self.text, spritefont, x+2, y, w-4, self.align, self.valign)
+		self.spritefont = text.printf(self.text, spritefont, x+2, y, w-4, self.align, self.valign)
 	end
 	
 end

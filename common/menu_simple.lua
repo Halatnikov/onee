@@ -63,19 +63,15 @@ function menu.push(name, params)
 		gui.Rows {
 			padding = menu.padding,
 			onDraw = function(self)
-				local focused = self.ui.focused
-				local description = focused.description
+				local description = self.ui.focused.description
 				
 				if description and not (#description == 0) then
-					local font = fonts.freaks16 or onee.font
-					local width, wraps = font:getWrap(description, onee.width - 4)
-					local height = font:getHeight()
+					local height = self.spritefont and self.spritefont.height or 0
 					
 					love.graphics.setColor(0, 0, 0, 0.75)
-					love.graphics.rectangle("fill", 0, onee.height - (height * #wraps) - (4*2 * #wraps) - 4, onee.width, 64)
+					love.graphics.rectangle("fill", 0, onee.height - height - 4, onee.width, 64)
 					love.graphics.reset()
-					--love.graphics.printf(description, 4, onee.height - (height * #wraps) - 2, onee.width - 4)
-					text.printf(description, "font_16", 4, onee.height - 20 - 2, nil, nil, "bottom")
+					self.spritefont = text.printf(description, "font_16", 4, onee.height - 20 - 2, nil, nil, "bottom")
 				end
 			end,
 		},
@@ -102,6 +98,11 @@ function menu.label(label, t)
 		w = menu.w, h = menu.h, align = "left",
 		xx = menu.x-8,
 		text = label or "",
+		onDraw = function(self)
+			love.graphics.setColor(menu.themes.default.color["normal"].fg)
+			love.graphics.line(self.x + self.spritefont.width, self.y + (self.h/2), self.x + self.w, self.y + (self.h/2))
+			love.graphics.reset()
+		end,
 	}
 	
 	table.append(item, t or {})
@@ -119,7 +120,7 @@ end
 --!
 function menu.button(label, description, func, enabled, t)
 	local item = gui.Button {
-		w = menu.w, align = "left",
+		w = menu.w/2, h = menu.h, align = "left",
 		text = label or "",
 		description = description,
 		onHit = func or noop,
@@ -132,11 +133,6 @@ function menu.button(label, description, func, enabled, t)
 	
 	table.append(item, t or {})
 	table.insert(menu.root, item)
-end
-
---!
-function menu.disabled(label, description, t)
-	return menu.button(label, description, nil, false, t)
 end
 
 --!
@@ -243,6 +239,73 @@ function menu.textinput(label, description, var, t)
 				self:onChange(self.text)
 			end,
 		},
+	}
+	
+	table.append(item, t or {})
+	table.insert(menu.root, item)
+end
+
+--!
+function menu.disabled(label, description, t)
+	return menu.button(label, description, nil, false, t)
+end
+
+--!
+function menu.hold(label, description, func, speed, t)
+	local item = gui.Button {
+		w = menu.w/2, h = menu.h, align = "left",
+		text = label or "",
+		description = description,
+		onHit = func or noop,
+		
+		hold = 0,
+		hold_speed = tick * (speed or 1.25),
+		
+		-- internal
+		hold_blocked = false,
+		hold_time = 0,
+		
+		onPointerInput = function(self) self:grabFocus() end,
+		onActionInput = noop,
+		
+		onUpdate = function(self)
+			local pressing = self.ui.device.confirm or (self.ui.device.clicking and collision.point_rect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h))
+			
+			if self == self.ui.focused and pressing then
+				if not self.hold_blocked then
+					self.hold = self.hold + self.hold_speed
+				end
+			else
+				self.hold = 0
+				self.hold_blocked = true
+			end
+			
+			if self.hold >= 1 then
+				self.hold = 0
+				self.hold_blocked = true
+				
+				if not self.active then
+					self.active = true
+					self:onHit()
+
+					self.ui.timer:after(0.15, function() self.active = false end)
+				end
+			end
+			
+			-- prevent excess inputs
+			if pressing then
+				if self.hold_time < 1 then self.hold_blocked = false end
+				self.hold_time = self.hold_time + 1
+			else
+				self.hold_time = 0
+			end
+		end,
+
+		beforeDraw = function(self)
+			love.graphics.setColor(rgb(self.ui.theme.color["active"].fg, 0.75))
+			love.graphics.rectangle("fill", self.x, self.y, self.hold / 1 * self.w, self.h)
+			love.graphics.reset()
+		end,
 	}
 	
 	table.append(item, t or {})

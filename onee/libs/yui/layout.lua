@@ -14,13 +14,13 @@
 local BASE = (...):gsub('layout$', '')
 
 local Widget = require(BASE..'widget')
+
 local core = require(BASE..'core')
 
 local Layout = setmetatable({
     __call = function(cls, args) return cls:new(args) end
 }, Widget)
 Layout.__index = Layout
-
 
 -- Calculate initial widget size.
 local function calcsize(sizes, widget)
@@ -231,7 +231,6 @@ function Layout:onPointerInput(px,py, clicked, down)
 end
 
 function Layout:update(dt)
-	if not self.ui.active then return end
     for _,widget in ipairs(self.stack) do
 		widget:beforeUpdate()
 		widget:update(dt)

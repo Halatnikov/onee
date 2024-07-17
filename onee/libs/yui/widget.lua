@@ -16,6 +16,7 @@
 -- @field theme (@{yui.theme.Theme|Theme}) widget specific theme
 -- @field color (@{yui.theme.ColorPalette|ColorPalette}) widget color
 -- @table WidgetAttributes
+
 local BASE = (...):gsub('widget$', '')
 
 local core = require(BASE..'core')
@@ -24,7 +25,6 @@ local Widget = {
     __call = function(cls, args) return cls:new(args) end
 }
 Widget.__index = Widget
-
 
 local function raise(widget)
     local parent = widget.parent
@@ -113,23 +113,23 @@ function Widget:loseFocus() end
 function Widget:gainFocus() end
 
 -- NOP event handlers, publicly overridable
-
 function Widget:onHit() end
 function Widget:onEnter() end
 function Widget:onLeave() end
 function Widget:onChange() end
 
--- NOP input event handlers
-function Widget:onActionInput(action) end
-function Widget:onPointerInput(x,y, clicked) end
-
--- NOP UI event handlers
 function Widget:beforeUpdate() end
 function Widget:onUpdate() end
-function Widget:update(dt) end
 
 function Widget:beforeDraw() end
 function Widget:onDraw() end
+
+-- NOP input event handlers
+function Widget:onActionInput(action) end
+function Widget:onPointerInput(x,y, clicked, down) end
+
+-- NOP UI event handlers
+function Widget:update(dt) end
 function Widget:draw() end
 
 return Widget

@@ -9,6 +9,7 @@
 local BASE = (...):gsub('slider$', '')
 
 local Widget = require(BASE..'widget')
+
 local core = require(BASE..'core')
 
 local Slider = setmetatable({
@@ -25,7 +26,6 @@ Slider.__index = Slider
 -- @field value (number) default value
 -- @field step (number) number of slider's steps
 -- @table SliderAttributes
-
 
 --- Slider constructor
 -- @param args (@{SliderAttributes}) widget attributes

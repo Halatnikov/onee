@@ -1,15 +1,16 @@
-onee = {}
-onee.version = "0.0.2-23"
-onee.colors = {	
-	bg = {8, 8, 8},
-	bg_deep = {16, 16, 16},
+onee = {
+	version = "0.0.2-24",
+	colors = {	
+		bg = {8, 8, 8},
+		bg_deep = {16, 16, 16},
+	},
 }
 
 ---------------------------------------------------------------- INIT
 
 do
 	require("conf")
-	require("onee/libs/errorhandler")
+	require("onee/errorhandler")
 	
 	-- love2d shenanigans
 	mobile = (love._os == "Android" or love._os == "iOS")
@@ -66,10 +67,6 @@ do
 	onee.allow_update = true
 	onee.width, onee.height = love.config.width, love.config.height
 	
-	_VERSION_major, _VERSION_minor = string.version(string.right(_VERSION, 3))
-	jit.version_major, jit.version_minor, jit.version_rolling = string.version(string.right(jit.version, -7))
-	jit.version_revision = string.left(jit.version_rolling, 2)
-	
 	-- :o
 	debug.enable(debug_mode)
 	
@@ -118,7 +115,7 @@ function onee.draw()
 	window.draw(function()
 		scene.draw()
 		debug.draw()
-		yui.draw()
+		yui.draw_()
 	end)
 	
 	input.draw()

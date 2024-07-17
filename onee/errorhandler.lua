@@ -52,7 +52,7 @@ function love.errorhandler(msg)
 				return "restart"
 			elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
 				copyToClipboard()
-			elseif e == "touchpressed" or (e == "mousepressed" and c == 1) then
+			elseif (e == "touchpressed") or (e == "mousepressed" and c == 1) then
 				local buttons = {"Yes", "Cancel", "Restart"}
 				if love.system then table.insert(buttons, "Copy to clipboard") end
 				

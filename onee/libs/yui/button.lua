@@ -7,12 +7,11 @@
 --
 -- Button widget receives the following callbacks: @{yui.Widget.WidgetCallbacks|onEnter}(), @{yui.Widget.WidgetCallbacks|onHit}(), @{yui.Widget.WidgetCallbacks|onLeave}().
 
-
 local BASE = (...):gsub('button$', '')
 
 local Widget = require(BASE..'widget')
-local core = require(BASE..'core')
 
+local core = require(BASE..'core')
 
 local Button = setmetatable({
     __call = function(cls, args) return cls:new(args) end
@@ -68,6 +67,7 @@ function Button:draw()
     local c = core.colorForWidgetState(self, color)
 
     core.drawBox(x,y,w,h, c, cornerRadius)
+	
 	if not spritefont then
 		y = y + core.verticalOffsetForAlign(self.valign, font, h)
 		
@@ -75,9 +75,9 @@ function Button:draw()
 		love.graphics.setFont(font)
 		love.graphics.printf(self.text, x+2, y, w-4, self.align)
 	end
+	
 	if spritefont then
-		love.graphics.setColor(c.fg)
-		text.printf(self.text, spritefont, x+2, y, w-4, self.align, self.valign)
+		self.spritefont = text.printf({{c.fg, self.text}}, spritefont, x+2, y, w-4, self.align, self.valign)
 	end
 end
 

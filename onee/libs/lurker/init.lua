@@ -76,7 +76,7 @@ function lurker.listdir(path, recursive, skipdotfiles)
       else
 		if not (
 			path == "/onee/libs/lurker" 
-			or f == "/onee/libs/errorhandler.lua"
+			or f == "/onee/errorhandler.lua"
 			or f == "/onee/libs/lust.lua"
 			or f == "/onee/utils.lua"
 			or path == "/onee/_tests" 

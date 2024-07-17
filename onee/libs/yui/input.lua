@@ -10,6 +10,7 @@
 local BASE = (...):gsub('input$', '')
 
 local Widget = require(BASE..'widget')
+
 local core = require(BASE..'core')
 
 local utf8 = require 'utf8'
@@ -20,7 +21,6 @@ local Input = setmetatable({
     __call = function(cls, args) return cls:new(args) end
 }, Widget)
 Input.__index = Input
-
 
 local function split(str, pos)
     local ofs = utf8.offset(str, pos) or 0
@@ -132,7 +132,6 @@ function Input:keypressed(key, _, isrepeat)
 		end
     end
 end
-
 
 function Input:onActionInput(action)
 	

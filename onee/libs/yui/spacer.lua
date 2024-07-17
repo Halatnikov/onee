@@ -17,7 +17,6 @@ local Spacer = setmetatable({
 }, Widget)
 Spacer.__index = Spacer
 
-
 --- Attributes accepted by the @{Spacer} widget @{yui.Widget.WidgetAttributes|attributes}.
 --
 -- @param args @{yui.Widget.WidgetAttributes|Widgetattributes} widget attributes

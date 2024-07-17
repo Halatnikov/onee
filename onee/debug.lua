@@ -19,7 +19,7 @@ function debug.enable(enabled)
 		
 		debug_draw_collisions = true
 		debug_draw_sprites = false
-		debug_hotswap = true
+		debug_hotswap = not mobile and true or false
 		debug_yui = false
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
@@ -113,18 +113,16 @@ function debug.draw()
 	for id, scene in ipairs(scenes) do
 		local function draw_recursively(arg)
 			for k, v in pairs(arg) do
-				if type(v) == "table" then
+				-- skip 3d models and yui, they cause a stack overflow
+				-- TODO: maybe handle recursive references? serpent
+				if type(v) == "table" and
+				(v.yui ~= true) and
+				(v.model ~= true and k ~= "models" and k ~= "assets") then
 					if debug_draw_collisions and v.collision == true then
 						queue.add(debug.drawlist, 1, function()
 							collision.debug_draw(v)
 						end)
-					elseif debug_draw_sprites and v.sprite == true then
-						queue.add(debug.drawlist, 2, function()
-							sprite.debug_draw(v, scene)
-						end)
-					-- skip 3d models, they cause a stack overflow
-					-- TODO: maybe handle recursive references? serpent
-					elseif v.model ~= true and k ~= "models" and k ~= "assets" then
+					else
 						draw_recursively(v)
 					end
 				end

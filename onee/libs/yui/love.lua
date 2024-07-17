@@ -4,7 +4,6 @@
 local Device = {}
 Device.__index = Device
 
-
 function Device.new()
     return setmetatable({
         px = nil, py = nil,
@@ -32,8 +31,8 @@ function Device:snapshot()
     snap.pointer = px ~= self.px or py ~= self.py or snap.clicked or snap.pointing
 
     -- Keyboard input
-    local confirm = love.keyboard.isDown("return") or (not clicking and input.a)
-    local cancel = love.keyboard.isDown("escape") or (not clicking and input.b)
+    local confirm = love.keyboard.isDown("return") or (not (self.clicking or clicking) and input.a)
+    local cancel = love.keyboard.isDown("escape") or (not (self.clicking or clicking) and input.b)
     local up = love.keyboard.isDown("up") or input.up
     local left = love.keyboard.isDown("left") or input.left
     local down = love.keyboard.isDown("down") or input.down

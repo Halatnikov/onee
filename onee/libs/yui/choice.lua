@@ -9,6 +9,7 @@
 local BASE = (...):gsub('choice$', '')
 
 local Widget = require(BASE..'widget')
+
 local core = require(BASE..'core')
 
 local Choice = setmetatable({

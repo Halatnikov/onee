@@ -22,7 +22,6 @@ local Columns = setmetatable({
 }, Layout)
 Columns.__index = Columns
 
-
 function Columns:new(args) return setmetatable(Layout:new(args), self) end
 
 return Columns

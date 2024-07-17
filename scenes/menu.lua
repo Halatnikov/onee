@@ -43,13 +43,9 @@ function scene.init(self)
 		end)
 	end
 	
-	menu.spacer()
-	
 	menu.label("Thingies")
 	
-	menu.button("Button", "that is a button", function(self)
-		print("yes indeed")
-	end)
+	menu.button("Button", "that is a button", function(self) log("yes indeed") end)
 	
 	menu.checkbox("Checkbox", "description Checkbox wOw", bool)
 	
@@ -60,6 +56,10 @@ function scene.init(self)
 	menu.textinput("Text input", "aaaaaaaaaaaaaaaaaaaa", textinput)
 	
 	menu.button("Disabled", "", nil, false)
+	
+	menu.hold("Hold button", "a", function(self) log("THE") end)
+	
+	menu.spacer()
 	
 	local gui = yui_
 	table.insert(menu.root, gui.Columns {
@@ -79,11 +79,7 @@ function scene.init(self)
 		},
 	})
 	
-	menu.spacer()
-	
-	menu.button("the", "an an")
-	
-	menu.button("Quit", "When you die in the game,"..newline.."you die in real life", function(self)
+	menu.hold("Quit", "When you die in the game,"..newline.."you die in real life", function(self)
 		love.event.quit()
 	end)
 	

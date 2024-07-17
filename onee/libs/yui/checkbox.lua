@@ -9,13 +9,13 @@
 local BASE = (...):gsub('checkbox$', '')
 
 local Widget = require(BASE..'widget')
+
 local core = require(BASE..'core')
 
 local Checkbox = setmetatable({
     __call = function(cls, args) return cls:new(args) end
 }, Widget)
 Checkbox.__index = Checkbox
-
 
 --- Attributes accepted by the @{Checkbox} widget beyond the standard @{yui.Widget.WidgetAttributes|attributes}
 -- and @{yui.Widget.WidgetCallbacks|callbacks}.

@@ -7,6 +7,8 @@ model = {
 font = {}
 text = {}
 
+local sprite_ = sprite
+
 -- containers
 fonts = {}
 
@@ -478,24 +480,25 @@ function sprite.draw(sprite, scene, args)
 			love.graphics.setColor(rgb(color, opacity))
 			draw()
 			love.graphics.reset()
+			if debug_draw_sprites then sprite_.debug_draw(sprite, scene) end
 		end)
 	elseif args.ignorescale then
 		window.pop()
 		love.graphics.setColor(rgb(color, opacity))
 		draw()
+		love.graphics.reset()
+		if debug_draw_sprites then sprite_.debug_draw(sprite, scene) end
 		window.push()
 	else
 		love.graphics.setColor(rgb(color, opacity))
 		draw()
 		love.graphics.reset()
+		if debug_draw_sprites then sprite_.debug_draw(sprite, scene) end
 	end
 end
 
 --! DEBUG DRAW SPRITE
 function sprite.debug_draw(sprite, scene)
-	if not sprite.active then return end 
-	if sprite.queued == false then return end
-	
 	local spritedef = scene.sprites[sprite.name]
 	local animdef = spritedef.animations[sprite.animation]
 	local framedef = animdef.frames[sprite.frame]
@@ -628,6 +631,16 @@ local mat4 = require "onee/libs/gltf/cpml.modules.mat4"
 --! INIT A NEW 3D MODEL INSTANCE
 function model.init(model, scene, name, data)
 	assert(scene.models[name], "model.init() | \""..name.."\" is not a valid 3d model!")
+	
+	if mobile then
+		local t = {
+			model = true,
+			name = name,
+			fallback = true,
+		}
+		table.append(t, data) -- additional data
+		return table.append(model, t)
+	end
 	
 	local t = {
 		model = true,
@@ -953,7 +966,6 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		if (char == newline) or (limit and curx >= limit) then
 			curline = curline + 1
 			charcount = 0
-			width = width or curx
 			width = curx > width and curx or width
 			curx = 0
 			cury = cury + fontdef.baseheight + fontdef.linespacing
@@ -1090,14 +1102,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 
 	end
 	
-	instance.raw = arg
-	
-	instance.width = width
-	instance.height = height
-	instance.lines = lines
-	instance.totalchars = totalchars
-	
-	-- final draw	
+	-- final draw
 	love.graphics.stack(function()
 		love.graphics.translate(x, y)
 		love.graphics.rotate(math.rad(r))
@@ -1116,6 +1121,9 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 				if alignv == "bottom" then yoffset = -math.floor(height) end
 			end
 			
+			instance.xoffset = xoffset
+			instance.yoffset = yoffset
+			
 			love.graphics.stack(function()
 				love.graphics.translate(xoffset, yoffset)
 				for i, charsprite in pairs(line) do
@@ -1126,6 +1134,13 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			end)
 		end
 	end)
+	
+	instance.raw = arg
+	
+	instance.width = width > 0 and width or curx
+	instance.height = height + cury
+	instance.lines = lines
+	instance.totalchars = totalchars
 	
 	-- clean inactive instances
 	-- for k,v in pairs(fontscene.instances) do
@@ -1178,7 +1193,7 @@ text.effects["rainbow"] = function(instance, data, effect, charsprite)
 	local g = math.sin(frequency + 0 + phase) * brightness + 128
 	local b = math.sin(frequency + 4 + phase) * brightness + 128
 	
-	charsprite.rgb = {r, g, b}
+	charsprite.rgb = {math.clamp(1.01, r, 255), math.clamp(1.01, g, 255), math.clamp(1.01, b, 255)} -- hack
 end
 
 end--#endregion

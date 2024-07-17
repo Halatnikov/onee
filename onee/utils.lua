@@ -1,5 +1,5 @@
-
 ---------------------------------------------------------------- BOOLS
+
 bool = {}
 
 function bool.int(arg)
@@ -448,6 +448,7 @@ function ripairs(arg)
 end
 
 ---------------------------------------------------------------- QUEUEING
+
 queue = {}
 
 function queue.add(arg, i, add)
@@ -473,16 +474,27 @@ function queue.execute(arg)
 end
 
 ---------------------------------------------------------------- COLORS
---TODO
---color random, color constants like red, white, black
---rgb(math.random(0,255), math.random(0,255), math.random(0,255))
+--TODO: color constants like red, white, black
+
 color = {}
 
-function color.random()
-	return math.random(0,255), math.random(0,255), math.random(0,255)
+function color.rgb(r, g, b, a)
+	if type(r) == "table" then
+		r, g, b, a = r[1], r[2], r[3], g or r[4] -- allow "{rgb},a"
+	end
+	
+	r = math.between(0, r, 1) and r or r/255
+	g = math.between(0, g, 1) and g or g/255
+	b = math.between(0, b, 1) and b or b/255
+	a = a and (math.between(0, a, 1) and a or a/100)
+	return r, g, b, a
 end
 
-function hsl(h, s, l, a)
+function color.torgb(r, g, b, a)
+	return math.round(r*255), math.round(g*255), math.round(b*255), a and math.round(a*255)
+end
+
+function color.hsl(h, s, l, a)
 	if s <= 0 then return l, l, l, a end
 	h = h * 6
 	local c = (1 - math.abs( 2 * l - 1)) * s
@@ -499,20 +511,12 @@ function hsl(h, s, l, a)
 	return r + m, g + m, b + m, a
 end
 
-function rgb(r, g, b, a)
-	if type(r) == "table" then
-		r, g, b, a = r[1], r[2], r[3], g or r[4] -- allow "{rgb},a"
-	end
-	
-	r = math.between(0, r, 1) and r or r/255
-	g = math.between(0, g, 1) and g or g/255
-	b = math.between(0, b, 1) and b or b/255
-	a = a and (math.between(0, a, 1) and a or a/100)
-	return r, g, b, a
-end
+rgb = color.rgb
+torgb = color.torgb
+hsl = color.hsl
 
-function torgb(r, g, b, a)
-	return math.round(r*255), math.round(g*255), math.round(b*255), a and math.round(a*255)
+function color.random()
+	return math.random(0,255), math.random(0,255), math.random(0,255)
 end
 
 ---------------------------------------------------------------- DRAWING
