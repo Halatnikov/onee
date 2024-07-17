@@ -93,7 +93,7 @@ end
 --!
 function menu.close()
 	yui.open[menu.name] = nil
-	yui.draw()
+	menu.root:draw()
 end
 
 --!
@@ -128,7 +128,6 @@ function menu.button(label, description, func, enabled, t)
 	if enabled == nil then enabled = true end
 	if enabled == false then
 		item.theme = menu.themes.disabled
-		item.onHit = noop
 	end
 	
 	table.append(item, t or {})

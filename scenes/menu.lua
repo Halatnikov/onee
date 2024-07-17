@@ -19,6 +19,19 @@ function scene.init(self)
 	
 	menu.push("test")
 	
+	menu.root.beforeDraw = function()
+		local focused = yui[menu.name].focused
+		
+		gradient("horizontal", {
+			{0, 1, 1, 0.5},
+			{0, 1, 1, 0.125},
+			{0, 0, 0, 0},
+		}, 0, focused.y - 2, 0, onee.width, focused.h + 4)
+	
+		self.arrow.y = focused.y + 8
+		sprite.draw(self.arrow, self, {queued = false})
+	end
+	
 	menu.label("Scenes")
 		
 	local scenes = files.listdir("scenes")
@@ -88,19 +101,6 @@ end
 
 function scene.draw(self)
 	sprite.draw(self.bg, self)
-	
-	local focused = yui[menu.name].focused
-	
-	queue.add(self.drawlist, 0, function()
-		gradient("horizontal", {
-			{0, 1, 1, 0.5},
-			{0, 1, 1, 0.125},
-			{0, 0, 0, 0},
-		}, 0, focused.y - 2, 0, onee.width, focused.h + 4)
-	end)
-	
-	self.arrow.y = focused.y + 8
-	sprite.draw(self.arrow, self)
 	
 	queue.add(self.drawlist, 2, function()
 		text.print({"TEST", "{input_right}"}, "font_titlecard", 100, 10)

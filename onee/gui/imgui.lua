@@ -561,7 +561,7 @@ function imgui.window.menubar()
 		
 		-- about dialog
 		if gui.BeginPopupModal("onee "..onee.version, nil, gui.love.WindowFlags("AlwaysAutoResize", "NoMove", "NoResize")) then
-			gui.Text("LOVE2D "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")"..
+			gui.Text("love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")"..
 				newline..
 				newline.."i'm freaks")
 			gui.Separator()
@@ -1077,6 +1077,8 @@ function imgui.window.main()
 		imgui.table(_G, "Global variables")
 		
 		imgui.table(fonts, "i'm too lazy, fonts", {fancy=true,imagescale=1})
+		
+		imgui.table(debug.getregistry(), "debug.getregistry()")
 		
 		gui.End()
 	end

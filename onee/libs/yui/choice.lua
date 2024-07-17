@@ -11,7 +11,7 @@ local BASE = (...):gsub('choice$', '')
 local Widget = require(BASE..'widget')
 local core = require(BASE..'core')
 
-local clamp = require('onee/libs/yui/gear.algo').clamp
+local clamp = require(BASE..'gear.algo').clamp
 
 local Choice = setmetatable({
     __call = function(cls, args) return cls:new(args) end

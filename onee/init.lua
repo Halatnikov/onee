@@ -74,7 +74,7 @@ do
 	debug.enable(debug_mode)
 	
 	-- :)
-	print("love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..") | onee "..onee.version)
+	print("onee "..onee.version.." | love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")")
 	local date = os.date("*t")
 	print(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	

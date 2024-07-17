@@ -280,13 +280,16 @@ function table.append(a, b)
 end
 
 function table.find(arg, result, result2)
-	if result2 then
+	if not result2 then
+		-- table has a key equaling "result"
+		for k,v in pairs(arg) do
+			if v == result then return k end
+		end
+	else
+		-- nested table which has a key "result" that equals "result2"
 		for k,v in pairs(arg) do
 			if type(v) == "table" and v[result] and v[result] == result2 then return k end
 		end
-	end
-	for k,v in pairs(arg) do
-		if v == result then return k end
 	end
 end
 

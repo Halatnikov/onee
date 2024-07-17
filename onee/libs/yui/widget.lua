@@ -16,7 +16,9 @@
 -- @field theme (@{yui.theme.Theme|Theme}) widget specific theme
 -- @field color (@{yui.theme.ColorPalette|ColorPalette}) widget color
 -- @table WidgetAttributes
-local rectunion = require('onee/libs/yui/gear.rect').union
+local BASE = (...):gsub('widget$', '')
+
+local rectunion = require(BASE..'gear.rect').union
 
 local Widget = {
     __call = function(cls, args) return cls:new(args) end

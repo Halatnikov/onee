@@ -15,7 +15,7 @@ local BASE = (...):gsub('layout$', '')
 
 local Widget = require(BASE..'widget')
 
-local gear = require 'onee/libs/yui/gear'
+local gear = require(BASE..'gear')
 
 local isinstance = gear.meta.isinstance
 local rectunion = gear.rect.union
