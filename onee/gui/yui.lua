@@ -71,6 +71,15 @@ function yui.remove(yui)
 	refresh_stack(yui.stack)
 end
 
+local yui_ = yui
+--!
+function yui.readd(yui)
+	assert((yui and yui.yui_instance), "yui.readd() | not a valid yui instance!")
+	local topmost = yui.stack[#yui.stack]
+	yui_.remove(yui)
+	yui_.add(yui, topmost)
+end
+
 --!
 function yui.update(yui)
 	assert((yui and yui.yui_instance), "yui.update() | not a valid yui instance!")
@@ -80,7 +89,6 @@ function yui.update(yui)
 	end
 end
 
-local yui_ = yui
 --!
 function yui.draw(yui, scene)
 	assert((yui and yui.yui_instance), "yui.draw() | not a valid yui instance!")

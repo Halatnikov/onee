@@ -50,6 +50,7 @@ function scene.set(path, data, name)
 	
 	scenes[1] = t --done
 	
+	print("scene is now "..path)
 	t.init(t)
 	
 end

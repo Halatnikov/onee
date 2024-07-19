@@ -54,7 +54,7 @@ function menu.start(params, func)
 			onDraw = function(self)
 				local description = self.ui.focused.description
 				
-				if description and not (#description == 0) then
+				if self.ui.active and description and not (#description == 0) then
 					local height = self.spritefont and self.spritefont.height or 0
 					
 					love.graphics.setColor(0, 0, 0, 0.75)
@@ -231,7 +231,7 @@ function menu.disabled(label, description, t)
 	return menu.button(label, description, nil, false, t)
 end
 
---!
+--! HOLD BUTTON
 function menu.hold(label, description, func, speed, t)
 	local item = gui.Button {
 		w = menu.w/2, h = menu.h, align = "left",
@@ -250,7 +250,7 @@ function menu.hold(label, description, func, speed, t)
 		onActionInput = noop,
 		
 		onUpdate = function(self)
-			if self:isFocused() and self.ui.device.confirm or (self.ui.device.clicking and collision.point_rect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h)) then
+			if self:isFocused() and self.ui.device.confirm or (self.ui.device.clicking and yui_.core.pointinrect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h)) then
 				if not self.hold_blocked then
 					self.hold = self.hold + self.hold_speed
 				end
@@ -281,10 +281,182 @@ function menu.hold(label, description, func, speed, t)
 		end,
 
 		beforeDraw = function(self)
-			love.graphics.setColor(rgb(self.ui.theme.color["active"].fg, 0.75))
+			love.graphics.setColor(rgb(self.ui.theme.color["active"].fg, 0.9))
 			love.graphics.rectangle("fill", self.x, self.y, self.hold / 1 * self.w, self.h)
 			love.graphics.reset()
 		end,
+	}
+	
+	table.append(item, t or {})
+	table.insert(menu.root, item)
+end
+
+--! DROPDOWN MENU
+function menu.dropdown(label, description, var, choices, fallback, inverted, t)
+	for i,choice in ipairs(choices) do
+        -- Expand shorthands
+        if type(choice) ~= "table" then
+            choice = {tostring(choice), choice}
+            choices[i] = choice
+        end
+    end
+	
+	-- the window it opens
+	local function window(parent)
+		parent.open = true
+		
+		inverted = inverted or (parent.y - (menu.h + menu.padding) * #choices > onee.height)
+		
+		local y, rect_y
+		if not inverted then
+			y = 0
+			rect_y = menu.h
+		else
+			y = (menu.h + menu.padding) * #choices
+			rect_y = -menu.padding
+		end
+		
+		local window = {
+			x = parent.x, y = parent.y - y, theme = menu.themes.default,
+			
+			gui.Rows {
+				padding = menu.padding,
+				
+				onActionInput = function(self, action)
+					if action.cancel then
+						parent:onChange()
+						yui.remove(parent.ui.instance)
+					end
+				end,
+				
+				beforeDraw = function(self)
+					local core = yui_.core
+					local color, font, cornerRadius, spritefont = core.themeForWidget(self)
+					local c = menu.themes.default.color["normal"].bg
+					
+					love.graphics.setColor(c[1]-0.1, c[2]-0.1, c[3]-0.1, 0.9)
+					love.graphics.rectangle("fill", self.x, self.y+rect_y, self.w, self.h-(menu.h-menu.padding), cornerRadius)
+					love.graphics.reset()
+				end,
+				
+				onDraw = function(self)
+					local description = self.ui.focused.description
+					
+					if self.ui.active and description and not (#description == 0) then
+						local height = self.spritefont and self.spritefont.height or 0
+						
+						love.graphics.setColor(0, 0, 0, 0.75)
+						love.graphics.rectangle("fill", 0, onee.height - height - 4, onee.width, 64)
+						love.graphics.reset()
+						self.spritefont = text.printf(description, "font_16", 4, onee.height - 20 - 2, nil, nil, "bottom")
+					end
+				end,
+			},
+		}
+		
+		-- invisible close button
+		local function close_button()
+			table.insert(window[1], gui.Button {
+				w = parent.w, h = menu.h, nofocus = true,
+				draw = noop,
+				onHit = function(self)
+					parent:onChange(nil)
+					yui.remove(parent.ui.instance)
+				end,
+			})
+		end
+		
+		if not inverted then close_button() end
+		
+		-- insert buttons
+		for i, choice in ipairs(parent.choices) do
+			table.insert(window[1], gui.Button {
+				w = parent.w, h = menu.h,
+				description = choice[3] or nil,
+				text = choice[1],
+				onHit = function(self)
+					if choice[4] then choice[4]() end
+					parent:onChange(choice[2])
+					yui.remove(parent.ui.instance)
+				end,
+			})
+		end
+		
+		if inverted then close_button() end
+		
+		return window
+	end
+	
+	-- the button itself
+	local item = gui.Columns {
+		description = description,
+		
+		gui.Label {
+			w = menu.w/2, h = menu.h, align = "left", focus = true,
+			text = label or "",
+		},
+		gui.Button {
+			w = menu.w/3, theme = menu.themes.default,
+			
+			fallback = fallback,
+			open = false,
+			choices = choices,
+			default = var,
+			
+			onUpdate = function(self)
+				self.text = self.fallback or var
+				for i,choice in ipairs(choices) do
+					if choice[2] == var then self.text = choice[1] end
+				end
+			end,
+			
+			draw = function(self)
+				self.active = self.open
+				
+				local core = yui_.core
+				local x,y,w,h = self.x,self.y,self.w,self.h
+				local color, font, cornerRadius, spritefont = core.themeForWidget(self)
+				
+				local c = core.colorForWidgetState(self, color)
+				local fg = {bg = {c.bg[1]+0.15, c.bg[2]+0.15, c.bg[3]+0.15}}
+
+				core.drawBox(x,y,w,h, c, cornerRadius)
+				core.drawBox(x+w-16,y,16,h, fg, cornerRadius)
+				
+				local cc = color.hovered
+				
+				love.graphics.setLineWidth(3)
+				love.graphics.setColor(cc.fg[1],cc.fg[2],cc.fg[3])
+				if not self.open then
+					love.graphics.line(x+w-h*.9,y+h*.3, x+w-h*.5,y+h*.7, x+w-h*.1,y+h*.3)
+				else
+					love.graphics.line(x+w-h*.9,y+h*.7, x+w-h*.5,y+h*.3, x+w-h*.1,y+h*.7)
+				end
+				love.graphics.reset()
+				
+				if not spritefont then
+					y = y + core.verticalOffsetForAlign(self.valign, font, h)
+					
+					love.graphics.setColor(c.fg)
+					love.graphics.setFont(font)
+					love.graphics.printf(self.text, x+2, y, w-4, self.align)
+				end
+				
+				if spritefont then
+					self.spritefont = text.printf({{c.fg, self.text}}, spritefont, x+2, y, w-16-4, self.align, self.valign)
+				end
+			end,
+			
+			onHit = function(self)
+				self.open = true
+				yui.add(self.ui.instance, window(self))
+			end,
+			
+			onChange = function(self, choice)
+				self.open = false
+				var = choice and choice or var
+			end,
+		}
 	}
 	
 	table.append(item, t or {})

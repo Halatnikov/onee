@@ -942,7 +942,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	local fontdef = font.font
 	
 	-- update or create instance
-	local id = string.md5(x..y..r..sx..sy..ox..oy..kx..ky)
+	local id = string.md5(x..y..r..sx..sy..ox..oy..kx..ky, limit, alignh, alignv)
 	fontscene.instances[id] = fontscene.instances[id] or text.new(id, fontscene)
 	local instance = fontscene.instances[id]
 	
@@ -1119,6 +1119,9 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 				
 				if alignv == "center" then yoffset = -math.floor(height / 2) end
 				if alignv == "bottom" then yoffset = -math.floor(height) end
+			elseif limit then
+				if alignh == "center" then xoffset = math.floor(limit / 2 - curx / 2) end
+				if alignh == "right" then xoffset = math.floor(limit - curx) end
 			end
 			
 			instance.xoffset = xoffset

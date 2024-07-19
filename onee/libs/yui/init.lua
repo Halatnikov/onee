@@ -24,4 +24,5 @@ return {
     Spacer = require(BASE..'spacer'),
     Ui = require(BASE..'ui'),
     Widget = require(BASE..'widget'),
+    core = require(BASE..'core'),
 }

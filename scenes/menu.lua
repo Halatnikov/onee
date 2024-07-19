@@ -5,7 +5,7 @@ local menu = dofile("common/menu_simple")
 
 local bool = true
 local num = 5
-local str = "You"
+local str = "you"
 local textinput = "i'm freaks"
 
 function scene.init(self)
@@ -20,15 +20,17 @@ function scene.init(self)
 	local main, yui_test
 	
 	main = menu.start({}, function(root, ui)
-		root.beforeDraw = function()
+		local scene = self
+		
+		root.beforeDraw = function(self)
 			gradient("horizontal", {
 				{0, 1, 1, 0.5},
 				{0, 1, 1, 0.125},
 				{0, 0, 0, 0},
 			}, 0, ui.focused.y - 2, 0, onee.width, ui.focused.h + 4)
 		
-			self.arrow.y = ui.focused.y + 8
-			sprite.draw(self.arrow, self, {queued = false})
+			scene.arrow.y = ui.focused.y + 8
+			sprite.draw(scene.arrow, scene, {queued = false})
 		end
 		
 		menu.label("Scenes")
@@ -58,15 +60,24 @@ function scene.init(self)
 	end)
 	
 	yui_test = menu.start({}, function(root, ui)
-		root.beforeDraw = function()
+		local scene = self
+		
+		root.beforeDraw = function(self)
 			gradient("horizontal", {
 				{0, 1, 1, 0.5},
 				{0, 1, 1, 0.125},
 				{0, 0, 0, 0},
 			}, 0, ui.focused.y - 2, 0, onee.width, ui.focused.h + 4)
 		
-			self.arrow.y = ui.focused.y + 8
-			sprite.draw(self.arrow, self, {queued = false})
+			scene.arrow.y = ui.focused.y + 8
+			sprite.draw(scene.arrow, scene, {queued = false})
+		end
+		
+		root.onActionInput = function(self, action)
+			if action.cancel then
+				self.ui.previous.visible = true
+				yui.remove(scene.menu)
+			end
 		end
 		
 		menu.label("yui elements test")
@@ -84,6 +95,13 @@ function scene.init(self)
 		menu.button("Disabled", "", nil, false)
 		
 		menu.hold("Hold button", "a", function(self) log("THE") end)
+		
+		menu.dropdown("Dropdown menu", "open a sub window", str, {
+			{"Have", "have", "descriptions of separate items"},
+			{"You", "you", "", function() log("i did") end},
+			{"Ever", "ever", "hello"}
+		})
+		menu.dropdown("Inverted dropdown", "", str, table.fill("when the", 8), "when the", true)
 		
 		local gui = yui_
 		table.insert(root, gui.Columns {
@@ -104,7 +122,6 @@ function scene.init(self)
 		})
 		menu.spacer()
 		
-		local scene = self
 		menu.button("Back", "", function(self)
 			self.ui.previous.visible = true
 			yui.remove(scene.menu)
