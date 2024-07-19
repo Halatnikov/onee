@@ -2,66 +2,55 @@ local menu = {}
 
 local gui = yui_
 
-menu.themes = {
-	default = {
-		cornerRadius = 0,
-		font = nil,
-		spritefont = "font_12",
-		color = {
-			normal = {bg = {0.25, 0.25, 0.25}, fg = {0.75, 0.75, 0.75}},
-			hovered = {bg = {0.19, 0.6, 0.73}, fg = {1, 1, 1}},
-			active = {bg = {1, 0.6, 0}, fg = {1, 1, 1}},
-		}
-	},
-	
-	textonly = {
-		cornerRadius = 0,
-		font = nil,
-		spritefont = "font_12",
-		color = {
-			normal = {bg = {0,0,0,0}, fg = {1,1,1}},
-			hovered = {bg = {0,0,0,0}, fg = {1,1,1}},
-			active = {bg = {0,0,0,0}, fg = {1, 0.6, 0}},
-		}
-	},
-	
-	disabled = {
-		cornerRadius = 0,
-		font = nil,
-		spritefont = "font_12",
-		color = {
-			normal = {bg = {0,0,0,0}, fg = {0,0,0}},
-			hovered = {bg = {0,0,0,0}, fg = {0,0,0}},
-			active = {bg = {0,0,0,0}, fg = {0,0,0}},
-		}
-	},
-}
-
-menu.name = nil
-menu.root, menu.ui = nil, nil
-menu.x, menu.y = 32, 16
-menu.w, menu.h = onee.width-64, 16
-menu.padding = 4
-menu.theme = menu.themes.textonly
-
 --!
-function menu.push(name, params)
-	params = params or {}
+function menu.start(params, func)	
+	menu.themes = {
+		default = {
+			cornerRadius = 0,
+			font = nil,
+			spritefont = "font_12",
+			color = {
+				normal = {bg = {0.25, 0.25, 0.25}, fg = {0.75, 0.75, 0.75}},
+				hovered = {bg = {0.19, 0.6, 0.73}, fg = {1, 1, 1}},
+				active = {bg = {1, 0.6, 0}, fg = {1, 1, 1}},
+			}
+		},
+		
+		textonly = {
+			cornerRadius = 0,
+			font = nil,
+			spritefont = "font_12",
+			color = {
+				normal = {bg = {0,0,0,0}, fg = {1,1,1}},
+				hovered = {bg = {0,0,0,0}, fg = {1,1,1}},
+				active = {bg = {0,0,0,0}, fg = {1, 0.6, 0}},
+			}
+		},
+		
+		disabled = {
+			cornerRadius = 0,
+			font = nil,
+			spritefont = "font_12",
+			color = {
+				normal = {bg = {0,0,0,0}, fg = {0,0,0}},
+				hovered = {bg = {0,0,0,0}, fg = {0,0,0}},
+				active = {bg = {0,0,0,0}, fg = {0,0,0}},
+			}
+		},
+	}
 	
-	menu.name = name
-	menu.x = params.x or menu.x
-	menu.y = params.y or menu.y
-	menu.w = params.w or menu.w
-	menu.h = params.h or menu.h
-	menu.padding = params.padding or menu.padding
-	menu.theme = params.theme or menu.theme
+	menu.x, menu.y = 32, 16
+	menu.w, menu.h = onee.width-64, 16
+	menu.padding = 4
+	menu.theme = menu.themes.textonly
 	
-	yui.open[menu.name] = true
+	table.append(menu, params)
 	
 	menu.ui = {
 		x = menu.x, y = menu.y, theme = menu.theme,
 		gui.Rows {
 			padding = menu.padding,
+			
 			onDraw = function(self)
 				local description = self.ui.focused.description
 				
@@ -78,18 +67,10 @@ function menu.push(name, params)
 	}
 	
 	menu.root = menu.ui[1]
-end
-
---!
-function menu.pop()
-	yui[menu.name] = gui.Ui:new(menu.ui)
-	menu.ui = nil
-end
-
---!
-function menu.close()
-	yui.open[menu.name] = nil
-	menu.root:draw()
+	
+	func(menu.root, menu.ui)
+	
+	return menu.ui
 end
 
 --!
@@ -269,9 +250,7 @@ function menu.hold(label, description, func, speed, t)
 		onActionInput = noop,
 		
 		onUpdate = function(self)
-			local pressing = self.ui.device.confirm or (self.ui.device.clicking and collision.point_rect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h))
-			
-			if self == self.ui.focused and pressing then
+			if self:isFocused() and self.ui.device.confirm or (self.ui.device.clicking and collision.point_rect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h)) then
 				if not self.hold_blocked then
 					self.hold = self.hold + self.hold_speed
 				end
@@ -293,7 +272,7 @@ function menu.hold(label, description, func, speed, t)
 			end
 			
 			-- prevent excess inputs
-			if pressing then
+			if self.ui.device.confirm or self.ui.device.clicking then
 				if self.hold_time < 1 then self.hold_blocked = false end
 				self.hold_time = self.hold_time + 1
 			else

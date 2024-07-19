@@ -88,11 +88,6 @@ function Choice:onActionInput(action)
         self.index = oldindex + 1
         handled = true
     end
-	if action.confirm then
-		self:onHit()
-		hit(self)
-		handled = true
-	end
     if not handled then
         return false
     end

@@ -410,6 +410,10 @@ function imgui.window.menubar()
 			if gui.MenuItem_Bool("Reset scene", "F3") then
 				scene.set(scenes[1].path)
 			end
+			-- to init scene
+			if gui.MenuItem_Bool("Re-init", "F4") then
+				scene.set("init")
+			end
 			-- advance frame controls shortcut
 			if gui.SmallButton(stepframe and "|>" or "||") then
 				stepframe = not stepframe
@@ -500,6 +504,7 @@ function imgui.window.menubar()
 		------------------------------------------------ windows menu
 		if gui.BeginMenu("Windows") then
 			
+			gui.SeparatorText("ImGui")
 			-- open main window
 			if gui.MenuItem_Bool("Main window", nil, imgui.open.main) then
 				imgui.open.main = not imgui.open.main
@@ -535,19 +540,26 @@ function imgui.window.menubar()
 				imgui.open.demo = not imgui.open.demo
 			end
 			
+			gui.SeparatorText("yui")
+			-- open debug menu button
+			if gui.MenuItem_Bool("Debug menu button", nil, debug_yui_debug_button) then
+				debug_yui_debug_button = not debug_yui_debug_button
+			end
+			
 			gui.EndMenu()
 		end
 		
-		------------------------------------------------ yui menu
-		if gui.BeginMenu("yui") then
+		------------------------------------------------ scenes menu
+		if gui.BeginMenu("Scenes") then
 			
-			-- open debug menu button
-			if gui.MenuItem_Bool("Debug menu button", nil, yui.open.debug_button) then
-				yui.open.debug_button = not yui.open.debug_button
-			end
-			-- debug menu itself
-			if gui.MenuItem_Bool("Debug menu", nil, yui.open.debug) then
-				yui.open.debug = not yui.open.debug
+			local list = files.listdir("scenes")
+			for i=1, #list do
+				local name = string.remove(list[i], "scenes/", ".lua")
+				local open = table.find(scenes, "path", name) ~= nil
+				
+				if gui.MenuItem_Bool(name, nil, open) then
+					scene.set(name)
+				end
 			end
 			
 			gui.EndMenu()

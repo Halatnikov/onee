@@ -1,3 +1,5 @@
+debug.yui = {}
+
 ---------------------------------------------------------------- DEBUG INIT
 
 --!
@@ -21,6 +23,7 @@ function debug.enable(enabled)
 		debug_draw_sprites = false
 		debug_hotswap = not mobile and true or false
 		debug_yui = false
+		debug_yui_debug_button = false
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
 		
@@ -104,6 +107,9 @@ function debug.update()
 	if debug_hotswap then lurker.update() end
 	
 	imgui.update()
+	if (mobile or not onee.libtype) or debug_yui_debug_button then
+		yui.update(debug.yui.debug_menu)
+	end
 end
 
 function debug.draw()
@@ -132,6 +138,10 @@ function debug.draw()
 		draw_recursively(scene)
 	end
 	queue.execute(debug.drawlist)
+	
+	if (mobile or not onee.libtype) or debug_yui_debug_button then
+		yui.draw(debug.yui.debug_menu)
+	end
 	
 end
 
@@ -195,6 +205,7 @@ onee.love("keypressed", function(k, scancode, isrepeat)
 	
 	if k == "f2" then love.event.quit("restart") end
 	if k == "f3" then scene.set(scenes[1].path) end
+	if k == "f4" then scene.set("init") end
 	
 	if not input.ignore then
 		if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end

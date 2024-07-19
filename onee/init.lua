@@ -35,6 +35,13 @@ do
 		love.filesystem.createDirectory("libs")
 		package.cpath = package.cpath..";"..love.filesystem.getSaveDirectory().."/libs/?."..onee.libtype
 	end
+	
+	-- various сonstants
+	framerate = 60
+	tick = 1 / framerate
+	onee.time_start = os.time()
+	onee.allow_update = true
+	onee.width, onee.height = love.config.width, love.config.height
 
 	-- libraries (user)
 	require("onee/libs/urfs")
@@ -59,13 +66,6 @@ do
 
 	-- gui (user)
 	require("onee/gui/yui")
-	
-	-- various сonstants
-	framerate = 60
-	tick = 1 / framerate
-	onee.time_start = os.time()
-	onee.allow_update = true
-	onee.width, onee.height = love.config.width, love.config.height
 	
 	-- :o
 	debug.enable(debug_mode)
@@ -115,7 +115,6 @@ function onee.draw()
 	window.draw(function()
 		scene.draw()
 		debug.draw()
-		yui.draw_()
 	end)
 	
 	input.draw()
