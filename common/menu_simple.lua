@@ -214,11 +214,11 @@ function menu.textinput(label, description, var, t)
 			onChange = function(self, text)
 				var = text
 			end,
-			onHit = function(self, text)
-				self.cursor = 1
-				self.text = ""
-				self:onChange(self.text)
-			end,
+			-- onHit = function(self, text)
+				-- self.cursor = 1
+				-- self.text = ""
+				-- self:onChange(self.text)
+			-- end,
 		},
 	}
 	
@@ -250,6 +250,8 @@ function menu.hold(label, description, func, speed, t)
 		onActionInput = noop,
 		
 		onUpdate = function(self)
+			if not self.ui.active then return end
+			
 			if self:isFocused() and self.ui.device.confirm or (self.ui.device.clicking and yui_.core.pointinrect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h)) then
 				if not self.hold_blocked then
 					self.hold = self.hold + self.hold_speed
@@ -303,8 +305,6 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 	
 	-- the window it opens
 	local function window(parent)
-		parent.open = true
-		
 		inverted = inverted or (parent.y - (menu.h + menu.padding) * #choices > onee.height)
 		
 		local y, rect_y
@@ -324,7 +324,7 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 				
 				onActionInput = function(self, action)
 					if action.cancel then
-						parent:onChange()
+						parent:onChange(nil)
 						yui.remove(parent.ui.instance)
 					end
 				end,
@@ -342,7 +342,7 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 				onDraw = function(self)
 					local description = self.ui.focused.description
 					
-					if self.ui.active and description and not (#description == 0) then
+					if description and not (#description == 0) then
 						local height = self.spritefont and self.spritefont.height or 0
 						
 						love.graphics.setColor(0, 0, 0, 0.75)
@@ -372,8 +372,8 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 		for i, choice in ipairs(parent.choices) do
 			table.insert(window[1], gui.Button {
 				w = parent.w, h = menu.h,
-				description = choice[3] or nil,
 				text = choice[1],
+				description = choice[3] or nil,
 				onHit = function(self)
 					if choice[4] then choice[4]() end
 					parent:onChange(choice[2])
@@ -404,15 +404,15 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 			default = var,
 			
 			onUpdate = function(self)
-				self.text = self.fallback or var
+				self.active = self.open
+				
+				self.text = self.fallback or tostring(var)
 				for i,choice in ipairs(choices) do
-					if choice[2] == var then self.text = choice[1] end
+					if not self.fallback and choice[2] == var then self.text = choice[1] end
 				end
 			end,
 			
 			draw = function(self)
-				self.active = self.open
-				
 				local core = yui_.core
 				local x,y,w,h = self.x,self.y,self.w,self.h
 				local color, font, cornerRadius, spritefont = core.themeForWidget(self)
@@ -423,28 +423,16 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 				core.drawBox(x,y,w,h, c, cornerRadius)
 				core.drawBox(x+w-16,y,16,h, fg, cornerRadius)
 				
-				local cc = color.hovered
-				
 				love.graphics.setLineWidth(3)
-				love.graphics.setColor(cc.fg[1],cc.fg[2],cc.fg[3])
+				love.graphics.setColor(color.hovered.fg)
 				if not self.open then
-					love.graphics.line(x+w-h*.9,y+h*.3, x+w-h*.5,y+h*.7, x+w-h*.1,y+h*.3)
+					love.graphics.line(x+w-h*.8,y+h*.35, x+w-h*.5,y+h*.65, x+w-h*.2,y+h*.35)
 				else
-					love.graphics.line(x+w-h*.9,y+h*.7, x+w-h*.5,y+h*.3, x+w-h*.1,y+h*.7)
+					love.graphics.line(x+w-h*.8,y+h*.65, x+w-h*.5,y+h*.35, x+w-h*.2,y+h*.65)
 				end
 				love.graphics.reset()
 				
-				if not spritefont then
-					y = y + core.verticalOffsetForAlign(self.valign, font, h)
-					
-					love.graphics.setColor(c.fg)
-					love.graphics.setFont(font)
-					love.graphics.printf(self.text, x+2, y, w-4, self.align)
-				end
-				
-				if spritefont then
-					self.spritefont = text.printf({{c.fg, self.text}}, spritefont, x+2, y, w-16-4, self.align, self.valign)
-				end
+				self.spritefont = text.printf({{c.fg, self.text}}, spritefont, x+2, y, w-16-4, self.align, self.valign)
 			end,
 			
 			onHit = function(self)

@@ -47,6 +47,7 @@ menu = {
 				self.text = string.format("%d %02.2f FPS %02.2fms", love.timer.getFPS(), fps, 1000*love.timer.getAverageDelta())
 			end,
 		},
+		
 		gui.Columns {
 			padding = padding,
 			-- reload
@@ -65,15 +66,27 @@ menu = {
 				end,
 			},
 		},
-		-- to init scene
+		
 		gui.Spacer {h = 4},
-		gui.Button {
-			w = width, h = height,
-			text = "Re-init",
-			onHit = function(self)
-				scene.set("init")
-			end,
+		gui.Columns {
+			padding = padding,
+			-- to init scene
+			gui.Button {
+				w = width/2 - padding/2, h = height,
+				text = "Re-init",
+				onHit = function(self)
+					scene.set("init")
+				end,
+			},
+			-- reset scene
+			gui.Button {
+				text = "Crash!",
+				onHit = function(self)
+					error("you did this to yourself")
+				end,
+			},
 		},
+		
 		-- draw collisions
 		gui.Checkbox {
 			checked = debug_draw_collisions,

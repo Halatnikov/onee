@@ -129,7 +129,7 @@ end
 
 function Choice:draw()
     local x,y,w,h = self.x,self.y,self.w,self.h
-    local color, font, cornerRadius = core.themeForWidget(self)
+    local color, font, cornerRadius, spritefont = core.themeForWidget(self)
     local c = core.colorForWidgetState(self, color)
 
     core.drawBox(x,y,w,h, c, cornerRadius)
@@ -153,12 +153,17 @@ function Choice:draw()
     end
 
     -- draw text
+	if not spritefont then
+		 y = y + core.verticalOffsetForAlign(self.valign, font, h)
 
-    y = y + core.verticalOffsetForAlign(self.valign, font, h)
-
-    love.graphics.setColor(c.fg)
-    love.graphics.setFont(font)
-    love.graphics.printf(self.choices[self.index][1], x+h+2, y, w-2*(h + 2), self.align)
+		love.graphics.setColor(c.fg)
+		love.graphics.setFont(font)
+		love.graphics.printf(self.choices[self.index][1], x+h+2, y, w-2*(h + 2), self.align)
+	end
+	
+	if spritefont then
+		self.spritefont = text.printf({{c.fg, self.choices[self.index][1]}}, spritefont, x+2, y, w-4, self.align, self.valign)
+	end
 end
 
 return Choice

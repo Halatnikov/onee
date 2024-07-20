@@ -903,12 +903,12 @@ function text.new(id, scene)
 	local t = {
 		instance = true,
 		fontinstance = true,
-		scene = scene.name,
+		fontscene = scene.name,
 		id = id,
 		
 		sprites = {},
 	}
-	t = table.protect(t, {"instance", "id", "scene", "text"})
+	t = table.protect(t, {"instance", "fontinstance", "fontscene", "id"})
 	
 	scene.instances[id] = t
 	
@@ -963,7 +963,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		local curfont
 		
 		-- new line
-		if (char == newline) or (limit and curx >= limit) then
+		if char == newline or (limit and curx >= limit) then
 			curline = curline + 1
 			charcount = 0
 			width = curx > width and curx or width
@@ -991,7 +991,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			totalchars = totalchars + 1
 			
 			-- text was updated, clear sprites
-			if not table.compare(instance.raw, arg) then instance.sprites = {} end
+			if not table.compare(instance.text, arg) then instance.sprites = {} end
 			
 			instance.sprites[curline] = instance.sprites[curline] or {}
 			instance.sprites[curline][charcount] = instance.sprites[curline][charcount]
@@ -1041,8 +1041,8 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		
 		-- inline icon
 		if string.left(data, 1) == "{" and string.right(data, 1) == "}" then
-			local icon = string.sub(data, 2, -2)
-			local char
+			local icon = string.mid(data, 2, -2)
+			local charsprite
 			
 			-- input icons
 			if string.find(icon, "input_") then
@@ -1062,16 +1062,16 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 					end
 				end
 				
-				char = printchar(icon)
-				if not char then char = printchar("unknown") end
+				charsprite = printchar(icon)
+				if not charsprite then charsprite = printchar("unknown") end
 				
 			-- regular icons
 			else
-				char = printchar(icon)
+				charsprite = printchar(icon)
 			end
 			
 			-- center icon vertically
-			char.y = char.realy + (fontdef.baseheight - char.realheight) / 2
+			charsprite.y = charsprite.realy + (fontdef.baseheight - charsprite.realheight) / 2
 		
 		-- regular text
 		else	
@@ -1079,12 +1079,13 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			for i, char in ipairs(string.split(data)) do
 				local charsprite = printchar(char)
 				if charsprite then 
+					-- apply effects
+					
 					-- color alias (as only effect)
 					if (#effects == 3 or #effects == 4) and type(effects[1]) == "number" then
 						effects = {effects}
 					end
 					
-					-- apply effects
 					for i, effect in ipairs(effects) do
 						if type(effect) == "string" then effect = {effect} end -- "shake" -> {"shake"}
 						
@@ -1138,17 +1139,13 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		end
 	end)
 	
-	instance.raw = arg
+	instance.text = arg
+	instance.text_old = arg
 	
 	instance.width = width > 0 and width or curx
 	instance.height = height + cury
 	instance.lines = lines
 	instance.totalchars = totalchars
-	
-	-- clean inactive instances
-	-- for k,v in pairs(fontscene.instances) do
-		-- if v.dt ~= dt then fontscene.instances[k] = nil end
-	-- end
 	
 	return instance -- that way you can do `local the = text.print("", 0, 0)`
 end

@@ -13,8 +13,8 @@ function debug.enable(enabled)
 		require("onee/libs/profi")
 		require("onee/libs/docroc")
 		
-		-- gui (debug)
-		require("onee/gui/imgui")
+		-- debug modules
+		require("onee/imgui")
 		
 		love.window.setTitle(love.config.title.." (debug)")
 		love.setDeprecationOutput(true)
@@ -66,6 +66,7 @@ function debug.enable(enabled)
 		debug_draw_sprites = false
 		debug_hotswap = false
 		debug_yui = false
+		debug_yui_debug_button = false
 		debug.profiler_enable(false)
 		debug.profiler_deep_enable(false)
 		
@@ -173,6 +174,9 @@ function debug.draw_post()
 		local text = debug_profiler_deep and "TRACING" or "PROFILING"
 		love.graphics.printf(text, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
 	end
+	if mobile and not (love._os == "Android" or love._os == "iOS") then
+		love.graphics.printf("MOBILE", windowwidth-128-4, windowheight-(16 + 13*2), 128, "right")
+	end
 	love.graphics.reset()
 	
 	
@@ -200,7 +204,6 @@ end
 
 onee.love("keypressed", function(k, scancode, isrepeat)
 	if not debug_mode then return end
-	--print(k)
 	--press l to learn
 	
 	if k == "f2" then love.event.quit("restart") end

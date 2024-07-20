@@ -162,6 +162,7 @@ function imgui.table_label(arg, settings)
 	
 	if gui.BeginItemTooltip() then
 		gui.Text(tostring(arg))
+		gui.Text("size: "..table.length(arg))
 		if mt then gui.Text("metatable: "..tostring(mt)) end
 		gui.EndTooltip()
 	end
@@ -457,10 +458,6 @@ function imgui.window.menubar()
 				debug_mode = not debug_mode
 				debug.enable(debug_mode)
 			end
-			-- toggle mobile mode
-			if gui.MenuItem_Bool("Mobile mode", nil, mobile) then
-				mobile = not mobile
-			end
 			-- change target fps
 			gui.AlignTextToFramePadding()
 			gui.Text("Target framerate")
@@ -474,6 +471,10 @@ function imgui.window.menubar()
 			end
 			
 			gui.Separator()
+			-- toggle mobile mode
+			if gui.MenuItem_Bool("Mobile mode", nil, mobile) then
+				mobile = not mobile
+			end
 			-- toggle file hot reload
 			if gui.MenuItem_Bool("File hotswap", nil, debug_hotswap) then
 				debug_hotswap = not debug_hotswap
@@ -724,6 +725,11 @@ function imgui.window.main()
 		if gui.Button("Reset scene") then
 			scene.set(scenes[1].name)
 		end
+		-- to init scene
+		gui.SameLine()
+		if gui.Button("Re-init") then
+			scene.set("init")
+		end
 		-- advance frame controls
 		gui.SameLine()
 		if gui.Button(stepframe and "|>" or "||") then
@@ -789,15 +795,11 @@ function imgui.window.main()
 				gui.EndCombo()
 			end
 			
-			if gui.TreeNodeEx_Str("internal", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				local _v = _int({onee.width, onee.height})
-				gui.SetNextItemWidth(128+64)
-				if gui.DragInt2("canvas width & height", _v) then
-					onee.width = _v[0]
-					onee.height = _v[1]
-				end
-				
-				gui.TreePop()
+			local _v = _int({onee.width, onee.height})
+			gui.SetNextItemWidth(128+64)
+			if gui.DragInt2("canvas width & height", _v) then
+				onee.width = _v[0]
+				onee.height = _v[1]
 			end
 			
 			if gui.Button("Update window") then
@@ -1360,13 +1362,11 @@ function imgui.window.tests()
 				local tests = files.listdir("onee/_tests")
 				if not test_current then 
 					test_current = tests[1]
-					test_current = string.remove(test_current, "onee/_tests/")
-					test_current = string.remove(test_current, ".lua")
+					test_current = string.remove(test_current, "onee/_tests/", ".lua")
 				end
 				if gui.BeginCombo("##tests", test_current) then
 					for k, v in kpairs(tests) do
-						v = string.remove(v, "onee/_tests/")
-						v = string.remove(v, ".lua")
+						v = string.remove(v, "onee/_tests/", ".lua")
 						if gui.Selectable_Bool(v) then test_current = v end
 					end
 					gui.EndCombo()
@@ -1383,8 +1383,10 @@ function imgui.window.tests()
 				if not test_last then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -") end
 				if test_last then
 					gui.Text(test_last.." -"); gui.SameLine()
-					if test_success then gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
-					else gui.TextColored(gui.ImVec4_Float(1,0,0,1), "FAILED")
+					if test_success then
+						gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
+					else
+						gui.TextColored(gui.ImVec4_Float(1,0,0,1), "FAILED")
 					end
 					
 					local ratio = (test_passes - test_errors) / test_passes
@@ -1456,7 +1458,7 @@ function imgui.window.docs()
 		end
 		
 		gui.Separator()
-		if file_current and gui.BeginChild_Str("debug") then
+		if file_current and gui.BeginChild_Str("docs") then
 			
 			for k,v in kpairs(docs[file_current]) do
 				

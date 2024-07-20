@@ -110,7 +110,7 @@ end
 
 --!
 function yui.debug_draw(ui)
-	function draw_recursive(arg)
+	local function draw_recursive(arg)
 		for k,v in ipairs(arg) do
 			love.graphics.setColor(1,1,1,0.1)
 			local mode = ui.focused == v and "fill" or "line"

@@ -22,6 +22,10 @@ function scene.init(self)
 	main = menu.start({}, function(root, ui)
 		local scene = self
 		
+		ui.onActive = function(self, active)
+			self.visible = active
+		end
+		
 		root.beforeDraw = function(self)
 			gradient("horizontal", {
 				{0, 1, 1, 0.5},
@@ -47,10 +51,7 @@ function scene.init(self)
 		menu.label("Other")
 		
 		local scene = self
-		menu.button("yui elements test", "", function(self)
-			self.ui.visible = false
-			yui.add(scene.menu, yui_test)
-		end)
+		menu.button("yui elements test", "", function(self) yui.add(scene.menu, yui_test) end)
 		
 		menu.spacer()
 		
@@ -74,10 +75,7 @@ function scene.init(self)
 		end
 		
 		root.onActionInput = function(self, action)
-			if action.cancel then
-				self.ui.previous.visible = true
-				yui.remove(scene.menu)
-			end
+			if action.cancel then yui.remove(scene.menu) end
 		end
 		
 		menu.label("yui elements test")
@@ -96,7 +94,7 @@ function scene.init(self)
 		
 		menu.hold("Hold button", "a", function(self) log("THE") end)
 		
-		menu.dropdown("Dropdown menu", "open a sub window", str, {
+		menu.dropdown("Dropdown menu", "opens a sub window", str, {
 			{"Have", "have", "descriptions of separate items"},
 			{"You", "you", "", function() log("i did") end},
 			{"Ever", "ever", "hello"}
@@ -122,10 +120,7 @@ function scene.init(self)
 		})
 		menu.spacer()
 		
-		menu.button("Back", "", function(self)
-			self.ui.previous.visible = true
-			yui.remove(scene.menu)
-		end)
+		menu.button("Back", "", function(self) yui.remove(scene.menu) end)
 	end)
 	
 	self.menu = yui.new(main)

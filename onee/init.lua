@@ -63,9 +63,7 @@ do
 	require("onee/collisions")
 	require("onee/assets")
 	require("onee/scenes")
-
-	-- gui (user)
-	require("onee/gui/yui")
+	require("onee/yui")
 	
 	-- :o
 	debug.enable(debug_mode)
