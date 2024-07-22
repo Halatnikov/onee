@@ -8,16 +8,18 @@ function debug.enable(enabled)
 	if enabled then
 		
 		-- libraries (debug)
-		require("onee/libs/df-serialize")
-		require("onee/libs/lurker")
-		require("onee/libs/profi")
-		require("onee/libs/docroc")
+		require("onee/debug/libs/df-serialize")
+		require("onee/debug/libs/lurker")
+		require("onee/debug/libs/lust")
+		require("onee/debug/libs/profi")
+		require("onee/debug/libs/docroc")
 		
 		-- debug modules
-		require("onee/imgui")
+		require("onee/debug/imgui")
 		
 		love.window.setTitle(love.config.title.." (debug)")
 		love.setDeprecationOutput(true)
+		print("<debug mode>")
 		
 		debug_draw_collisions = true
 		debug_draw_sprites = false
@@ -244,13 +246,20 @@ function debug.test(arg)
 	local env = {}
 	env = copy(_G) -- add globals, techically isolated for that test only?
 	
-	local lust = require("onee/libs/lust")
-	
 	env.describe, env.it, env.expect = lust.describe, lust.it, lust.expect
 	env.before, env.after = lust.before, lust.after
 	env.spy = lust.spy
 
 	env.group, env.test, env.assert = env.describe, env.it, env.expect -- aliases
+	
+	-- reset
+	lust.level = 0
+	lust.passes = 0
+	lust.errors = 0
+	lust.befores = {}
+	lust.afters = {}
+	lust.summary = {}
+	lust.success = true
 	
 	------------ set up custom functions
 	
@@ -325,17 +334,14 @@ function debug.test(arg)
 	dofile("onee/_tests/"..arg, env)
 	
 	-- test finished
-	local success, summary, passes, errors = lust.success, lust.summary, lust.passes, lust.errors
 	local took = math.round(love.timer.getTime() - time_start, 5)
 	
-	if success then log("TEST PASSED")
+	if lust.success then log("TEST PASSED")
 	else log("TEST FAILED")
 	end
-	log("PASSES: "..passes..", ERRORS: "..errors..", TOOK: "..took)
+	log("PASSES: "..lust.passes..", ERRORS: "..lust.errors..", TOOK: "..took)
 	
-	unrequire("onee/libs/lust")
-	
-	return success, summary, passes, errors, took
+	return lust.success, lust.summary, lust.passes, lust.errors, took
 end
 
 ---------------------------------------------------------------- PROFILER

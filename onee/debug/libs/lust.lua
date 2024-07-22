@@ -2,7 +2,7 @@
 -- https://github.com/bjornbytes/lust
 -- MIT LICENSE
 
-local lust = {}
+lust = {}
 lust.level = 0
 lust.passes = 0
 lust.errors = 0

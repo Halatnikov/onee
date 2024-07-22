@@ -7,10 +7,11 @@ imgui = {
 local gui
 if onee.libtype and debug_mode then
 	if not files.exists("libs/cimgui."..onee.libtype) then
-		love.filesystem.write("libs/cimgui."..onee.libtype, love.filesystem.read("onee/libs/cimgui-love/cimgui."..onee.libtype))
+		local lib = love.filesystem.read("onee/debug/libs/cimgui-love/cimgui."..onee.libtype)
+		love.filesystem.write("libs/cimgui."..onee.libtype, lib)
 	end
 	
-	imgui_ = require("onee/libs/cimgui-love")
+	imgui_ = require("onee/debug/libs/cimgui-love")
 	gui = imgui_
 	
 	gui.love.Init()

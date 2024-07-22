@@ -44,6 +44,7 @@ do
 	onee.width, onee.height = love.config.width, love.config.height
 
 	-- libraries (user)
+	require("onee/libs/semver")
 	require("onee/libs/urfs")
 	require("onee/libs/timer")
 	require("onee/libs/json")
@@ -55,26 +56,29 @@ do
 	-- onee modules
 	require("onee/utils")
 	require("onee/misc")
-	require("onee/window")
-	require("onee/files")
 	require("onee/debug")
-	
+	require("onee/files")
+	require("onee/window")
 	require("onee/input")
-	require("onee/collisions")
-	require("onee/assets")
-	require("onee/scenes")
-	require("onee/yui")
 	
-	-- :o
-	debug.enable(debug_mode)
+	require("onee/scenes")
+	require("onee/assets")
+	require("onee/collisions")
+	require("onee/yui")
 	
 	-- :)
 	print("onee "..onee.version.." | love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")")
 	local date = os.date("*t")
-	print(string.format("%d/%02d/%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
+	print(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
+	
+	-- :o
+	debug.enable(debug_mode)
+	
+	-- resolve some initital things
+	onee.compatibility(onee.version, love.config.onee)
+	window.update() -- init game canvas
 	
 	-- off we go
-	window.update() -- init game canvas
 	scene.set("init")
 end
 

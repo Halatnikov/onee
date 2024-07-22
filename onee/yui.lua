@@ -123,6 +123,8 @@ function yui.debug_draw(ui)
 end
 
 -- additional UIs
-require("onee/yui/debug_menu") -- mobile debug button
+if debug_mode then
+	require("onee/debug/yui/debug_menu") -- mobile debug button
+end
 
 _prof.hook("yui")

@@ -27,6 +27,25 @@ function onee.loading(text)
 	love.graphics.present()
 end
 
+--!
+function onee.compatibility(current, needed)
+	if not needed then return end
+	-- strip pre-releases
+	current, needed = semver(string.tokenize(current,"-",1)), semver(string.tokenize(needed,"-",1))
+	
+	if current == needed then
+		return true
+	end
+	if current > needed then
+		-- todo: save your onee version in savefile and show a message box only once
+		print("installed onee version is higher than required") 
+		return tostring(current)
+	end
+	if current < needed then
+		error("at least onee v"..tostring(needed).." is required! please update from v"..tostring(current))
+	end
+end
+
 love.graphics.reset_ = love.graphics.reset
 
 --! modified love.graphics.reset() for my needs

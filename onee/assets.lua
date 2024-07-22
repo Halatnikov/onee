@@ -82,6 +82,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	onee.loading("loading sprite "..path)
 	
 	sprite = sprite or dofile("sprites/"..path) -- init
+	assert(not (sprite.font) or (sprite.font and sprite.font.verified), "asset.sprite() | attempted to load font in \""..name.."\" as a regular sprite")
 	scene.assets[name] = {}
 	sprite.cached_images = {}
 	
@@ -791,11 +792,14 @@ function asset.spritefont(path)
 	onee.loading("preprocessing font "..path)
 	
 	local sprite = dofile("sprites/"..path) -- init
+	assert(sprite.font,"asset.spritefont() | no fontdef specified in \""..name.."\"")
 	fonts[name] = {}
 	sprite.cached_images = {}
 	
 	sprite.tiled = nil -- nope
 	sprite.nineslice = nil
+	
+	sprite.animations = sprite.animations or {}
 	
 	local font = fonts[name]
 	
@@ -813,13 +817,14 @@ function asset.spritefont(path)
 		
 		drawlist = {},
 	}
-	font.scene = table.protect(font.scene, {"scene", "font"})
+	font.scene = table.protect(font.scene, {"scene", "fontscene"})
 	
 	local fontdef = sprite.font
 	font.font = fontdef
+	fontdef.verified = true -- allow loading in asset.sprite()
 	fontdef.spacing = fontdef.spacing or 0
 	fontdef.linespacing = fontdef.linespacing or 0
-	assert(fontdef.baseheight, "asset.spritefont() | no baseheight specified")
+	assert(fontdef.baseheight, "asset.spritefont() | no baseheight specified") --todo
 	
 	-- static character rows helper
 	if fontdef.rows then

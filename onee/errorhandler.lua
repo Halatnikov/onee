@@ -135,7 +135,7 @@ function errorhandler.draw(msg, mode, notraceback)
 	err = err:gsub("%[string \"(.-)\"%]", "%1")
 	
 	err = err.."\n"
-	err = err.."\nonee "..(onee.version or "???")..", love2d "..(love._version or "???")
+	err = err.."\n"..((love.config and love.config.title) and love.config.title or "???")..", onee "..(onee.version or "???")..", love2d "..(love._version or "???")
 	err = err.."\n"
 	err = err.."\nPress Ctrl+C to copy to clipboard"
 	err = err.."\nPress Esc to quit or Space to restart"

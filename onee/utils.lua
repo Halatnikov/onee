@@ -186,18 +186,6 @@ function string.tokenize(arg, separator, index)
 	if not index then return t end
 end
 
-function string.version(arg)
-	arg = arg or onee.version
-	
-	local ver = string.tokenize(arg, "-", 1)
-	local pre = string.tokenize(arg, "-", 2)
-	
-	ver = string.tokenize(ver, ".")
-	if pre then table.insert(ver, pre) end
-	
-	return unpack(ver)
-end
-
 ---------------------------------------------------------------- TABLES
 
 function copy(arg)

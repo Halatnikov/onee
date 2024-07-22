@@ -2,10 +2,6 @@ local sprite = {}
 
 sprite.filename = "font_16"
 
-sprite.animations = {
-	
-}
-
 sprite.font = {
 	
 	spacing = 2,

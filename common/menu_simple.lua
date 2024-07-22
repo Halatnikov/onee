@@ -426,9 +426,9 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 				love.graphics.setLineWidth(3)
 				love.graphics.setColor(color.hovered.fg)
 				if not self.open then
-					love.graphics.line(x+w-h*.8,y+h*.35, x+w-h*.5,y+h*.65, x+w-h*.2,y+h*.35)
+					love.graphics.line(x+w-h*0.8,y+h*0.35, x+w-h*0.5,y+h*0.65, x+w-h*0.2,y+h*0.35)
 				else
-					love.graphics.line(x+w-h*.8,y+h*.65, x+w-h*.5,y+h*.35, x+w-h*.2,y+h*.65)
+					love.graphics.line(x+w-h*0.8,y+h*0.65, x+w-h*0.5,y+h*0.35, x+w-h*0.2,y+h*0.65)
 				end
 				love.graphics.reset()
 				

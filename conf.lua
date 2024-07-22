@@ -4,6 +4,8 @@ function love.conf(t)
 	t.identity = "onee" -- savedata folder
 	t.version = "11.3" -- minimum love2d version
 	
+	t.onee = "0.0.2" -- preferred onee version
+	
 	t.width = 640
     t.height = 360
 	

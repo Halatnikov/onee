@@ -48,6 +48,7 @@ animations
 		[defines origin point for all frames, but frame's origin still takes priority]
 		
 		sheet
+		[only when no frames defined]
 		
 			x
 			y
@@ -61,6 +62,8 @@ animations
 			y
 			width
 			height
+			mode
+			padding
 			
 		nineslice
 		
@@ -155,11 +158,15 @@ seq_index
 loops
 [increases by 1 every time the animation loops (default: 0)]
 
-====
+==== available callbacks
 	
 anim_end()
 	
 ====
+
+active
+
+visible
 
 speed
 [overwrite the current animation speed in fps, resets when the animation changes]
@@ -172,6 +179,8 @@ z
 
 angle
 [angle in degrees (default: 0)]
+
+scale
 
 scalex
 [x scale multiplier of the sprite (default: 1)]
@@ -224,3 +233,8 @@ nineslice
 	width
 	height
 
+debug
+	
+	rgb
+	
+	highlighted
