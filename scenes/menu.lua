@@ -132,6 +132,7 @@ end
 
 function scene.update(self)
 	sprite.update(self.arrow, self)
+	
 	yui.update(self.menu)
 end
 

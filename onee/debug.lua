@@ -452,7 +452,7 @@ local function wrap(t, key, name)
 		_prof.pop()
 		return ...
 	end
-		
+	
 	t[key] = function(...)
 		if not _prof.enabled then return func(...) end
 		_prof.push(name)

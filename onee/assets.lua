@@ -240,7 +240,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	scene.sprites[name] = sprite -- done
 	
 	local time_finish = love.timer.getTime()
-	print("sprite "..path.." took "..math.round(time_finish - time_start, 4))
+	print("sprite "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
 end
 
 --! INIT A NEW SPRITE INSTANCE
@@ -623,7 +623,7 @@ function asset.model(path, scene)
 	scene.models[name] = modeldef -- done
 	
 	local time_finish = love.timer.getTime()
-	print("model "..path.." took "..math.round(time_finish - time_start, 4))
+	print("model "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
 end
 
 local vec3 = require "onee/libs/gltf/cpml.modules.vec3"
@@ -882,7 +882,7 @@ function asset.spritefont(path)
 	end
 	
 	local time_finish = love.timer.getTime()
-	print("font "..path.." took "..math.round(time_finish - time_start, 4))
+	print("font "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
 	
 	sprite.cached_images = nil
 	asset.sprite(path, font.scene, sprite) -- done, move on

@@ -15,7 +15,8 @@ if onee.libtype and debug_mode then
 	gui = imgui_
 	
 	gui.love.Init()
-	--gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
+	
+	gui.GetIO().ConfigFlags = gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
 	
 	imgui.open.menubar = true
 	imgui.open.main = true
@@ -864,11 +865,12 @@ function imgui.window.main()
 		if gui.CollapsingHeader_BoolPtr("General stats") then
 			
 			-- window size
-			gui.Text("Window size: "..windowwidth.."x"..windowheight)
+			gui.Text("Window size: "..windowwidth.."x"..windowheight.." (including DPI: "..love.graphics.getPixelWidth().."x"..love.graphics.getPixelHeight().." x"..love.window.getDPIScale()..")")
+			gui.Text("Gamma correct: "..tostring(love.graphics.isGammaCorrect()))
 			
-			--newly declared globals tree
+			------------------------ newly declared globals tree
 			if gui.TreeNodeEx_Str("Newly declared globals", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				if gui.BeginTable("globals", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+				if gui.BeginTable("stats_globals", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
 					gui.TableSetupColumn("k")
 					
 					for k,v in kpairs(debug.globals) do
@@ -882,15 +884,92 @@ function imgui.window.main()
 				gui.TreePop()
 			end
 			
-			--loaded requires tree
+			------------------------ loaded requires tree
 			if gui.TreeNodeEx_Str("package.loaded", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				if gui.BeginTable("package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+				if gui.BeginTable("stats_package_loaded", 1, gui.love.TableFlags("RowBg", "BordersInnerV")) then
 					gui.TableSetupColumn("k")
 					
 					for k in kpairs(package.loaded) do
 						gui.TableNextRow()
 						gui.TableSetColumnIndex(0)
 						gui.Text(tostring(k))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
+			
+			------------------------ love.graphics.getSystemLimits() tree
+			if gui.TreeNodeEx_Str("love.graphics.getSystemLimits()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				if gui.BeginTable("stats_systemlimits", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
+					
+					for k,v in kpairs(love.graphics.getSystemLimits()) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
+			
+			------------------------ love.graphics.getSupported() tree
+			if gui.TreeNodeEx_Str("love.graphics.getSupported()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				gui.SeparatorText("love.graphics.getSupported()")
+				if gui.BeginTable("stats_graphicsfeatures", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
+					
+					for k,v in kpairs(love.graphics.getSupported()) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
+					end
+					
+					gui.EndTable()
+				end
+				
+				gui.SeparatorText("love.graphics.getTextureTypes()")
+				if gui.BeginTable("stats_texturetypes", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
+					
+					for k,v in kpairs(love.graphics.getTextureTypes()) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
+					end
+					
+					gui.EndTable()
+				end
+				
+				gui.SeparatorText("love.graphics.getImageFormats()")
+				if gui.BeginTable("stats_imageformats", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
+					
+					for k,v in kpairs(love.graphics.getImageFormats()) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
+					end
+					
+					gui.EndTable()
+				end
+				
+				gui.SeparatorText("love.graphics.getCanvasFormats()")
+				if gui.BeginTable("stats_canvasformats", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
+					
+					for k,v in kpairs(love.graphics.getCanvasFormats()) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
 					end
 					
 					gui.EndTable()
@@ -1004,25 +1083,6 @@ function imgui.window.main()
 					gui.TableSetupColumn("v")
 					
 					for k,v in kpairs(renderer) do
-						gui.TableNextRow()
-						gui.TableSetColumnIndex(0); gui.Text(k)
-						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
-					end
-					
-					gui.EndTable()
-				end
-				gui.TreePop()
-			end
-			
-			------------------------ love.graphics.getSystemLimits() tree
-			if gui.TreeNodeEx_Str("love.graphics.getSystemLimits()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				local limits = love.graphics.getSystemLimits()
-				
-				if gui.BeginTable("performance_limits", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
-					gui.TableSetupColumn("k")
-					gui.TableSetupColumn("v")
-					
-					for k,v in kpairs(limits) do
 						gui.TableNextRow()
 						gui.TableSetColumnIndex(0); gui.Text(k)
 						gui.TableSetColumnIndex(1); gui.Text(tostring(v))

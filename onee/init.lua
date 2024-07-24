@@ -1,5 +1,5 @@
 onee = {
-	version = "0.0.2-24",
+	version = "0.0.2-25",
 	colors = {	
 		bg = {8, 8, 8},
 		bg_deep = {16, 16, 16},

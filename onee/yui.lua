@@ -1,5 +1,6 @@
 yui = {}
 yui_ = require("onee/libs/yui")
+local gui = yui_
 
 --!
 function yui.new(root, data)
@@ -59,7 +60,7 @@ function yui.add(yui, child)
 	child.instance = yui
 	child.previous = yui.stack[#yui.stack]
 	child.onActive = child.onActive or noop
-	table.insert(yui.stack, child.yui and child or yui_.Ui:new(child))
+	table.insert(yui.stack, child.yui and child or gui.Ui:new(child))
 	refresh_stack(yui.stack)
 end
 
