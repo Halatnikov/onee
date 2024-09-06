@@ -21,7 +21,7 @@ function object.update(self, scene)
 		self.collision = nil
 		self.sprite.animation = "collect"
 		
-		function self.sprite.anim_end(anim)
+		self.sprite.anim_end = function(anim)
 			self.destroy()
 		end
 	end

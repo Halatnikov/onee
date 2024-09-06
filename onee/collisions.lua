@@ -115,7 +115,7 @@ function collision.check(self, scene, objectname, collisionname)
 	end
 	
 	-- nothing found
-	if not candidates[1] then return end
+	if #candidates == 0 then return end
 	
 	for i=1, #candidates do
 		local other = candidates[i]

@@ -240,17 +240,6 @@ function table.length(arg)
 	return i
 end
 
-function table.reverse(arg)
-	return table.sort(arg, function(a,b) return a > b end)
-end
-
-function table.fill(v, min, max)
-	if not max then min, max = 1, min end
-	local t = {}
-	for i = min, max do table.insert(t, v) end
-	return t
-end
-
 function table.append(a, b)
 	a, b = a or {}, b or {}
 	local mt = getmetatable(b)
@@ -279,6 +268,43 @@ function table.find(arg, result, result2)
 			if type(v) == "table" and v[result] and v[result] == result2 then return k end
 		end
 	end
+end
+
+function table.reverse(arg)
+	return table.sort(arg, function(a,b) return a > b end)
+end
+
+function table.fill(v, min, max)
+	if not max then min, max = 1, min end
+	local t = {}
+	for i = min, max do table.insert(t, type(v) == "function" and v() or v) end
+	return t
+end
+
+function table.sortby(arg, k, descending)
+	return table.sort(arg, function(a,b)
+		if not (a[k] and b[k]) then return end
+		if not descending then
+			if type(a) ~= type(b) then return tostring(a[k]) < tostring(b[k]) end
+			return a[k] < b[k]
+		else
+			if type(a) ~= type(b) then return tostring(a[k]) > tostring(b[k]) end
+			return a[k] > b[k]
+		end
+	end)
+end
+
+function table.sortv(arg, descending)
+	return table.sort(arg, function(a,b)
+		if not (arg[a] and arg[b]) then return end
+		if not descending then
+			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
+			return arg[a] < arg[b]
+		else
+			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) > tostring(arg[b]) end
+			return arg[a] > arg[b]
+		end
+	end)
 end
 
 function table.maxn(arg, v)
@@ -312,32 +338,6 @@ function table.minn(arg, v)
 end
 function table.minv(arg) return table.minn(arg, true) end -- alias
 table.mink = table.minn -- alias
-
-function table.sortby(arg, k, descending)
-	return table.sort(arg, function(a,b)
-		if not (a[k] and b[k]) then return end
-		if not descending then
-			if type(a) ~= type(b) then return tostring(a[k]) < tostring(b[k]) end
-			return a[k] < b[k]
-		else
-			if type(a) ~= type(b) then return tostring(a[k]) > tostring(b[k]) end
-			return a[k] > b[k]
-		end
-	end)
-end
-
-function table.sortv(arg, descending)
-	return table.sort(arg, function(a,b)
-		if not (arg[a] and arg[b]) then return end
-		if not descending then
-			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
-			return arg[a] < arg[b]
-		else
-			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) > tostring(arg[b]) end
-			return arg[a] > arg[b]
-		end
-	end)
-end
 
 function table.mostcommon(arg)
 	local count = {}
@@ -479,7 +479,7 @@ function color.rgb(r, g, b, a)
 end
 
 function color.torgb(r, g, b, a)
-	return math.round(r*255), math.round(g*255), math.round(b*255), a and math.round(a*255)
+	return math.round(r*255), math.round(g*255), math.round(b*255), a and math.round(a*100)
 end
 
 function color.hsl(h, s, l, a)
@@ -499,9 +499,19 @@ function color.hsl(h, s, l, a)
 	return r + m, g + m, b + m, a
 end
 
+function color.hex(hex)
+	hex = string.right(hex, 6)
+	local r, g, b
+	r = tonumber(string.mid(hex, 1,2), 16)/255
+	g = tonumber(string.mid(hex, 3,4), 16)/255
+	b = tonumber(string.mid(hex, 5,6), 16)/255
+	return r, g, b
+end
+
 rgb = color.rgb
 torgb = color.torgb
 hsl = color.hsl
+hex = color.hex
 
 function color.random()
 	return math.random(0,255), math.random(0,255), math.random(0,255)

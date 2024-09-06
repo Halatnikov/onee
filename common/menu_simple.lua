@@ -401,7 +401,6 @@ function menu.dropdown(label, description, var, choices, fallback, inverted, t)
 			fallback = fallback,
 			open = false,
 			choices = choices,
-			default = var,
 			
 			onUpdate = function(self)
 				self.active = self.open

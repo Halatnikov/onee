@@ -1,0 +1,18 @@
+{ "object":
+    {
+     "gid":1,
+     "height":32,
+     "id":26,
+     "name":"yorb",
+     "rotation":0,
+     "type":"Object",
+     "visible":true,
+     "width":32
+    },
+ "tileset":
+    {
+     "firstgid":1,
+     "source":"..\/images\/yorb.tsj"
+    },
+ "type":"template"
+}

@@ -1,0 +1,12 @@
+{ "object":
+    {
+     "height":32,
+     "id":6,
+     "name":"solid",
+     "rotation":0,
+     "type":"Object",
+     "visible":true,
+     "width":32
+    },
+ "type":"template"
+}

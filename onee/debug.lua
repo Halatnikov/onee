@@ -236,7 +236,6 @@ function log(arg)
 	table.insert(qqueue, {text = {{1,1,1,1},tostring(arg)}, timestamp = ms})
 end
 -- /!\ [AssetLoading] asset.sprite() | asset "name" already loaded!
-log("test")
 
 ---------------------------------------------------------------- TESTS
 

@@ -100,18 +100,14 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 			-- gif
 			if animdef.gif then
 				local imagepath = path.."/"..filename
-				if files.exists("sprites/"..string.remove(imagepath, path.."/")..".gif") then 
-					imagepath = string.remove(imagepath, path.."/")
-				end
+				if files.exists("sprites/"..filename..".gif") then imagepath = filename end
 				
 				gif.add("sprites/"..imagepath..".gif", scene, name, anim, animdef, scene.assets[name][anim])
 			
 			-- spritestrip (extension of spritesheet)
 			elseif animdef.strip then
 				local imagepath = path.."/"..filename
-				if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
-					imagepath = string.remove(imagepath, path.."/")
-				end
+				if files.exists("sprites/"..filename..".png") then imagepath = filename end
 				
 				spritesheet.strip(sprite, "sprites/"..imagepath..".png", scene, name, anim, animdef, scene.assets[name][anim])
 				
@@ -124,9 +120,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					-- spritesheet
 					if framedef.sheet then
 						local imagepath = path.."/"..filename
-						if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
-							imagepath = string.remove(imagepath, path.."/")
-						end
+						if files.exists("sprites/"..filename..".png") then imagepath = filename end
 						
 						spritesheet.add(sprite, "sprites/"..imagepath..".png", scene, name, anim, frame, animdef, framedef, scene.assets[name][anim])
 						
@@ -153,9 +147,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					local framedef = animdef.frames[1]
 					
 					local imagepath = path.."/"..filename
-					if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
-						imagepath = string.remove(imagepath, path.."/")
-					end
+					if files.exists("sprites/"..filename..".png") then imagepath = filename end
 					
 					spritesheet.add(sprite, "sprites/"..imagepath..".png", scene, name, anim, 1, animdef, framedef, scene.assets[name][anim])
 					
@@ -164,9 +156,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 					animdef.frames = {[1] = {}}
 					
 					local imagepath = path.."/"..filename
-					if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
-						imagepath = string.remove(imagepath, path.."/")
-					end
+					if files.exists("sprites/"..filename..".png") then imagepath = filename end
 					
 					local image = love.graphics.newImage("sprites/"..imagepath..".png")
 					
@@ -240,7 +230,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	scene.sprites[name] = sprite -- done
 	
 	local time_finish = love.timer.getTime()
-	print("sprite "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
+	log("sprite "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
 end
 
 --! INIT A NEW SPRITE INSTANCE
@@ -623,7 +613,7 @@ function asset.model(path, scene)
 	scene.models[name] = modeldef -- done
 	
 	local time_finish = love.timer.getTime()
-	print("model "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
+	log("model "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
 end
 
 local vec3 = require "onee/libs/gltf/cpml.modules.vec3"
@@ -832,9 +822,7 @@ function asset.spritefont(path)
 			local filename = row.filename or sprite.filename
 			
 			local imagepath = path.."/"..filename
-			if files.exists("sprites/"..string.remove(imagepath, path.."/")..".png") then 
-				imagepath = string.remove(imagepath, path.."/")
-			end
+			if files.exists("sprites/"..filename..".png") then imagepath = filename end
 			imagepath = "sprites/"..imagepath..".png"
 			
 			sprite.cached_images[imagepath] = sprite.cached_images[imagepath] or love.image.newImageData(imagepath)
@@ -882,7 +870,7 @@ function asset.spritefont(path)
 	end
 	
 	local time_finish = love.timer.getTime()
-	print("font "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
+	log("font "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
 	
 	sprite.cached_images = nil
 	asset.sprite(path, font.scene, sprite) -- done, move on

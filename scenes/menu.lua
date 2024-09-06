@@ -50,7 +50,6 @@ function scene.init(self)
 		
 		menu.label("Other")
 		
-		local scene = self
 		menu.button("yui elements test", "", function(self) yui.add(scene.menu, yui_test) end)
 		
 		menu.spacer()

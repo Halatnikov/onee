@@ -1,0 +1,12 @@
+{ "object":
+    {
+     "height":64,
+     "id":4,
+     "name":"player",
+     "rotation":0,
+     "type":"Object",
+     "visible":true,
+     "width":32
+    },
+ "type":"template"
+}

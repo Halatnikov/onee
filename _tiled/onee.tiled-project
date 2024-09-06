@@ -1,0 +1,71 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+        {
+            "arguments": "\"onee\" --console",
+            "command": "love",
+            "enabled": true,
+            "name": "Launch onee",
+            "saveBeforeExecute": true,
+            "shortcut": null,
+            "showOutput": true,
+            "workingDirectory": "%executablepath"
+        }
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        ".",
+        "../levels"
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 2,
+            "members": [
+                {
+                    "name": "VisibleIngame",
+                    "type": "bool",
+                    "value": true
+                }
+            ],
+            "name": "Layer",
+            "type": "class",
+            "useAs": [
+                "layer"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 1,
+            "members": [
+                {
+                    "name": "Name",
+                    "type": "string",
+                    "value": ""
+                }
+            ],
+            "name": "Level",
+            "type": "class",
+            "useAs": [
+                "map"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+            ],
+            "name": "Object",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        }
+    ]
+}

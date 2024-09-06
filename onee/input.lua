@@ -1,13 +1,14 @@
 input = {
 	mode = "keyboard",
+	ignore = false,
+	touch_active = true,	
+
 	time = {},
 	pressed = {},
 	released = {},
 	
 	mouse_wheel = 0,
-	mouse_istouch = {},
-	
-	touch_active = true,
+	mouse_istouch = {},	
 }
 
 -- initialize the table
@@ -80,9 +81,7 @@ function input.update()
 				-- gamepad axis
 				if entry.axis then
 					for i in pairs(entry.axis) do
-					
-						local axis = entry.axis[i][1]
-						local dir = entry.axis[i][2]	
+						local axis, dir = entry.axis[i][1], entry.axis[i][2]
 					
 						if (math.abs(gamepad:getGamepadAxis(axis)) > config.input.gamepad_deadzone)
 						and math.sign(gamepad:getGamepadAxis(axis)) == dir then 

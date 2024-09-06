@@ -1,0 +1,20 @@
+{ "columns":1,
+ "image":"yorb.png",
+ "imageheight":32,
+ "imagewidth":32,
+ "margin":0,
+ "name":"yorb",
+ "objectalignment":"topleft",
+ "spacing":0,
+ "tilecount":1,
+ "tiledversion":"1.11.0",
+ "tileheight":32,
+ "tileoffset":
+    {
+     "x":-16,
+     "y":-16
+    },
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.10"
+}

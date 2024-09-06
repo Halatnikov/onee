@@ -36,7 +36,6 @@ function yui.new(root, data)
 	onee.love("textedited", t.textedited)
 	
 	table.append(t, data) -- additional data
-	
 	if root then yui.add(t, root) end
 	
 	return t
@@ -76,7 +75,8 @@ local yui_ = yui
 --!
 function yui.readd(yui)
 	assert((yui and yui.yui_instance), "yui.readd() | not a valid yui instance!")
-	local topmost = yui.stack[#yui.stack]
+	
+	local topmost = yui.stack[#yui.stack] -- store it here
 	yui_.remove(yui)
 	yui_.add(yui, topmost)
 end

@@ -111,6 +111,11 @@ function errorhandler.draw(msg, mode, notraceback)
 		"Catastrophic failure",
 		"FUCK!!!!",
 		"H-hello?... Is anyone here?... It's so dark in there......",
+		"Minor spelling mistake, I win",
+		"*bummer*",
+		"baba booey",
+		"Did you try turning it on and off?",
+		"What are video games anymore?",
 	}
 
 	local err = {}

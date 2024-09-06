@@ -38,7 +38,7 @@ function onee.compatibility(current, needed)
 	end
 	if current > needed then
 		-- todo: save your onee version in savefile and show a message box only once
-		print("installed onee version is higher than required") 
+		log("installed onee version is higher than required") 
 		return tostring(current)
 	end
 	if current < needed then
