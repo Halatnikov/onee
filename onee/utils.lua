@@ -10,10 +10,10 @@ end
 -- TODO: lerp (and pingpong), smoothstep, decay, closest to ^2, construct 2, vector 2?
 -- angle from x1 y1 to x2 y2
 
-math.random = love.math.random
-math.int = math.floor
 pi = math.pi
 inf = math.huge
+math.random = love.math.random
+math.int = math.floor
 
 function math.is_int(arg)
 	return math.floor(arg) == arg and true or false
@@ -166,6 +166,7 @@ function string.zeropad(arg, decimals)
 	end
 end
 
+-- TODO: use sha-384 for other stuff preferably
 function string.md5(arg) -- alias
 	return love.data.hash("md5", tostring(arg))
 end
@@ -177,10 +178,10 @@ function string.tokenize(arg, separator, index)
 	
 	local t = {}
 	for k in string.gmatch(arg..separator, "([^"..escaped.."]*)"..separator) do
-		table.insert (t, k)
+		table.insert(t, k)
 		
-		if index then
-			if table.find(t, k) == index then return t[index] end
+		if index and table.find(t, k) == index then
+			return t[index]
 		end
 	end
 	if not index then return t end
@@ -307,10 +308,10 @@ function table.sortv(arg, descending)
 	end)
 end
 
-function table.maxn(arg, v)
+function table.maxn(arg, vals)
 	local maxn
 	for k,v in pairs(arg) do
-		if not v then -- keys
+		if not vals then -- keys
 			maxn = maxn or k
 			maxn = k > maxn and k or maxn
 		else -- values
@@ -323,10 +324,10 @@ end
 function table.maxv(arg) return table.maxn(arg, true) end -- alias
 table.maxk = table.maxn -- alias
 
-function table.minn(arg, v)
+function table.minn(arg, vals)
 	local minn
 	for k,v in pairs(arg) do
-		if not v then -- keys
+		if not vals then -- keys
 			minn = minn or k
 			minn = k < minn and k or minn
 		else -- values

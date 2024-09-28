@@ -1169,7 +1169,7 @@ text.effects["wave"] = function(instance, data, effect, charsprite)
 	local speedx = effect.speedx or 0
 	local strengthx = effect.strengthx or 0
 	
-	charsprite.x = charsprite.realx + math.sin(instance.timer * speedx + charsprite.num) * strengthy
+	charsprite.x = charsprite.realx + math.sin(instance.timer * speedx + charsprite.num) * strengthx
 	charsprite.y = charsprite.realy + math.sin(instance.timer * speedy + charsprite.num) * strengthy
 end
 

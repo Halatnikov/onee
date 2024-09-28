@@ -68,6 +68,7 @@ menu = {
 		},
 		
 		gui.Spacer {h = 4},
+		
 		gui.Columns {
 			padding = padding,
 			-- to init scene
@@ -78,7 +79,7 @@ menu = {
 					scene.set("init")
 				end,
 			},
-			-- reset scene
+			-- crahs
 			gui.Button {
 				text = "Crash!",
 				onHit = function(self)
