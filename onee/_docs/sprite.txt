@@ -103,7 +103,7 @@ animations
 				
 				gif_dispose
 				[requires anim.gif, overwrite dispose mode of this frame]
-				[valid values: DISPOSE.ANY, DISPOSE.NONE, DISPOSE.BACKGROUND, DISPOSE.PREVIOUS]
+				[valid values: GIF_DISPOSE.ANY, GIF_DISPOSE.NONE, GIF_DISPOSE.BACKGROUND, GIF_DISPOSE.PREVIOUS]
 				
 				image
 				[requires anim.images, specify a reused frame number out of order]

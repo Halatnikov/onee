@@ -594,6 +594,7 @@ function imgui.window.menubar()
 			gui.Text(string.format("%02.2f FPS %02.2fms", fps, 1000*dt))
 			local date = os.date("*t")
 			gui.Text(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
+			
 			gui.Text(string.format("internet time @%d", date.beats))
 			gui.ProgressBar(date.beats - math.floor(date.beats), gui.ImVec2_Float(128,1),"")
 			

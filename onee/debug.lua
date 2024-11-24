@@ -19,7 +19,7 @@ function debug.enable(enabled)
 		
 		love.window.setTitle(love.config.title.." (debug)")
 		love.setDeprecationOutput(true)
-		print("<debug mode>")
+		log("<debug mode>")
 		
 		debug_draw_collisions = true
 		debug_draw_sprites = false
@@ -335,9 +335,7 @@ function debug.test(arg)
 	-- test finished
 	local took = math.round(love.timer.getTime() - time_start, 5)
 	
-	if lust.success then log("TEST PASSED")
-	else log("TEST FAILED")
-	end
+	if lust.success then log("TEST PASSED") else log("TEST FAILED") end
 	log("PASSES: "..lust.passes..", ERRORS: "..lust.errors..", TOOK: "..took)
 	
 	return lust.success, lust.summary, lust.passes, lust.errors, took

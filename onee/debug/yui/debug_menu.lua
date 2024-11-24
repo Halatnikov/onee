@@ -1,8 +1,11 @@
 local gui = yui_
 local button, menu
 
+---------------------------------------------------------------- open button
+local width, height = 20, 20
+local padding = 4
 button = {
-	x = onee.width-20-4, y = 4,
+	x = onee.width-width-padding, y = padding,
 	
 	onActive = function(self, active)
 		self.visible = active
@@ -11,7 +14,7 @@ button = {
 	gui.Rows {
 		-- open debug menu
 		gui.Button {
-			w = 20, h = 20, nofocus = true,
+			w = width, h = height, nofocus = true,
 			text = "+",
 			onHit = function(self)
 				yui.add(self.ui.instance, menu)
@@ -20,6 +23,7 @@ button = {
 	},
 }
 
+---------------------------------------------------------------- menu itself
 local width, height = 192, 20
 local padding = 4
 menu = {

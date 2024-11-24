@@ -21,7 +21,7 @@ TILE = {
 	
 	STRETCH = 0, -- only for nine-slices
 }
-DISPOSE = {
+GIF_DISPOSE = {
 	ANY = 0, -- unspecified
 	NONE = 1, -- superimpose on previous
 	BACKGROUND = 2, -- clear to bg color
@@ -1186,7 +1186,7 @@ text.effects["rainbow"] = function(instance, data, effect, charsprite)
 	local g = math.sin(frequency + 0 + phase) * brightness + 128
 	local b = math.sin(frequency + 4 + phase) * brightness + 128
 	
-	charsprite.rgb = {math.clamp(1.01, r, 255), math.clamp(1.01, g, 255), math.clamp(1.01, b, 255)} -- hack
+	charsprite.rgb = {r,g,b}
 end
 
 end--#endregion

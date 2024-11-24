@@ -11,7 +11,7 @@ function scene.set(path, data, name)
 	
 	name = name or string.tokenize(path, "/", -1)
 	
-	if scenes[1] then scenes[1].delete(scenes[1]) end
+	if scenes[1] then scenes[1].deinit(scenes[1]) end
 	scenes[1] = {}
 	collectgarbage()
 	
@@ -33,7 +33,7 @@ function scene.set(path, data, name)
 		drawlist = {},
 		
 		init = noop,
-		delete = noop,
+		deinit = noop,
 		update = noop,
 		update_pre = noop,
 		update_post = noop,
@@ -178,7 +178,7 @@ function instance.new(name, scene, data) -- string, table, table=
 		visible = true,
 		
 		init = noop,
-		delete = noop,
+		deinit = noop,
 		update = noop,
 		update_pre = noop,
 		update_post = noop,
@@ -213,7 +213,7 @@ function instance.delete(id, scene)
 	local name = instance.object
 	scene.objects[name].instances = scene.objects[name].instances - 1
 	
-	instance.delete(instance)
+	instance.deinit(instance)
 	scene.instances[id] = nil
 end
 

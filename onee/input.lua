@@ -107,8 +107,8 @@ function input.update()
 						local x, y = shape.circle[1], shape.circle[2]
 						local radius = shape.circle[3]
 						
-						if shape.centerx then x = (windowwidth/2) + x elseif math.sign(x) == -1 then x = windowwidth + x end
-						if shape.centery then y = (windowheight/2) + y elseif math.sign(y) == -1 then y = windowheight + y end
+						x = shape.centerx and (windowwidth/2) + x or math.sign(x) == -1 and windowwidth + x or x
+						y = shape.centery and (windowheight/2) + y or math.sign(y) == -1 and windowheight + y or y
 						
 						if collision.point_circ(touchx,touchy, x,y,radius) then
 							input.mode = "touch"
@@ -121,8 +121,8 @@ function input.update()
 						local width = shape.rect[3]
 						local height = shape.rect[4] or width
 						
-						if shape.centerx then x = (windowwidth/2) + x elseif math.sign(x) == -1 then x = windowwidth + x end
-						if shape.centery then y = (windowheight/2) + y elseif math.sign(y) == -1 then y = windowheight + y end
+						x = shape.centerx and (windowwidth/2) + x or math.sign(x) == -1 and windowwidth + x or x
+						y = shape.centery and (windowheight/2) + y or math.sign(y) == -1 and windowheight + y or y
 						
 						if collision.point_rect(touchx,touchy, x,y,width,height) then
 							input.mode = "touch"
@@ -161,8 +161,8 @@ function input.draw()
 					local x, y = shape.circle[1], shape.circle[2]
 					local radius = shape.circle[3]
 					
-					if shape.centerx then x = (windowwidth/2) + x elseif math.sign(x) == -1 then x = windowwidth + x end
-					if shape.centery then y = (windowheight/2) + y elseif math.sign(y) == -1 then y = windowheight + y end
+					x = shape.centerx and (windowwidth/2) + x or math.sign(x) == -1 and windowwidth + x or x
+					y = shape.centery and (windowheight/2) + y or math.sign(y) == -1 and windowheight + y or y
 					
 					love.graphics.circle(fill, x, y, radius)
 					love.graphics.printf(shape.text or "", x-(radius/2), y-8, radius, "center")
@@ -173,8 +173,8 @@ function input.draw()
 					local width = shape.rect[3]
 					local height = shape.rect[4] or width
 					
-					if shape.centerx then x = (windowwidth/2) + x elseif math.sign(x) == -1 then x = windowwidth + x end
-					if shape.centery then y = (windowheight/2) + y elseif math.sign(y) == -1 then y = windowheight + y end
+					x = shape.centerx and (windowwidth/2) + x or math.sign(x) == -1 and windowwidth + x or x
+					y = shape.centery and (windowheight/2) + y or math.sign(y) == -1 and windowheight + y or y
 					
 					love.graphics.rectangle(fill, x, y, width, height)
 					love.graphics.printf(shape.text or "", x, y+(height/2)-8, width, "center")

@@ -62,17 +62,17 @@ function gif.add(path, scene, name, anim, animdef, export)
 		if framedef.gif_dispose then dispose = framedef.gif_dispose end -- overwrite dispose
 		
 		canvas:renderTo(function() -- do a frame
-			if dispose == DISPOSE.ANY or dispose == DISPOSE.NONE then
+			if dispose == GIF_DISPOSE.ANY or dispose == GIF_DISPOSE.NONE then
 				previous = nil
 				love.graphics.draw(image, x, y)
-			elseif dispose == DISPOSE.BACKGROUND then
+			elseif dispose == GIF_DISPOSE.BACKGROUND then
 				previous = nil
 				love.graphics.clear()
 				if animdef.gif_transparent == false then -- fill with background color
 					love.graphics.clear(rgb(gif.background))
 				end
 				love.graphics.draw(image, x, y)
-			elseif dispose == DISPOSE.PREVIOUS then
+			elseif dispose == GIF_DISPOSE.PREVIOUS then
 				if not previous then previous = i-1 end
 				love.graphics.clear()
 				love.graphics.draw(export[previous], x, y)

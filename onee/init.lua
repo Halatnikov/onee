@@ -67,9 +67,9 @@ do
 	require("onee/yui")
 	
 	-- :)
-	print("onee "..onee.version.." | love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")")
+	log("onee "..onee.version.." | love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")")
 	local date = os.date("*t")
-	print(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
+	log(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	
 	-- :o
 	debug.enable(debug_mode)
@@ -128,7 +128,7 @@ function onee.draw()
 	_prof.mark("sleeping...")
 	-- frame limiter end
 	onee.after_draw = love.timer.getTime()
-	if onee.before_update <= onee.after_draw then onee.before_update = onee.after_draw end
+	onee.before_update = (onee.before_update <= onee.after_draw) and onee.after_draw or onee.before_update
 	love.timer.sleep(onee.before_update - onee.after_draw)
 	
 	_prof.pop()

@@ -472,9 +472,11 @@ function color.rgb(r, g, b, a)
 		r, g, b, a = r[1], r[2], r[3], g or r[4] -- allow "{rgb},a"
 	end
 	
-	r = math.between(0, r, 1) and r or r/255
-	g = math.between(0, g, 1) and g or g/255
-	b = math.between(0, b, 1) and b or b/255
+	if not (math.between(0, r, 1) and math.between(0, g, 1) and math.between(0, b, 1)) then
+		r = r/255
+		g = g/255
+		b = b/255
+	end
 	a = a and (math.between(0, a, 1) and a or a/100)
 	return r, g, b, a
 end

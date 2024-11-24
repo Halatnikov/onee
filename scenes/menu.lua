@@ -100,7 +100,7 @@ function scene.init(self)
 			{"You", "you", "", function() log("i did") end},
 			{"Ever", "ever", "hello"}
 		})
-		menu.dropdown("Inverted dropdown", "", str, table.fill("when the", 8), "when the", true)
+		menu.dropdown("Inverted dropdown", "", str, table.fill("when the", 8), "a", true)
 		
 		local gui = yui_
 		table.insert(root, gui.Columns {
@@ -127,7 +127,7 @@ function scene.init(self)
 	self.menu = yui.new(main)
 end
 
-function scene.delete(self)
+function scene.deinit(self)
 	input.touch_active = true
 end
 
