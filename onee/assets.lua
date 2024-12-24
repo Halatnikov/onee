@@ -274,8 +274,6 @@ function sprite.init(sprite, scene, name, data)
 	
 	table.append(t, data) -- additional data
 	
-	t = table.protect(t, {"sprite", "name"})
-	
 	return table.append(sprite, t)
 end
 
@@ -382,7 +380,7 @@ function sprite.draw(sprite, scene, args)
 	
 	-- opacity and tinting
 	local color = sprite.rgb or {255,255,255}
-	local opacity = sprite.opacity or 100
+	local opacity = sprite.opacity
 	
 	-- animation shenanigans
 	local anim = sprite.animation
@@ -758,7 +756,7 @@ function model.draw(model, scene)
 	
 	-- opacity and tinting
 	local color = model.rgb or {255,255,255}
-	local opacity = model.opacity or 100
+	local opacity = model.opacity
 	
 	queue.add(scene.drawlist, z, function()
 		love.graphics.setColor(rgb(color, opacity))
@@ -807,7 +805,6 @@ function asset.spritefont(path)
 		
 		drawlist = {},
 	}
-	font.scene = table.protect(font.scene, {"scene", "fontscene"})
 	
 	local fontdef = sprite.font
 	font.font = fontdef
@@ -901,7 +898,6 @@ function text.new(id, scene)
 		
 		sprites = {},
 	}
-	t = table.protect(t, {"instance", "fontinstance", "fontscene", "id"})
 	
 	scene.instances[id] = t
 	

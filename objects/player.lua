@@ -53,7 +53,7 @@ function object.update(self, scene)
 	
 	-- acceleration
 	if input.left ~= input.right then
-		player.facing = bool.int(input.right) - bool.int(input.left)
+		player.facing = math.bool(input.right) - math.bool(input.left)
 		
 		if player.ground then
 			player.x_speed = player.x_speed + (player.acc * player.facing)

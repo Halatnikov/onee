@@ -1,10 +1,3 @@
-group("bool library", function()
-	test("bool.int(arg)", function()
-		assert(bool.int(true) == 1).pass("true is 1")
-		assert(bool.int(false) == 0).pass("false is 0")
-	end)
-end)
-
 group("math library extension", function()
 	test("globals", function()
 		assert(math.random == love.math.random).pass()
@@ -151,30 +144,6 @@ group("table library extension", function()
 		assert(#mixed_keys == 3 and table.length(mixed_keys) == 5).pass("doesn't ignore non numeric keys")
 		assert(#not_from_0 == 4 and table.length(not_from_0) == 7).pass("doesn't ignore anything lower then 0")
 	end)
-	test("table.protect(arg, blacklist)", function()
-		local t = { a = 1, b = 2, c = 3 }
-		t = table.protect(t, {"a", "c"})
-		local mt = getmetatable(t)
-		
-		assert(mt.protected).pass("identifies as protected")
-		assert(t.c == 3).pass("can still index it")
-		assert(function() t.d = 4; t.b = nil end).success("can still modify it")
-		
-		assert(function() t.a = 5 end).error("can't modify a protected key")
-		assert(t.a == 1).pass("key is still unchanged")
-		
-		assert(function() t.__a = 5 end).success("can bypass protection by modifying __key")
-		assert(t.a == 1).deny("now the key is changed")
-		
-		table.remove(mt.blacklist, table.find(mt.blacklist, "c"))
-		assert(function() t.c = 5 end).success("able to modify the blacklist")
-		
-		local t2 = {}; for k,v in pairs(t) do t2[k] = v end
-		assert(t2.a == 5 and t2.d == 4).pass("still works with pairs() iterator")
-		
-		table.insert(mt.blacklist, "__")
-		assert(function() t.d = 4; t.b = nil end).error("__ in blacklist prevents modifying entire table")
-	end)
 	test("table.mostcommon(arg)", function()
 		local t = { 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 }
 		local common, counts = table.mostcommon(t)
@@ -199,7 +168,7 @@ end)
 
 group("queue library", function()
 	local t, val
-	local function substract(arg)
+	local function subtract(arg)
 		val = val - arg
 	end
 	before(function()
@@ -207,7 +176,7 @@ group("queue library", function()
 	end)
 	
 	test("make a queue and execute", function()
-		for i = -1, 4 do queue.add(t, i, function() substract(1) end) end
+		for i = -1, 4 do queue.add(t, i, function() subtract(1) end) end
 		assert(t.queue).exist("queue initialized")
 		assert(t.first == -1 and t.last == 4).pass()
 		assert(t.queue[1][1]).type("function")
@@ -217,9 +186,9 @@ group("queue library", function()
 		assert(t.queue and t.first and t.last).deny("queue is emptied when executed")
 	end)
 	test("adding to the same index", function()
-		queue.add(t, 2, function() substract(1) end)
-		queue.add(t, 2, function() substract(1) end)
-		queue.add(t, 2, function() substract(1) end)
+		queue.add(t, 2, function() subtract(1) end)
+		queue.add(t, 2, function() subtract(1) end)
+		queue.add(t, 2, function() subtract(1) end)
 		assert(t.queue[2][3]).type("function")
 		
 		queue.execute(t)

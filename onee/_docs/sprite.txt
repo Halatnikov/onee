@@ -198,7 +198,7 @@ rgb
 [tint of the sprite, 3 rgb values from 0 to 255 (default: {255, 255, 255})]
 
 opacity
-[opacity of the sprite from 0 to 100 (default: 100)]
+[opacity of the sprite from 0 to 1 (default: 1)]
 
 skewx
 skewy

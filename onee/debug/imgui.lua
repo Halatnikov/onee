@@ -521,7 +521,7 @@ function imgui.window.menubar()
 				imgui.open.inspector = not imgui.open.inspector
 			end
 			-- open tests runner window
-			if gui.MenuItem_Bool("Test suite", nil, imgui.open.tests) then
+			if gui.MenuItem_Bool("Tests runner", nil, imgui.open.tests) then
 				imgui.open.tests = not imgui.open.tests
 			end
 			-- open profiler window
@@ -901,6 +901,26 @@ function imgui.window.main()
 				gui.TreePop()
 			end
 			
+			------------------------ love.graphics.getRendererInfo() tree
+			if gui.TreeNodeEx_Str("love.graphics.getRendererInfo()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
+				local renderer = {}
+				renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
+				
+				if gui.BeginTable("performance_renderer", 2, gui.love.TableFlags("RowBg", "BordersInnerV", "Resizable")) then
+					gui.TableSetupColumn("k")
+					gui.TableSetupColumn("v")
+					
+					for k,v in kpairs(renderer) do
+						gui.TableNextRow()
+						gui.TableSetColumnIndex(0); gui.Text(k)
+						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
+					end
+					
+					gui.EndTable()
+				end
+				gui.TreePop()
+			end
+			
 			------------------------ love.graphics.getSystemLimits() tree
 			if gui.TreeNodeEx_Str("love.graphics.getSystemLimits()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
 				if gui.BeginTable("stats_systemlimits", 2, gui.love.TableFlags("RowBg", "BordersInnerV")) then
@@ -1067,26 +1087,6 @@ function imgui.window.main()
 							gui.TableSetColumnIndex(0); gui.Text(k)
 							gui.TableSetColumnIndex(1); gui.Text(tostring(v))
 						end
-					end
-					
-					gui.EndTable()
-				end
-				gui.TreePop()
-			end
-			
-			------------------------ love.graphics.getRendererInfo() tree
-			if gui.TreeNodeEx_Str("love.graphics.getRendererInfo()", gui.love.TreeNodeFlags("SpanAvailWidth")) then
-				local renderer = {}
-				renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
-				
-				if gui.BeginTable("performance_renderer", 2, gui.love.TableFlags("RowBg", "BordersInnerV", "Resizable")) then
-					gui.TableSetupColumn("k")
-					gui.TableSetupColumn("v")
-					
-					for k,v in kpairs(renderer) do
-						gui.TableNextRow()
-						gui.TableSetColumnIndex(0); gui.Text(k)
-						gui.TableSetColumnIndex(1); gui.Text(tostring(v))
 					end
 					
 					gui.EndTable()
@@ -1417,80 +1417,73 @@ local test_current, test_last, test_success, test_summary, test_passes, test_err
 function imgui.window.tests()
 	local open = _bool(imgui.open.tests)
 	
-	if gui.Begin("Test suite", open) then
-		if gui.BeginTabBar("", gui.love.TabBarFlags("Reorderable")) then
-			if gui.BeginTabItem("Tests runner") then
-				-- test selector
-				local tests = files.listdir("onee/_tests")
-				if not test_current then 
-					test_current = tests[1]
-					test_current = string.remove(test_current, "onee/_tests/", ".lua")
-				end
-				if gui.BeginCombo("##tests", test_current) then
-					for k, v in kpairs(tests) do
-						v = string.remove(v, "onee/_tests/", ".lua")
-						if gui.Selectable_Bool(v) then test_current = v end
-					end
-					gui.EndCombo()
-				end
-				
-				-- run button
-				gui.SameLine()
-				if gui.Button("Run") and test_current then
-					test_success, test_summary, test_passes, test_errors, test_took = debug.test(test_current)
-					test_last = test_current
-				end
-				
-				-- test overview
-				if not test_last then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -") end
-				if test_last then
-					gui.Text(test_last.." -"); gui.SameLine()
-					if test_success then
-						gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
-					else
-						gui.TextColored(gui.ImVec4_Float(1,0,0,1), "FAILED")
-					end
-					
-					local ratio = (test_passes - test_errors) / test_passes
-					gui.ProgressBar(ratio, gui.ImVec2_Float(gui.GetWindowWidth()-16,12), math.floor(ratio*100).."%")
-					
-					gui.TextColored(gui.ImVec4_Float(0,1,0,1), tostring(test_passes))
-					gui.SameLine(); gui.Text("passes")
-					gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
-					gui.SameLine(); gui.Text("fails")
-					gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..math.round(test_took, 5)..")")
-					gui.Separator()
-				end
-				
-				-- test summary
-				if gui.BeginChild_Str("test summary") and test_last then
-					for i=1, #test_summary do
-						local test = test_summary[i]
-						if not test.error then
-							gui.Selectable_Bool(string.rep("    ", test.level-1)..test.name)
-						else
-							local message = string.tokenize(test.error, newline)
-							local error, at = message[1], message[2] and string.trim(message[2]) or ""
-							local filepath = string.tokenize(error, ":", 2)
-							if string.find(filepath, test_last..".lua") then
-								error = string.replace(error, filepath..":", " line ")
-							end
-							
-							gui.TextColored(gui.ImVec4_Float(1,0,0,1), string.rep("  ", test.level)..test.name)
-							gui.Text(string.rep("    ", test.level))
-							gui.SameLine(); gui.TextWrapped(error)
-							if at ~= "AT:" and at ~= "" then
-								gui.Text(string.rep("    ", test.level))
-								gui.SameLine(); gui.TextWrapped(at)
-							end
-						end
-					end
-					gui.EndChild()
-				end
-				gui.EndTabItem()
+	if gui.Begin("Tests runner", open) then
+		-- test selector
+		local tests = files.listdir("onee/_tests")
+		if not test_current then 
+			test_current = tests[1]
+			test_current = string.remove(test_current, "onee/_tests/", ".lua")
+		end
+		if gui.BeginCombo("##tests", test_current) then
+			for k, v in kpairs(tests) do
+				v = string.remove(v, "onee/_tests/", ".lua")
+				if gui.Selectable_Bool(v) then test_current = v end
+			end
+			gui.EndCombo()
+		end
+		
+		-- run button
+		gui.SameLine()
+		if gui.Button("Run") and test_current then
+			test_success, test_summary, test_passes, test_errors, test_took = debug.test(test_current)
+			test_last = test_current
+		end
+		
+		-- test overview
+		if not test_last then gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "- :) -") end
+		if test_last then
+			gui.Text(test_last.." -"); gui.SameLine()
+			if test_success then
+				gui.TextColored(gui.ImVec4_Float(0,1,0,1), "PASSED")
+			else
+				gui.TextColored(gui.ImVec4_Float(1,0,0,1), "FAILED")
 			end
 			
-			gui.EndTabBar()
+			local ratio = (test_passes - test_errors) / test_passes
+			gui.ProgressBar(ratio, gui.ImVec2_Float(gui.GetWindowWidth()-16,12), math.floor(ratio*100).."%")
+			
+			gui.TextColored(gui.ImVec4_Float(0,1,0,1), tostring(test_passes))
+			gui.SameLine(); gui.Text("passes")
+			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
+			gui.SameLine(); gui.Text("fails")
+			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..math.round(test_took, 5)..")")
+			gui.Separator()
+		end
+		
+		-- test summary
+		if gui.BeginChild_Str("test summary") and test_last then
+			for i=1, #test_summary do
+				local test = test_summary[i]
+				if not test.error then
+					gui.Selectable_Bool(string.rep("    ", test.level-1)..test.name)
+				else
+					local message = string.tokenize(test.error, newline)
+					local error, at = message[1], message[2] and string.trim(message[2]) or ""
+					local filepath = string.tokenize(error, ":", 2)
+					if string.find(filepath, test_last..".lua") then
+						error = string.replace(error, filepath..":", " line ")
+					end
+					
+					gui.TextColored(gui.ImVec4_Float(1,0,0,1), string.rep("  ", test.level)..test.name)
+					gui.Text(string.rep("    ", test.level))
+					gui.SameLine(); gui.TextWrapped(error)
+					if at ~= "AT:" and at ~= "" then
+						gui.Text(string.rep("    ", test.level))
+						gui.SameLine(); gui.TextWrapped(at)
+					end
+				end
+			end
+			gui.EndChild()
 		end
 		gui.End()
 	end
@@ -1662,7 +1655,7 @@ function imgui.window.profiler()
 							if i > root.id and report_raw[i].level <= root.level then break end
 							table.insert(root_sorted, report_raw[i])
 						end
-						table.sortby(root_sorted, "level")
+						root_sorted = table.sortby(root_sorted, "level")
 						local max_level = root_sorted[#root_sorted] and root_sorted[#root_sorted].level or 0
 						local min_level = root_sorted[1] and root_sorted[1].level or 0
 						
@@ -1728,9 +1721,10 @@ function imgui.window.profiler()
 								end
 							end
 							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
-								"min: "..table.minv(graph).."ms"..
-								newline.."max: "..table.maxv(graph).."ms"..
-								newline.."avg: "..math.round(math.average(graph),3).."ms",
+								"min: "..table.sortv(graph)[1].."ms"..
+								newline.."max: "..table.sortv(graph)[#graph].."ms"..
+								newline.."avg: "..math.round(math.average(graph),3).."ms"..
+								newline.."cur: "..graph[frame].."ms",
 							nil, nil, gui.ImVec2_Float(-1,64))
 						gui.EndTabItem()
 						end
@@ -1742,9 +1736,10 @@ function imgui.window.profiler()
 								end
 							end
 							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
-								"min: "..table.minv(graph).."MB"..
-								newline.."max: "..table.maxv(graph).."MB"..
-								newline.."avg: "..math.round(math.average(graph),3).."MB",
+								"min: "..table.sortv(graph)[1].."MB"..
+								newline.."max: "..table.sortv(graph)[#graph].."MB"..
+								newline.."avg: "..math.round(math.average(graph),3).."MB"..
+								newline.."cur: "..graph[frame].."MB",
 							nil, nil, gui.ImVec2_Float(-1,64))
 						gui.EndTabItem()
 						end
@@ -1807,7 +1802,7 @@ function imgui.window.profiler()
 					sortdescending = _v[0]
 					
 					deep_report = copy(profi.reports)
-					table.sortby(deep_report, sortkey, sortdescending)
+					deep_report = table.sortby(deep_report, sortkey, sortdescending)
 					
 					gui.SetNextWindowBgAlpha(1)
 					if gui.BeginTable("profiling_deep", 5, gui.love.TableFlags("BordersInnerV", "Resizable", "ScrollY", "ScrollX", "Reorderable")) then

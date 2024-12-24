@@ -43,8 +43,6 @@ function collision.init(collision, name, data)
 		t.circ.radius = t.circ.radius or 0
 	end
 	
-	t = table.protect(t, {"collision", "name"})
-	
 	return table.append(collision, t)
 end
 

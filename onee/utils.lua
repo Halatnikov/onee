@@ -1,11 +1,3 @@
----------------------------------------------------------------- BOOLS
-
-bool = {}
-
-function bool.int(arg)
-	return arg == true and 1 or 0
-end
-
 ---------------------------------------------------------------- MATH
 -- TODO: lerp (and pingpong), smoothstep, decay, closest to ^2, construct 2, vector 2?
 -- angle from x1 y1 to x2 y2
@@ -14,6 +6,10 @@ pi = math.pi
 inf = math.huge
 math.random = love.math.random
 math.int = math.floor
+
+function math.bool(arg)
+	return arg == true and 1 or 0
+end
 
 function math.is_int(arg)
 	return math.floor(arg) == arg and true or false
@@ -243,14 +239,12 @@ end
 
 function table.append(a, b)
 	a, b = a or {}, b or {}
-	local mt = getmetatable(b)
-	if mt then setmetatable(a, mt) end
+	if getmetatable(b) then setmetatable(a, getmetatable(b)) end
 	
 	for k,v in pairs(b) do 
 		if type(v) == "table" and type(a[k] or false) == "table" then
 			table.append(a[k], b[k])
 		else
-			if mt and mt.protected and table.find(mt.blacklist, k) then k = "__"..k end
 			a[k] = v
 		end
 	end
@@ -271,10 +265,6 @@ function table.find(arg, result, result2)
 	end
 end
 
-function table.reverse(arg)
-	return table.sort(arg, function(a,b) return a > b end)
-end
-
 function table.fill(v, min, max)
 	if not max then min, max = 1, min end
 	local t = {}
@@ -282,63 +272,32 @@ function table.fill(v, min, max)
 	return t
 end
 
+function table.reverse(arg)
+	arg = copy(arg)
+    for i = 1, math.floor(#arg/2) do
+        arg[i], arg[#arg - i+1] = arg[#arg - i+1], arg[i]
+    end
+    return arg
+end
+
 function table.sortby(arg, k, descending)
-	return table.sort(arg, function(a,b)
+	arg = copy(arg)
+	table.sort(arg, function(a,b)
 		if not (a[k] and b[k]) then return end
-		if not descending then
-			if type(a) ~= type(b) then return tostring(a[k]) < tostring(b[k]) end
-			return a[k] < b[k]
-		else
-			if type(a) ~= type(b) then return tostring(a[k]) > tostring(b[k]) end
-			return a[k] > b[k]
-		end
+		if type(a) ~= type(b) then return tostring(a[k]) < tostring(b[k]) end
+		return a[k] < b[k]
 	end)
+	return descending and table.reverse(arg) or arg
 end
 
 function table.sortv(arg, descending)
-	return table.sort(arg, function(a,b)
-		if not (arg[a] and arg[b]) then return end
-		if not descending then
-			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) < tostring(arg[b]) end
-			return arg[a] < arg[b]
-		else
-			if type(arg[a]) ~= type(arg[b]) then return tostring(arg[a]) > tostring(arg[b]) end
-			return arg[a] > arg[b]
-		end
+	arg = copy(arg)
+	table.sort(arg, function(a,b)
+		if type(a) ~= type(b) then return tostring(a) < tostring(b) end
+		return a < b
 	end)
+	return descending and table.reverse(arg) or arg
 end
-
-function table.maxn(arg, vals)
-	local maxn
-	for k,v in pairs(arg) do
-		if not vals then -- keys
-			maxn = maxn or k
-			maxn = k > maxn and k or maxn
-		else -- values
-			maxn = maxn or v
-			maxn = v > maxn and v or maxn
-		end
-	end
-	return maxn
-end
-function table.maxv(arg) return table.maxn(arg, true) end -- alias
-table.maxk = table.maxn -- alias
-
-function table.minn(arg, vals)
-	local minn
-	for k,v in pairs(arg) do
-		if not vals then -- keys
-			minn = minn or k
-			minn = k < minn and k or minn
-		else -- values
-			minn = minn or v
-			minn = v < minn and v or minn
-		end
-	end
-	return minn
-end
-function table.minv(arg) return table.minn(arg, true) end -- alias
-table.mink = table.minn -- alias
 
 function table.mostcommon(arg)
 	local count = {}
@@ -366,8 +325,7 @@ function table.unflatten(arg)
 		node = arg[i]
 		if node.parent and keys[node.parent] then
 			local parent = keys[node.parent]
-			arg[parent].children = arg[parent].children or {}
-			table.insert(arg[parent].children, node)
+			table.insert(arg[parent], node)
 		else
 			table.insert(tree, node)
 		end
@@ -376,32 +334,7 @@ function table.unflatten(arg)
 	return tree
 end
 
-function table.protect(arg, blacklist)
-	local proxy = {}
-	local mt = {
-		protected = true,
-		blacklist = blacklist,
-		__index = arg,
-		__newindex = function(t, k, v)
-			assert(not table.find(blacklist, "__"), "attempt to modify protected table")
-			assert(not table.find(blacklist, k), "attempt to overwrite protected key \""..k.."\"")
-			k = string.remove(k, "__") -- bypass by setting __key
-			arg[k] = v
-		end,
-	}
-	setmetatable(proxy, mt)
-	return proxy
-end
-
 ---------------------------------------------------------------- ITERATORS
-
-pairs_ = pairs
-function pairs(arg)
-	local mt = getmetatable(arg)
-	if mt and mt.protected then arg = mt.__index end
-	
-	return pairs_(arg)
-end
 
 function kpairs(arg, v)
 	local keys = {}
@@ -430,7 +363,7 @@ function vpairs(arg) return kpairs(arg, true) end -- alias
 function ripairs(arg)
 	return function(arg, i)
 		i = i - 1
-		if i ~= 0 then
+		if not (i == 0) then
 			return i, arg[i]
 		end
 	end, arg, #arg + 1

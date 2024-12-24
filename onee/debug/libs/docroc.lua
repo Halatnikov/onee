@@ -99,7 +99,7 @@ function docroc.process(filename)
 					param.default = param.default or ttypes[i].default
 				end
 			end
-			table.sortby(tags["param"], "_order")
+			tags["param"] = table.sortby(tags["param"], "_order")
 		end)
 		
 		-- comment "block" done

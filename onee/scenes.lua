@@ -46,8 +46,6 @@ function scene.set(path, data, name)
 	
 	if data then table.append(t, data) end -- additional data
 	
-	t = table.protect(t, {"scene", "id"})
-	
 	scenes[1] = t --done
 	
 	log("scene is now "..path)
@@ -130,8 +128,6 @@ function object.new(path, scene, data, name)
 		table.append(t.data, data)
 	end
 	
-	t = table.protect(t, {"object", "name", "scene"})
-	
 	scene.objects[name] = t -- done
 	
 	return t
@@ -192,8 +188,6 @@ function instance.new(name, scene, data) -- string, table, table=
 	if data then table.append(t, data) end -- additional data
 	
 	t.destroy = function() instance.delete(t.id, scene) end
-	
-	t = table.protect(t, {"instance", "object", "scene", "id", "id_i", "destroy"})
 	
 	scene.instances[id] = t -- done
 	
