@@ -110,6 +110,7 @@ function debug.update()
 	if debug_hotswap then lurker.update() end
 	
 	imgui.update()
+	
 	if (mobile or not onee.libtype) or debug_yui_debug_button then
 		yui.update(debug.yui.debug_menu)
 	end
@@ -148,13 +149,15 @@ function debug.draw()
 	
 end
 
-a = {{0,0}, {100,10}, {50,100}, {60,30}}
-local ox = 50
-local oy = 50
+-- a = {{0,0}, {100,10}, {50,100}, {60,30}}
+-- local ox = 50
+-- local oy = 50
 
 qqueue = {}
 function debug.draw_post()
 	if not debug_mode then return end
+	
+	imgui.draw()
 	
 	if mobile then
 		local touches = love.touch.getTouches()
@@ -165,19 +168,20 @@ function debug.draw_post()
 		end
 	end
 	
-	imgui.draw()
-	
-	local h = math.loop(0, 1, 4)
-	love.graphics.setColor(hsl(h, 1, 0.5))
-	if debug_hotswap then
-		love.graphics.printf("HOTSWAP", windowwidth-128-4, windowheight-(16 + 13*0), 128, "right")
-	end
-	if debug_profiler or debug_profiler_deep then
-		local text = debug_profiler_deep and "TRACING" or "PROFILING"
-		love.graphics.printf(text, windowwidth-128-4, windowheight-(16 + 13*1), 128, "right")
-	end
-	if mobile and not (love._os == "Android" or love._os == "iOS") then
-		love.graphics.printf("MOBILE", windowwidth-128-4, windowheight-(16 + 13*2), 128, "right")
+	local labels = {
+		["FROZEN"] = not onee.allow_update,
+		["HOTSWAP"] = debug_hotswap,
+		["MOBILE"] = (mobile and not (love._os == "Android" or love._os == "iOS")),
+		["PROFILING"] = debug_profiler,
+		["TRACING"] = debug_profiler_deep,
+	}
+	local i = -1
+	love.graphics.setColor(hsl(math.loop(0, 1, 4), 1, 0.5))
+	for k, v in kpairs(labels) do
+		if v then
+			i = i + 1
+			love.graphics.printf(k, windowwidth-128-4, windowheight-(16 + 13*i), 128, "right")
+		end
 	end
 	love.graphics.reset()
 	
@@ -186,9 +190,18 @@ function debug.draw_post()
 	for k, v in ripairs(qqueue) do
 		i = i + 1
 		v.timestamp = v.timestamp or 0
+		local padding = 4
+		local y = windowheight - ((onee.font:getHeight() + padding*2.5) * i)
 		
-		love.graphics.print(v.text, 4, windowheight - 4 - ((13  * i)))
-		if ms - v.timestamp > 3 then table.remove(qqueue, k) end
+		local w, h = onee.font:getWidth(v.text[2]) + padding*2, onee.font:getHeight() + padding*2
+		love.graphics.setColor(0.15,0.15,0.15, 0.66)
+		love.graphics.rectangle("fill", padding, y - padding, w, h, 6)
+		love.graphics.setColor(1,1,1, 0.25)
+		love.graphics.rectangle("line", padding, y - padding, w, h, 6)
+		love.graphics.reset()
+		love.graphics.print(v.text, padding*2, y)
+		
+		if love.timer.getTime() - v.timestamp > 4 then table.remove(qqueue, k) end
 	end
 	if #qqueue > 24 then table.remove(qqueue, 1) end
 	
@@ -211,12 +224,10 @@ onee.love("keypressed", function(k, scancode, isrepeat)
 	if k == "f2" then love.event.quit("restart") end
 	if k == "f3" then scene.set(scenes[1].path) end
 	if k == "f4" then scene.set("init") end
+	if k == "f9" then error("you did this to yourself") end
 	
-	if not input.ignore then
-		if k == "f" then log((#qqueue+1).." HOLY SHIT "..string.random(10).." Testing testing Test Test 2 3 4 omg my god "..ms) end
-		if k == "g" then log(string.random(150)) end
-	end
-	
+	if input.ignore then return end
+	if k == "g" then log(string.random(math.random(16,128))) end
 end)
 
 --! pretty print a table
@@ -233,7 +244,7 @@ function log(arg)
 	--io.write(tostring(arg), newline)
 	print(arg)
 	-- use kinda sparingly, because this is laggy
-	table.insert(qqueue, {text = {{1,1,1,1},tostring(arg)}, timestamp = ms})
+	table.insert(qqueue, {text = {{1,1,1}, tostring(arg)}, timestamp = love.timer.getTime()})
 end
 -- [WARN] [AssetLoading] asset.sprite() | asset "name" already loaded!
 
@@ -333,10 +344,10 @@ function debug.test(arg)
 	dofile("onee/_tests/"..arg, env)
 	
 	-- test finished
-	local took = math.round(love.timer.getTime() - time_start, 5)
+	local took = love.timer.getTime() - time_start
 	
-	if lust.success then log("TEST PASSED") else log("TEST FAILED") end
-	log("PASSES: "..lust.passes..", ERRORS: "..lust.errors..", TOOK: "..took)
+	log(lust.success and "TEST PASSED" or "TEST FAILED")
+	log(string.format("PASSES: %d, ERRORS: %d, TOOK: %.5f", lust.passes, lust.errors, took))
 	
 	return lust.success, lust.summary, lust.passes, lust.errors, took
 end

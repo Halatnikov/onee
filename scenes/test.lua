@@ -1,6 +1,6 @@
-local scene = {}
+local _ = Scene()
 
-function scene.init(self)
+function _:init()
 	
 	object.new("test", self, {a=1,{3}})
 	instance.new("test", self ,{b=4})
@@ -19,21 +19,21 @@ function scene.init(self)
 	object.new("test_gdportal", self)
 	instance.new("test_gdportal", self , {x = 200, y = 280, scale = 0.5, angle = 45})
 	
-	scene.a = 2
+	self.a = 2
 	--debug.table(object.instances("test", self))
 	
 end
 
-function scene.update(self)
+function _:update()
 	
-	scene.a = scene.a - 10
-	
-end
-
-function scene.draw(self)
-	
-	
+	self.a = self.a - 10
 	
 end
 
-return scene
+function _:draw()
+	
+	
+	
+end
+
+return _

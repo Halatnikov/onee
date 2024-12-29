@@ -1,5 +1,4 @@
-local scene_ = scene
-local scene = {}
+local _ = Scene()
 
 local menu = dofile("common/menu_simple")
 
@@ -8,7 +7,7 @@ local num = 5
 local str = "you"
 local textinput = "i'm freaks"
 
-function scene.init(self)
+function _:init()
 	input.touch_active = false
 	
 	asset.sprite("spr_menu_arrow_16", self)
@@ -20,6 +19,7 @@ function scene.init(self)
 	local main, yui_test
 	
 	main = menu.start({}, function(root, ui)
+		local scene_ = scene
 		local scene = self
 		
 		ui.onActive = function(self, active)
@@ -56,7 +56,7 @@ function scene.init(self)
 		
 		menu.spacer()
 		
-		menu.hold("Quit", "When you die in the game,"..newline.."you die in real life", function(self)
+		menu.hold("Quit", "When you die in the game,\nyou die in real life", function(self)
 			love.event.quit()
 		end)
 	end)
@@ -127,20 +127,20 @@ function scene.init(self)
 	self.menu = yui.new(main)
 end
 
-function scene.deinit(self)
+function _:deinit()
 	input.touch_active = true
 end
 
-function scene.update(self)
+function _:update()
 	sprite.update(self.arrow, self)
 	
 	yui.update(self.menu)
 end
 
-function scene.draw(self)
+function _:draw()
 	sprite.draw(self.bg, self)
 	
 	yui.draw(self.menu, self)
 end
 
-return scene
+return _

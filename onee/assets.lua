@@ -229,8 +229,7 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	sprite.cached_images = nil
 	scene.sprites[name] = sprite -- done
 	
-	local time_finish = love.timer.getTime()
-	log("sprite "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
+	log(string.format("sprite '%s' took %.4f (now %.2fMB)", path, (love.timer.getTime() - time_start), love.graphics.getStats().texturememory/1024/1024))
 end
 
 --! INIT A NEW SPRITE INSTANCE
@@ -253,6 +252,7 @@ function sprite.init(sprite, scene, name, data)
 		loops = 0,
 		
 		anim_end = noop,
+		frame_end = noop,
 	}
 	
 	if spritedef.tiled then
@@ -318,11 +318,11 @@ function sprite.update(sprite, scene)
 	-- advance frame
 	if sprite.timer > 1 / (speed / framedef.length) then
 		sprite.timer = 0
+		sprite.frame_end(sprite.frame, sprite.seq_index) -- callback
 		
 		sprite.seq_index = sprite.seq_index + 1
 		if sprite.seq_index > #animdef[sprite.seq] then -- animation reached end
-			-- callback
-			sprite.anim_end(sprite.animation)
+			sprite.anim_end(sprite.animation) -- callback
 			
 			-- loop
 			if not (animdef.loops == false) or (animdef.loops and sprite.loops < animdef.loops) then
@@ -610,8 +610,7 @@ function asset.model(path, scene)
 	
 	scene.models[name] = modeldef -- done
 	
-	local time_finish = love.timer.getTime()
-	log("model "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
+	log(string.format("model '%s' took %.4f (now %.2fMB)", path, (love.timer.getTime() - time_start), love.graphics.getStats().texturememory/1024/1024))
 end
 
 local vec3 = require "onee/libs/gltf/cpml.modules.vec3"
@@ -866,8 +865,7 @@ function asset.spritefont(path)
 		end
 	end
 	
-	local time_finish = love.timer.getTime()
-	log("font "..path.." took "..math.round(time_finish - time_start, 4).." (now "..math.round(love.graphics.getStats().texturememory/1024/1024,2).."MB)")
+	log(string.format("font '%s' took %.4f (now %.2fMB)", path, (love.timer.getTime() - time_start), love.graphics.getStats().texturememory/1024/1024))
 	
 	sprite.cached_images = nil
 	asset.sprite(path, font.scene, sprite) -- done, move on

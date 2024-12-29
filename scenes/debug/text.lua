@@ -1,6 +1,6 @@
-local scene = {}
+local _ = Scene()
 
-function scene.draw(self)
+function _:draw()
 	text.print({"TEST", "{input_right}"}, "font_titlecard", 100, 10)
 	
 	text.printf({
@@ -13,4 +13,4 @@ function scene.draw(self)
 	}, "font_12", 100, 40, nil, "center")
 end
 
-return scene
+return _

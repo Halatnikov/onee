@@ -6,51 +6,65 @@ scenes = {} -- actual containers
 
 ---------------------------------------------------------------- SCENE
 
+Scene = class({
+	name = "",
+	path = "",
+	id = 1, 
+	active = true,
+	visible = true,
+	
+	init = noop,
+	deinit = noop,
+	update = noop,
+	update_pre = noop,
+	update_post = noop,
+	draw = noop,
+	draw_pre = noop,
+	draw_post = noop,
+	
+	__init = function(self)
+		self.objects = {}
+		self.instances = {}
+		
+		self.assets = {}
+		self.sprites = {}
+		self.models = {}
+		
+		self.drawlist = {}
+	end,
+	
+	remove = function(self)
+		self:deinit()
+		self = nil
+	end,
+})
+
 --! SWITCH CURRENT SCENE
 function scene.set(path, data, name)
+	for k,scene in ipairs(scenes) do scene:remove() end
+	collectgarbage()
+	log("recreated scene stack")
 	
+	scene.add(path, 1, data, name)
+end
+
+--! INSERT SCENE TO STACK
+function scene.add(path, i, data, name)
+	i = i or #scenes+1
 	name = name or string.tokenize(path, "/", -1)
 	
-	if scenes[1] then scenes[1].deinit(scenes[1]) end
-	scenes[1] = {}
-	collectgarbage()
+	local t = files.exists("scenes/"..path..".lua") and dofile("scenes/"..path) or Scene()
 	
-	local t = { -- init
-		scene = true,
-		name = name,
-		path = path,
-		id = 1,
-		active = true,
-		visible = true,
-		
-		objects = {},
-		instances = {},
-		
-		assets = {},
-		sprites = {},
-		models = {},
-		
-		drawlist = {},
-		
-		init = noop,
-		deinit = noop,
-		update = noop,
-		update_pre = noop,
-		update_post = noop,
-		draw = noop,
-		draw_pre = noop,
-		draw_post = noop,
-	}
+	table.append(t, data) -- additional data
 	
-	if files.exists("scenes/"..path..".lua") then table.append(t, dofile("scenes/"..path)) end
+	t.name = name
+	t.path = path
+	t.id = i
 	
-	if data then table.append(t, data) end -- additional data
+	scenes[i] = t -- done
 	
-	scenes[1] = t --done
-	
-	log("scene is now "..path)
-	t.init(t)
-	
+	log("added scene '"..path.."'")
+	t:init()
 end
 
 -- SCENES UPDATE LOOP
@@ -63,7 +77,7 @@ function scene.update(source)
 		_prof.push(scene.name)
 		if scene.active then
 			_prof.mark("scene")
-			scene.update(scene) -- scene
+			scene:update() -- scene
 			
 			for id, instance in pairs(scene.instances) do
 				_prof.push(id)
@@ -87,7 +101,7 @@ function scene.draw(source)
 		
 		if scene.visible then
 			_prof.mark("scene")
-			scene.draw(scene) -- scene
+			scene:draw() -- scene
 			
 			for id, instance in pairs(scene.instances) do
 				_prof.push(id)

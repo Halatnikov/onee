@@ -297,14 +297,14 @@ function imgui.table_fancy_allow(arg)
 	
 	if arg.rgb then
 		if #arg.rgb == 3 then
-			local _v = _float({arg.rgb[1]/255, arg.rgb[2]/255, arg.rgb[3]/255})
+			local _v = _float({arg.rgb[1], arg.rgb[2], arg.rgb[3]})
 			gui.ColorEdit3("rgb", _v)
 			
 			arg.rgb[1] = _v[0]*255
 			arg.rgb[2] = _v[1]*255
 			arg.rgb[3] = _v[2]*255
 		elseif #arg.rgb == 4 then
-			local _v = _float({arg.rgb[1]/255, arg.rgb[2]/255, arg.rgb[3]/255, arg.rgb[4]/100})
+			local _v = _float({arg.rgb[1], arg.rgb[2], arg.rgb[3], arg.rgb[4]})
 			gui.ColorEdit4("rgb", _v)
 			
 			arg.rgb[1] = _v[0]*255
@@ -493,7 +493,7 @@ function imgui.window.menubar()
 			
 			gui.Separator()
 			-- trigger a crash
-			if gui.MenuItem_Bool("Crash!") then
+			if gui.MenuItem_Bool("Crash!", "F9") then
 				error("you did this to yourself")
 			end
 			-- close the game
@@ -576,9 +576,7 @@ function imgui.window.menubar()
 		
 		-- about dialog
 		if gui.BeginPopupModal("onee "..onee.version, nil, gui.love.WindowFlags("AlwaysAutoResize", "NoMove", "NoResize")) then
-			gui.Text("love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")"..
-				newline..
-				newline.."i'm freaks")
+			gui.Text(string.format("love2d %s (%s, %s)\n\ni'm freaks", love._version, _VERSION, string.left(jit.version, 13)))
 			gui.Separator()
 			if gui.Button("me too", gui.ImVec2_Float(120, 0)) then
 				gui.CloseCurrentPopup()
@@ -591,7 +589,8 @@ function imgui.window.menubar()
 		gui.SameLine(windowwidth-120)
 		gui.Text(string.format("%d FPS %02.2fms", love.timer.getFPS(), 1000*love.timer.getAverageDelta()))
 		if gui.BeginItemTooltip() then
-			gui.Text(string.format("%02.2f FPS %02.2fms", fps, 1000*dt))
+			gui.Text(string.format("%02.2f FPS %02.2fms", 1/love.timer.getDelta(), 1000*love.timer.getDelta()))
+			gui.Text("v"..onee.version)
 			local date = os.date("*t")
 			gui.Text(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 			
@@ -774,6 +773,10 @@ function imgui.window.main()
 		gui.Checkbox("yui debug", _v)
 		debug_yui = _v[0]
 		
+		local _v = _bool(input.ignore)
+		gui.Checkbox("Ignore input", _v)
+		input.ignore = _v[0]
+		
 		------------------------------------------------ SETTINGS HEADER
 		if gui.CollapsingHeader_BoolPtr("Settings") then
 			gui.SeparatorText("Window")
@@ -866,8 +869,13 @@ function imgui.window.main()
 		if gui.CollapsingHeader_BoolPtr("General stats") then
 			
 			-- window size
-			gui.Text("Window size: "..windowwidth.."x"..windowheight.." (including DPI: "..love.graphics.getPixelWidth().."x"..love.graphics.getPixelHeight().." x"..love.window.getDPIScale()..")")
-			gui.Text("Gamma correct: "..tostring(love.graphics.isGammaCorrect()))
+			gui.Text("Window size: "..windowwidth.."x"..windowheight)
+			if gui.BeginItemTooltip() then
+				gui.Text("including DPI: "..love.graphics.getPixelWidth().."x"..love.graphics.getPixelHeight().." x"..love.window.getDPIScale())
+				gui.Text("Gamma correct: "..tostring(love.graphics.isGammaCorrect()))
+				
+				gui.EndTooltip()
+			end
 			
 			------------------------ newly declared globals tree
 			if gui.TreeNodeEx_Str("Newly declared globals", gui.love.TreeNodeFlags("SpanAvailWidth")) then
@@ -906,7 +914,7 @@ function imgui.window.main()
 				local renderer = {}
 				renderer.name, renderer.version, renderer.vendor, renderer.device = love.graphics.getRendererInfo()
 				
-				if gui.BeginTable("performance_renderer", 2, gui.love.TableFlags("RowBg", "BordersInnerV", "Resizable")) then
+				if gui.BeginTable("stats_renderer", 2, gui.love.TableFlags("RowBg", "BordersInnerV", "Resizable")) then
 					gui.TableSetupColumn("k")
 					gui.TableSetupColumn("v")
 					
@@ -1008,9 +1016,9 @@ function imgui.window.main()
 			graph_update = _v[0]
 			
 			-- raw fps and dt table
-			if graph_update and onee.allow_update then
-				table.remove(graph_fps, 1); table.insert(graph_fps, fps)
-				table.remove(graph_dt, 1); table.insert(graph_dt, 1000*dt)
+			if graph_update then
+				table.remove(graph_fps, 1); table.insert(graph_fps, 1/love.timer.getDelta())
+				table.remove(graph_dt, 1); table.insert(graph_dt, 1000*love.timer.getDelta())
 			end
 			
 			if gui.BeginTable("performance_fps", 2) then
@@ -1020,17 +1028,16 @@ function imgui.window.main()
 				
 				gui.TableNextRow()
 				gui.TableSetColumnIndex(0)
-				gui.PlotLines_FloatPtr("", _float(graph_fps), #graph_fps, 0, tostring(math.round(fps,2)), framerate/2, framerate, gui.ImVec2_Float(-1,30))
+				gui.PlotLines_FloatPtr("", _float(graph_fps), #graph_fps, 0, string.format("%.2f", 1/love.timer.getDelta()), framerate/2, framerate, gui.ImVec2_Float(-1,30))
 				gui.TableSetColumnIndex(1)
-				gui.PlotLines_FloatPtr("", _float(graph_dt), #graph_dt, 0, math.round(1000*dt,2).."ms", nil, nil, gui.ImVec2_Float(-1,30))
+				gui.PlotLines_FloatPtr("", _float(graph_dt), #graph_dt, 0, string.format("%.2fms", 1000*love.timer.getDelta()), nil, nil, gui.ImVec2_Float(-1,30))
 				
 				gui.EndTable()
 			end
 			
 			-- ram table
-			local stats = love.graphics.getStats()
-			local texture = math.round(stats.texturememory/1024/1024,2)
-			local gc = math.round(collectgarbage("count")/1024,2)
+			local texture = love.graphics.getStats().texturememory/1024/1024
+			local gc = collectgarbage("count")/1024
 			local total = texture + gc
 			
 			if graph_update then
@@ -1043,13 +1050,13 @@ function imgui.window.main()
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text(texture.."MB")
-				gui.TableSetColumnIndex(1); gui.Text(gc.."MB")
+				gui.TableSetColumnIndex(0); gui.Text(string.format("%.2fMB", texture))
+				gui.TableSetColumnIndex(1); gui.Text(string.format("%.2fMB", gc))
 				
 				gui.EndTable()
 			end
 			
-			gui.PlotLines_FloatPtr("", _float(graph_ram), #graph_ram, 0, "total: "..total.."MB", nil, nil, gui.ImVec2_Float(-1,30))
+			gui.PlotLines_FloatPtr("", _float(graph_ram), #graph_ram, 0, string.format("total %.2fMB\n max: %.2fMB", total, table.sortv(graph_ram)[#graph_ram]), nil, nil, gui.ImVec2_Float(-1,30))
 			
 			-- timers table
 			if gui.BeginTable("performance_time", 3) then
@@ -1059,9 +1066,9 @@ function imgui.window.main()
 				gui.TableHeadersRow()
 				
 				gui.TableNextRow()
-				gui.TableSetColumnIndex(0); gui.Text(tostring(math.round(ms,2)))
+				gui.TableSetColumnIndex(0); gui.Text(string.format("%.2f", ms))
 				gui.TableSetColumnIndex(1); gui.Text(tostring(frames))
-				gui.TableSetColumnIndex(2); gui.Text(tostring(math.round(love.timer.getTime(),2)))
+				gui.TableSetColumnIndex(2); gui.Text(string.format("%.2f", love.timer.getTime()))
 				if gui.BeginItemTooltip() then
 					local timer = love.timer.getTime()
 					gui.Text(string.format("%dh %02dm %02ds %02dms", timer/3600, math.floor(timer/60)%60, math.floor(timer)%60, math.floor(timer*100)%100))
@@ -1081,7 +1088,7 @@ function imgui.window.main()
 					gui.TableSetupColumn("k")
 					gui.TableSetupColumn("v")
 					
-					for k,v in kpairs(stats) do
+					for k,v in kpairs(love.graphics.getStats()) do
 						if k ~= "texturememory" then
 							gui.TableNextRow()
 							gui.TableSetColumnIndex(0); gui.Text(k)
@@ -1098,7 +1105,6 @@ function imgui.window.main()
 		
 		------------------------------------------------ INPUT HEADER
 		if gui.CollapsingHeader_BoolPtr("Input: "..input.mode.."###input") then
-			
 			-- mouse table
 			if gui.BeginTable("input_mouse", 3, gui.love.TableFlags("RowBg", "BordersInnerV")) then
 				gui.TableSetupColumn("")
@@ -1456,7 +1462,7 @@ function imgui.window.tests()
 			gui.SameLine(); gui.Text("passes")
 			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(1,0,0,1), tostring(test_errors))
 			gui.SameLine(); gui.Text("fails")
-			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "(took "..math.round(test_took, 5)..")")
+			gui.SameLine(); gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), string.format("(took %.5f)", test_took))
 			gui.Separator()
 		end
 		
@@ -1594,7 +1600,7 @@ end
 
 ---------------------------------------------------------------- PROFILER
 
-local report, deep_report = {}, {}
+local report, report_raw, deep_report = {}, {}, {}
 local frame, root = 1
 local sorting, sortkey, sortdescending = "Time", "timer", true
 
@@ -1621,9 +1627,16 @@ function imgui.window.profiler()
 				end
 				if not debug_profiler and #_prof.data_pretty ~= 0 then
 					gui.SameLine()
-					gui.Text("Time spent: "..math.round(_prof.stop - _prof.start, 2))
+					if gui.Button("Clear") then
+						_prof.data, _prof.data_pretty = {}, {}
+						report, report_raw = {}, {}
+						collectgarbage()
+						gui.EndChild()
+					end
 					gui.SameLine()
-					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..math.round(_prof.start, 2).." to "..math.round(_prof.stop, 2)..")")
+					gui.Text(string.format("Time spent: %.2f", _prof.stop - _prof.start))
+					gui.SameLine()
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), string.format("(%.2f to %.2f)", _prof.start, _prof.stop))
 					
 					report_raw = _prof.data
 					report = _prof.data_pretty
@@ -1669,10 +1682,11 @@ function imgui.window.profiler()
 									local node = report_raw[j]
 									
 									if node.type == "event" then
-										local time = math.round((node.stop - node.start)*1000, 4)
-										local ram = math.round((node.ramstop - node.ramstart)/1024, 4)
-										ram = ram >= 0 and "+"..ram or ram
-										local label = node.name.." ("..time.."ms "..ram.."MB)"
+										local time = (node.stop - node.start)*1000
+										local ram = (node.ramstop - node.ramstart)/1024
+										
+										ram = ram >= 0 and string.format("+%.4f", ram) or string.format("%.4f", ram)
+										local label = string.format("%s (%.4fms %sMB)", node.name, time, ram)
 										
 										local maxx = gui.GetContentRegionMax().x + 10
 										
@@ -1699,7 +1713,7 @@ function imgui.window.profiler()
 										if gui.BeginItemTooltip() then
 											gui.Text(node.name)
 											gui.Separator()
-											gui.Text("at "..math.round(node.start,3))
+											gui.Text(string.format("at %.3f", node.start))
 											
 											gui.EndTooltip()
 										end
@@ -1717,30 +1731,20 @@ function imgui.window.profiler()
 							local graph = {}
 							for i=1, #report do
 								if report[i].type == "event" then
-									table.insert(graph, math.round((report[i].stop - report[i].start)*1000, 3))
+									table.insert(graph, (report[i].stop - report[i].start)*1000)
 								end
 							end
-							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
-								"min: "..table.sortv(graph)[1].."ms"..
-								newline.."max: "..table.sortv(graph)[#graph].."ms"..
-								newline.."avg: "..math.round(math.average(graph),3).."ms"..
-								newline.."cur: "..graph[frame].."ms",
-							nil, nil, gui.ImVec2_Float(-1,64))
+							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0, string.format("min: %.3fms\navg: %.3fms\ncur: %.3fms", table.sortv(graph)[1], table.sortv(graph)[#graph], math.average(graph), graph[frame]), nil, nil, gui.ImVec2_Float(-1,64))
 						gui.EndTabItem()
 						end
 						if gui.BeginTabItem("RAM") then
 							local graph = {}
 							for i=1, #report do
 								if report[i].type == "event" then
-									table.insert(graph, math.round(report[i].ramstop/1024, 3))
+									table.insert(graph, report[i].ramstop/1024)
 								end
 							end
-							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0,
-								"min: "..table.sortv(graph)[1].."MB"..
-								newline.."max: "..table.sortv(graph)[#graph].."MB"..
-								newline.."avg: "..math.round(math.average(graph),3).."MB"..
-								newline.."cur: "..graph[frame].."MB",
-							nil, nil, gui.ImVec2_Float(-1,64))
+							gui.PlotLines_FloatPtr("", _float(graph), #graph, 0, string.format("min: %.3fMB\navg: %.3fMB\ncur: %.3fMB", table.sortv(graph)[1], table.sortv(graph)[#graph], math.average(graph), graph[frame]), nil, nil, gui.ImVec2_Float(-1,64))
 						gui.EndTabItem()
 						end
 					gui.EndTabBar()
@@ -1780,9 +1784,9 @@ function imgui.window.profiler()
 				end
 				if not debug_profiler_deep and #profi.reports ~= 0 then
 					gui.SameLine()
-					gui.Text("Time spent: "..math.round(profi.stopTime - profi.startTime, 2))
+					gui.Text(string.format("Time spent: %.2f", profi.stopTime - profi.startTime))
 					gui.SameLine()
-					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "("..math.round(profi.startTime, 2).." to "..math.round(profi.stopTime, 2)..")")
+					gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), string.format("(%.2f to %.2f)", profi.startTime, profi.stopTime))
 					
 					gui.Separator()
 					
@@ -1792,7 +1796,6 @@ function imgui.window.profiler()
 						if gui.Selectable_Bool("File") then sorting = "File"; sortkey = "source" end
 						if gui.Selectable_Bool("Function") then sorting = "Function"; sortkey = "name" end
 						if gui.Selectable_Bool("Time") then sorting = "Time"; sortkey = "timer" end
-						--if gui.Selectable_Bool("Relative") then sorting = "Relative"; sortkey = "relative" end
 						if gui.Selectable_Bool("Called") then sorting = "Called"; sortkey = "count" end
 						gui.EndCombo()
 					end
@@ -1835,7 +1838,7 @@ function imgui.window.profiler()
 								gui.Text(name)
 							end
 							gui.TableSetColumnIndex(2); gui.Text(string.format("%04.4fms", report.timer*1000))
-							gui.TableSetColumnIndex(3); gui.Text(string.zeropad(relative,0.2).."%%")
+							gui.TableSetColumnIndex(3); gui.Text(string.format("%.2f", relative).."%%")
 							gui.TableSetColumnIndex(4); gui.Text(tostring(report.count))
 						end
 						gui.EndTable()

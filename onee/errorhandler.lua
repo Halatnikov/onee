@@ -80,8 +80,6 @@ errorhandler.print = error_printer
 -- todo: an option for more detailed tracebacks
 
 function errorhandler.draw(msg, mode, notraceback)
-	
-	local font = love.graphics.setNewFont(14)
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.origin()
 	
@@ -110,16 +108,34 @@ function errorhandler.draw(msg, mode, notraceback)
 		"things are happening",
 		"Catastrophic failure",
 		"FUCK!!!!",
-		"H-hello?... Is anyone here?... It's so dark in there......",
+		"Hello? Is anyone there? It's so dark in here...",
 		"Minor spelling mistake, I win",
 		"*bummer*",
 		"baba booey",
 		"Did you try turning it on and off?",
-		"What are video games anymore?",
+		"You hear about video games?",
+		"i need a moment",
+		"we doin it",
+		"That's new",
+		"This is the one, right there",
+		"Be sure to see a doctor about this",
+		"Point and laugh",
+		"oh...",
+		"I'll let it slide just this once",
+		"Millions dead",
+		"Press L to learn",
+	}
+	
+	local corner = {
+		":)",
+		":3",
+		":o",
 	}
 
 	local err = {}
 	table.insert(err, titles[love.math.random(#titles)].."\n")
+	
+	corner = corner[love.math.random(#corner)]
 	
 	table.insert(err, sanitizedmsg)
 	if #sanitizedmsg ~= #msg then
@@ -129,7 +145,7 @@ function errorhandler.draw(msg, mode, notraceback)
 	table.insert(err, "\n")
 	for l in trace:gmatch("(.-)\n") do
 		if not (l:match("boot.lua") or l:match("errorhandler.lua") or l:match("lurker/init.lua")) then
-			l = l:gsub("stack traceback:", "Traceback:\n")
+			l = l:gsub("stack traceback:", "Traceback:")
 			table.insert(err, l)
 		end
 	end
@@ -140,28 +156,28 @@ function errorhandler.draw(msg, mode, notraceback)
 	err = err:gsub("%[string \"(.-)\"%]", "%1")
 	
 	err = err.."\n"
-	err = err.."\n"..((love.config and love.config.title) and love.config.title or "???")..", onee "..(onee.version or "???")..", love2d "..(love._version or "???")
+	local title = (love.config and love.config.title) and love.config.title or "???"
+	err = err.."\n"..title..", onee "..(onee.version or "???")..", love2d "..(love._version or "???")
 	err = err.."\n"
 	err = err.."\nPress Ctrl+C to copy to clipboard"
 	err = err.."\nPress Esc to quit or Space to restart"
 	err = err.."\n"
 	
 	if mode == "lurker" then
-		err = err.."\n[hotswap]   If you fix the problem and update the file, the program will attempt to resume"
+		err = err.."\n[hotswap]: If you fix the problem and update the file, the program will attempt to resume"
 	end
-
-	local fullErrorText = err
+	
 	local function copyToClipboard()
 		if not love.system then return end
-		love.system.setClipboardText(fullErrorText)
-		err = err.."\nCopied to clipboard!"
+		love.system.setClipboardText(err)
 	end
 	
 	local function draw()
 		if not love.graphics.isActive() then return end
-		local pos = 70
-		love.graphics.clear(89/255, 157/255, 220/255) -- best not mess with this
-		love.graphics.printf(err, font, pos, pos, love.graphics.getWidth() - pos)
+		local pos = 45
+		love.graphics.clear(57/255, 176/255, 97/255)
+		love.graphics.printf(err, pos, pos, love.graphics.getWidth() - pos*2)
+		love.graphics.printf(corner, pos, pos, love.graphics.getWidth() - pos*2, "right")
 		love.graphics.reset(true)
 	end
 	

@@ -29,7 +29,7 @@ function docroc.process(filename)
 		chunk:gsub("@(%w+)%s?([^@]*)", function(name, body)
 			body = body:gsub("(%s+)$", "")
 			local processor = docroc.processors[name]
-			if not processor then print("docroc.process() | unknown tag - "..name..newline..context) end
+			if not processor then log("docroc.process() | unknown tag - "..name..newline..context) end
 			local tag = processor and processor(body) or {}
 			body = body:gsub("%-%-%s*(.*)$", "")
 			tag.tag = name

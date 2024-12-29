@@ -61,7 +61,7 @@ end
 
 
 function lurker.print(...)
-  print("[lurker] " .. lume.format(...))
+  log("[lurker] " .. lume.format(...))
 end
 
 

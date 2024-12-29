@@ -123,10 +123,6 @@ function string.find(arg, find, index, plain) -- alias
 	return string.find_(arg, find, index, plain)
 end
 
-function string.findcase(arg, find, index, plain) -- case insensitive alias
-	return string.find(string.lower(arg), string.lower(find), index, plain)
-end
-
 function string.remove(arg, ...)
 	local find = type(...) == "table" and ... or {...}
 	for i=1, #find do
@@ -151,15 +147,6 @@ function string.random(length)
 		table.insert(t, string.mid(chars, r, r))
 	end
 	return table.concat(t)
-end
-
-function string.zeropad(arg, decimals)
-	if math.is_int(decimals) then -- do 20 -> 0020
-		return string.format("%0"..decimals.."d", arg)
-	elseif math.between(0, decimals, 1) then -- do 0.2 -> 0.200
-		decimals = #tostring(decimals) == 3 and decimals * 10 or decimals * 100
-		return string.format("%."..decimals.."f", arg)
-	end
 end
 
 -- TODO: use sha-384 for other stuff preferably
@@ -270,6 +257,14 @@ function table.fill(v, min, max)
 	local t = {}
 	for i = min, max do table.insert(t, type(v) == "function" and v() or v) end
 	return t
+end
+
+function table.clear(arg)
+	local k = next(arg)
+	while k ~= nil do
+		arg[k] = nil
+		k = next(arg)
+	end
 end
 
 function table.reverse(arg)
@@ -414,40 +409,43 @@ function color.rgb(r, g, b, a)
 	return r, g, b, a
 end
 
-function color.torgb(r, g, b, a)
-	return math.round(r*255), math.round(g*255), math.round(b*255), a and math.round(a*100)
-end
-
 function color.hsl(h, s, l, a)
-	if s <= 0 then return l, l, l, a end
-	h = h * 6
-	local c = (1 - math.abs( 2 * l - 1)) * s
-	local x = (1 - math.abs( h % 2 - 1)) * c
-	local m = (1 - 0.5 * c)
-	local r, g, b
-	if h < 1 then     r, g, b = c, x, 0
-	elseif h < 2 then r, g, b = x, c, 0
-	elseif h < 3 then r, g, b = 0, c, x
-	elseif h < 4 then r, g, b = 0, x, c
-	elseif h < 5 then r, g, b = x, 0, c
-	else              r, g, b = c, 0, x
-	end 
-	return r + m, g + m, b + m, a
+	if not (s > 0) then return l, l, l, a end
+	
+	local function convert(p, q, t)
+		if t < 0 then t = t + 1 end
+		if t > 1 then t = t - 1 end
+		if t < 1/6 then return p + (q - p) * 6 * t end
+		if t < 1/2 then return q end
+		if t < 2/3 then return p + (q - p) * (2/3 - t) * 6 end
+		return p
+	end
+	
+	local q = (l < 0.5) and l * (1 + s) or l + s - l * s
+	local p = l * 2 - q
+
+	local r = convert(p, q, h + 1/3)
+	local g = convert(p, q, h)
+	local b = convert(p, q, h - 1/3)
+
+    return r, g, b, a
 end
 
 function color.hex(hex)
 	hex = string.right(hex, 6)
-	local r, g, b
-	r = tonumber(string.mid(hex, 1,2), 16)/255
-	g = tonumber(string.mid(hex, 3,4), 16)/255
-	b = tonumber(string.mid(hex, 5,6), 16)/255
+	local r = tonumber(string.mid(hex, 1,2), 16)/255
+	local g = tonumber(string.mid(hex, 3,4), 16)/255
+	local b = tonumber(string.mid(hex, 5,6), 16)/255
 	return r, g, b
 end
 
 rgb = color.rgb
-torgb = color.torgb
 hsl = color.hsl
 hex = color.hex
+
+function color.torgb(r, g, b, a)
+	return math.round(r*255), math.round(g*255), math.round(b*255), a and math.round(a*100)
+end
 
 function color.random()
 	return math.random(0,255), math.random(0,255), math.random(0,255)
@@ -465,23 +463,29 @@ end
 function gradient(type, colors, x, y, r, w, h, ox, oy, kx, ky)
 	type = type or "horizontal"
 	r = math.rad(r or 0)
+	local types = {}
 	
-	local vertices = {}
-	if type == "horizontal" then
+	types["horizontal"] = function()
+		local vertices = {}
 		for i, color in ipairs(colors) do
 			local x = (i - 1) / (#colors - 1)
 			table.insert(vertices, {x, 1, x, 1, color[1], color[2], color[3], color[4] or 1})
 			table.insert(vertices, {x, 0, x, 0, color[1], color[2], color[3], color[4] or 1})
 		end
-	elseif type == "vertical" then
+		return vertices
+	end
+	
+	types["vertical"] = function()
+		local vertices = {}
 		for i, color in ipairs(colors) do
 			local y = (i - 1) / (#colors - 1)
 			table.insert(vertices, {1, y, 1, y, color[1], color[2], color[3], color[4] or 1})
 			table.insert(vertices, {0, y, 0, y, color[1], color[2], color[3], color[4] or 1})
 		end
+		return vertices
 	end
 	
-	love.graphics.draw(love.graphics.newMesh(vertices, "strip", "static"), x, y, r, w, h, ox, oy, kx, ky)
+	love.graphics.draw(love.graphics.newMesh(types[type](), "strip", "static"), x, y, r, w, h, ox, oy, kx, ky)
 end
 
 ---------------------------------------------------------------- MISC
@@ -494,7 +498,7 @@ end
 
 dofile_ = dofile
 function dofile(path, env)
-	if string.right(path, 4) ~= ".lua" then path = path..".lua" end 
+	path = string.right(path, 4) == ".lua" and path or path..".lua"
 	local run = assert(love.filesystem.load(path), path.." not found")
 	if env then setfenv(run, env) end
 	return run()
@@ -506,9 +510,9 @@ function os.date(format, time)
 	if format == "*t" then
 		local t = os.date_("*t",time)
 		-- default fields: year, month, day, hour, min, sec, wday, yday, isdst
-		t.wdayname = string.tokenize("Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday",",",t.wday)
+		t.wdayname = string.tokenize("monday,tuesday,wednesday,thursday,friday,saturday,sunday",",",t.wday)
 		t.wdayshort = string.left(t.wdayname,3)
-		t.monthname = string.tokenize("January,February,March,April,May,June,July,August,September,October,November,December",",",t.month)
+		t.monthname = string.tokenize("january,february,march,april,may,june,july,august,september,october,november,december",",",t.month)
 		t.monthshort = string.left(t.monthname,3)
 		t.hour12 = tonumber(os.date_("%I",time))
 		t.period = os.date_("%p",time) -- am, pm
@@ -518,4 +522,14 @@ function os.date(format, time)
 		return t
 	end
 	return os.date_(format, time)
+end
+
+-- allows using __gc metamethod on table
+-- TODO: what about __len, __pairs and __ipairs
+function setproxy(arg)
+	local proxy = newproxy(true)
+	getmetatable(proxy).__gc = function()
+		return arg.__gc and arg:__gc()
+	end
+	arg.__newproxy = proxy
 end

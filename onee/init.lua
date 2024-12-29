@@ -1,5 +1,5 @@
 onee = {
-	version = "0.0.2-25",
+	version = "0.0.2-26",
 	colors = {	
 		bg = {8, 8, 8},
 		bg_deep = {16, 16, 16},
@@ -36,6 +36,10 @@ do
 		package.cpath = package.cpath..";"..love.filesystem.getSaveDirectory().."/libs/?."..onee.libtype
 	end
 	
+	-- set default font
+	onee.font = love.graphics.newFont("onee/ProggyClean.ttf", 16)
+	onee.font:setFilter("nearest")
+	
 	-- various сonstants
 	framerate = 60
 	tick = 1 / framerate
@@ -44,6 +48,7 @@ do
 	onee.width, onee.height = love.config.width, love.config.height
 
 	-- libraries (user)
+	require("onee/libs/oo")
 	require("onee/libs/semver")
 	require("onee/libs/urfs")
 	require("onee/libs/timer")
@@ -67,7 +72,7 @@ do
 	require("onee/yui")
 	
 	-- :)
-	log("onee "..onee.version.." | love2d "..love._version.." (".._VERSION..", "..string.left(jit.version, 13)..")")
+	log(string.format("onee %s | love2d %s (%s, %s)", onee.version, love._version, _VERSION, string.left(jit.version, 13)))
 	local date = os.date("*t")
 	log(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
 	

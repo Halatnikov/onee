@@ -96,11 +96,9 @@ function input.update()
 	
 	-- touch screen mode
 	if mobile and input.touch_active then
-		local touches = love.touch.getTouches()
-		
 		for key, entry in pairs(config.input.touch) do
 			for i, shape in pairs(entry) do
-				for j, id in pairs(touches) do
+				for j, id in pairs(love.touch.getTouches()) do
 					local touchx, touchy = love.touch.getPosition(id)
 					
 					if shape.circle then

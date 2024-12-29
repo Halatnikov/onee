@@ -74,3 +74,47 @@ function love.graphics.reset(ignore) -- bool=
 		love.graphics.setFrontFaceWinding("ccw")
 	end
 end
+
+Test = class({t = {}})
+
+function Test:__init()
+	setproxy(self)
+	Test.x = 0
+	Test.y = 0
+end
+
+function Test:__index(k)
+	print("index", self, k, Test[k], rawget(self, k))
+	-- super hacky but since both getting and setting trigger __index, maybe try storing an older table state and compare it against new one and if it's changed, that's setting
+	if type(Test[k]) == "table" then
+		Test.__oldstate = Test.__oldstate or {}
+		Test.__oldstate[k] = Test.__oldstate[k] or copy(Test[k])
+	end
+	if type(Test[k]) == "table" and rawget(self, k) == nil and (table.compare(Test.__oldstate[k], Test[k])) then
+		self[k] = copy(Test[k])
+		Test[k] = copy(Test.__oldstate[k])
+	end
+	return Test[k]
+end
+
+function Test:__newindex(k, v)
+	print("newindex", self, k ,v)
+	rawset(self, k, v)
+end
+
+function Test:__gc()
+	print("FUCK!!!!")
+end
+
+a = Test()
+b = Test()
+c = Test()
+
+a.t.huh = "nor way"
+b.x = 49
+
+print(a.x)
+print(b.x)
+print(b.t.huh)
+
+c = nil

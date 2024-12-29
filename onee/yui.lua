@@ -115,7 +115,7 @@ function yui.debug_draw(ui)
 		for k,v in ipairs(arg) do
 			love.graphics.setColor(1,1,1,0.1)
 			local mode = ui.focused == v and "fill" or "line"
-			love.graphics.rectangle(mode, math.round(v.x), math.round(v.y), v.w, v.h)
+			love.graphics.rectangle(mode, math.floor(v.x), math.floor(v.y), v.w, v.h)
 			love.graphics.reset()
 			draw_recursive(v)
 		end

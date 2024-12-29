@@ -1,12 +1,14 @@
-local scene_ = scene
-local scene = {}
+local _ = Scene()
 
-function scene.init(self)
+_.assets = {
+	"font_controls",
+	"font_12",
+	"font_16",
+	"font_titlecard",
+}
+
+function _:init()
 	-- init fonts
-	fonts.proggy_clean = love.graphics.newFont("fonts/ProggyClean.ttf", 16)
-	fonts.proggy_clean:setFilter("nearest")
-	onee.font = fonts.proggy_clean -- set default font
-	
 	asset.spritefont("font_controls")
 	
 	asset.spritefont("font_12")
@@ -18,7 +20,7 @@ function scene.init(self)
 	asset.spritefont("font_titlecard")
 	font.append("font_titlecard", "font_controls")
 	
-	scene_.set("menu")
+	scene.set("menu")
 end
 
-return scene
+return _
