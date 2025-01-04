@@ -38,7 +38,6 @@ function Button:new(args)
     self.align = self.align or 'center'
     self.valign = self.valign or 'center'
     self.active = false
-	self.description = self.description or nil
 	
     return self
 end

@@ -82,6 +82,7 @@ do
 	-- resolve some initital things
 	onee.compatibility(onee.version, love.config.onee)
 	window.update() -- init game canvas
+	onee.persist = Scene()
 	
 	-- off we go
 	scene.set("init")

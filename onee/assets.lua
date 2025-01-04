@@ -9,9 +9,6 @@ text = {}
 
 local sprite_ = sprite
 
--- containers
-fonts = {}
-
 -- constants
 TILE = {
 	TILE = "repeat",
@@ -80,6 +77,11 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	
 	local time_start = love.timer.getTime()
 	onee.loading("loading sprite "..path)
+	
+	-- single image, no spritedef
+	if not sprite and not files.exists("sprites/"..path..".lua") and files.exists("sprites/"..path..".png") then
+		sprite = {animations = {idle = {filename = path}}}
+	end
 	
 	sprite = sprite or dofile("sprites/"..path) -- init
 	assert(not (sprite.font) or (sprite.font and sprite.font.verified), "asset.sprite() | attempted to load font in \""..name.."\" as a regular sprite")
@@ -771,16 +773,15 @@ do--#region SPRITEFONTS
 
 --! LOAD NEW SPRITEFONT ASSET
 -- an extension of sprite
-function asset.spritefont(path)
+function asset.spritefont(path, data)
 	local name = string.tokenize(path, "/", -1)
-	if fonts[name] then return end -- already loaded
+	if onee.persist.assets[name] then return end -- already loaded
 	
 	local time_start = love.timer.getTime()
 	onee.loading("preprocessing font "..path)
 	
 	local sprite = dofile("sprites/"..path) -- init
 	assert(sprite.font,"asset.spritefont() | no fontdef specified in \""..name.."\"")
-	fonts[name] = {}
 	sprite.cached_images = {}
 	
 	sprite.tiled = nil -- nope
@@ -788,25 +789,7 @@ function asset.spritefont(path)
 	
 	sprite.animations = sprite.animations or {}
 	
-	local font = fonts[name]
-	
-	font.spritefont = true
-	-- mini scene for storing assets
-	font.scene = {
-		scene = true,
-		fontscene = true,
-		name = name,
-		
-		assets = {},
-		sprites = {},
-		
-		instances = {},
-		
-		drawlist = {},
-	}
-	
 	local fontdef = sprite.font
-	font.font = fontdef
 	fontdef.verified = true -- allow loading in asset.sprite()
 	fontdef.spacing = fontdef.spacing or 0
 	fontdef.linespacing = fontdef.linespacing or 0
@@ -865,39 +848,25 @@ function asset.spritefont(path)
 		end
 	end
 	
+	table.append(sprite.font, data)
+	
 	log(string.format("font '%s' took %.4f (now %.2fMB)", path, (love.timer.getTime() - time_start), love.graphics.getStats().texturememory/1024/1024))
 	
 	sprite.cached_images = nil
-	asset.sprite(path, font.scene, sprite) -- done, move on
+	asset.sprite(path, onee.persist, sprite) -- done, move on
 end
 
 --!
-function font.append(font, arg)
-	if type(font) == "string" then font = fonts[font] end
-	if type(arg) ~= "table" then arg = {arg} end
-	local fontscene = font.scene
-	
-	for k,v in ipairs(arg) do
-		if type(v) == "string" then v = fonts[v] end
-		local name = v.scene.name
-		
-		fontscene.assets[name] = v.scene.assets[name]
-		fontscene.sprites[name] = v.scene.sprites[name]
-	end
-end
-
---!
-function text.new(id, scene)
+function text.new(id)
 	local t = {
 		instance = true,
 		fontinstance = true,
-		fontscene = scene.name,
 		id = id,
 		
 		sprites = {},
 	}
 	
-	scene.instances[id] = t
+	onee.persist.instances[id] = t
 	
 	return t
 end
@@ -910,7 +879,6 @@ end
 --!
 function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, alignv)
 	if type(arg) == "string" then arg = {arg} end
-	if type(font) == "string" then font = fonts[font] end
 	
 	x = x or 0; x = math.floor(x)
 	y = y or 0; y = math.floor(y)
@@ -925,13 +893,12 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 	alignh = alignh or "left"
 	alignv = alignv or "top"
 	
-	local fontscene = font.scene
-	local fontdef = font.font
+	local fontdef = onee.persist.sprites[font].font
 	
 	-- update or create instance
-	local id = string.md5(x..y..r..sx..sy..ox..oy..kx..ky, limit, alignh, alignv)
-	fontscene.instances[id] = fontscene.instances[id] or text.new(id, fontscene)
-	local instance = fontscene.instances[id]
+	local id = string.md5(font..x..y..r..sx..sy..ox..oy..kx..ky, limit, alignh, alignv)
+	onee.persist.instances[id] = onee.persist.instances[id] or text.new(id)
+	local instance = onee.persist.instances[id]
 	
 	instance.timer = (instance.timer or 0) + dt
 	instance.dt = dt
@@ -962,12 +929,12 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		end
 		
 		-- find character in available fonts
-		if fontscene.assets[fontscene.name][char] then -- main font takes priority
-			curfont = fontscene.name
+		if onee.persist.assets[font][char] then -- main font takes priority
+			curfont = font
 		else
-			for k, font in pairs(fontscene.assets) do -- look in appended fonts
-				if k ~= fontscene.name and font[char] then 
-					curfont = k
+			for k, font in pairs(fontdef.fallbacks) do -- look in other fonts
+				if onee.persist.assets[font] and onee.persist.assets[font][char] then 
+					curfont = font
 					break
 				end
 			end
@@ -982,11 +949,11 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			
 			instance.sprites[curline] = instance.sprites[curline] or {}
 			instance.sprites[curline][charcount] = instance.sprites[curline][charcount]
-				or sprite.init(instance.sprites[curline][charcount], fontscene, curfont, {animation = char})
+				or sprite.init(instance.sprites[curline][charcount], onee.persist, curfont, {animation = char})
 			
 			local charsprite = instance.sprites[curline][charcount]
 			
-			local spritedef = fontscene.sprites[curfont]
+			local spritedef = onee.persist.sprites[curfont]
 			local animdef = spritedef.animations[char]
 			local framedef = animdef.frames[charsprite.frame]
 			
@@ -1118,9 +1085,8 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 			love.graphics.stack(function()
 				love.graphics.translate(xoffset, yoffset)
 				for i, charsprite in pairs(line) do
-					sprite.update(charsprite, fontscene)
-					local fontscene = fonts[charsprite.name].scene
-					sprite.draw(charsprite, fontscene, {queued = false})
+					sprite.update(charsprite, onee.persist)
+					sprite.draw(charsprite, onee.persist, {queued = false})
 				end
 			end)
 		end

@@ -102,6 +102,9 @@ function Ui:new(args)
     end
 
     self.w,self.h = root.w,root.h
+	
+	self.init = self.init or noop
+	self:init()
 
     local firstfocus, cancelfocus = resolveautofocus(root)
     if not firstfocus then
@@ -112,7 +115,7 @@ function Ui:new(args)
 
     self.cancelfocus = cancelfocus
     firstfocus:grabFocus()
-
+	
     return self
 end
 

@@ -185,7 +185,6 @@ function debug.draw_post()
 	end
 	love.graphics.reset()
 	
-	
 	local i = 0
 	for k, v in ripairs(qqueue) do
 		i = i + 1

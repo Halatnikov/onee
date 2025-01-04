@@ -22,7 +22,7 @@ function onee.loading(text)
 	love.graphics.reset(true)
 	window.draw(function()
 		love.graphics.clear(rgb(onee.colors.bg))
-		love.graphics.printf(text, onee.width/2-150, onee.height-16, 150*2, "center")
+		love.graphics.printf(text, 0, onee.height-16, onee.width, "center")
 	end)
 	love.graphics.present()
 end

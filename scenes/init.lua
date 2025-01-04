@@ -11,14 +11,11 @@ function _:init()
 	-- init fonts
 	asset.spritefont("font_controls")
 	
-	asset.spritefont("font_12")
-	font.append("font_12", "font_controls")
+	asset.spritefont("font_12", {fallbacks = {"font_controls"}})
 	
-	asset.spritefont("font_16")
-	font.append("font_16", "font_controls")
+	asset.spritefont("font_16", {fallbacks = {"font_controls"}})
 	
-	asset.spritefont("font_titlecard")
-	font.append("font_titlecard", "font_controls")
+	asset.spritefont("font_titlecard", {fallbacks = {"font_controls"}})
 	
 	scene.set("menu")
 end

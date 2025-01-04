@@ -28,8 +28,6 @@ local theme = {
     cornerRadius = 4,
 
     -- font = nil defaults to love.graphics.getFont()
-	font = nil,
-	spritefont = nil,
 
     color = {
         normal   = {bg = {0.25, 0.25, 0.25}, fg = {0.73, 0.73, 0.73}},

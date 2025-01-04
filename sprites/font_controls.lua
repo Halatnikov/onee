@@ -31,7 +31,7 @@ for k,v in pairs(keyboard) do
 			or k == "general" and 102
 			or k == "symbols" and 136
 		
-		local t = {
+		sprite.animations["key_"..v[i]] = {
 			seq = {1,2},
 			speed = 3,
 			strip = {
@@ -39,8 +39,6 @@ for k,v in pairs(keyboard) do
 				x = (16 * (i - 1)) + (i - 1), y = y,
 			},
 		}
-		
-		sprite.animations["key_"..v[i]] = t
 	end
 end
 

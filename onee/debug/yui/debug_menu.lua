@@ -46,7 +46,6 @@ menu = {
 		-- fps, raw fps and dt
 		gui.Label {
 			align = "right",
-			text = "",
 			onUpdate = function(self)
 				self.text = string.format("%d %02.2f FPS %02.2fms", love.timer.getFPS(), 1/love.timer.getDelta(), 1000*love.timer.getAverageDelta())
 			end,
@@ -54,12 +53,8 @@ menu = {
 		-- ram
 		gui.Label {
 			align = "right",
-			text = "",
 			onUpdate = function(self)
-				local texture = love.graphics.getStats().texturememory/1024/1024,2
-				local gc = collectgarbage("count")/1024,2
-				
-				self.text = string.format("texture: %.1fMB gc: %.1fMB", texture, gc)
+				self.text = string.format("texture: %.1fMB gc: %.1fMB", love.graphics.getStats().texturememory/1024/1024, collectgarbage("count")/1024)
 			end,
 		},
 		

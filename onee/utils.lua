@@ -269,7 +269,7 @@ end
 
 function table.reverse(arg)
 	arg = copy(arg)
-    for i = 1, math.floor(#arg/2) do
+    for i=1, math.floor(#arg/2) do
         arg[i], arg[#arg - i+1] = arg[#arg - i+1], arg[i]
     end
     return arg

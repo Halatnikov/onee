@@ -252,7 +252,7 @@ function menu.hold(label, description, func, speed, t)
 		onUpdate = function(self)
 			if not self.ui.active then return end
 			
-			if self:isFocused() and self.ui.device.confirm or (self.ui.device.clicking and yui_.core.pointinrect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h)) then
+			if self:isFocused() and self.ui.device.confirm or (self.ui.device.clicking and collision.point_rect(self.ui.device.px, self.ui.device.py, self.x, self.y, self.w, self.h)) then
 				if not self.hold_blocked then
 					self.hold = self.hold + self.hold_speed
 				end

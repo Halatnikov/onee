@@ -1,13 +1,13 @@
 --TODO: maybe do a t.onee (set them as globals later)
 function love.conf(t)
-	t.title = "onee"
-	t.identity = "onee" -- savedata folder
+	t.title = "Scruffy 1: Freaky Edition"
+	t.identity = "scruffy1freaky" -- savedata folder
 	t.version = "11.3" -- minimum love2d version
 	
 	t.onee = "0.0.2" -- preferred onee version
 	
 	t.width = 640
-    t.height = 360
+    t.height = 480
 	
 	t.gammacorrect = true
 	t.window = nil
@@ -49,7 +49,7 @@ config = {
 			right = {{rect = {80,-92, 64,32}}},
 			a = {{circle = {-64,-80, 48}, text = "A"}},
 			b = {{circle = {-150,-48, 32}, text = "B"}},
-			start = {{rect = {-44,-48, 88,32}, centerx = true, text = "Start"}},
+			start = {{rect = {-44,-48, 88,32}, centerx = true, text = "Pause"}},
 		},
 	},
 }

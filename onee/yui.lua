@@ -56,9 +56,12 @@ end
 function yui.add(yui, child)
 	assert((yui and yui.yui_instance), "yui.add() | not a valid yui instance!")
 	
+	child.visible, child.active = true, true
+	
 	child.instance = yui
 	child.previous = yui.stack[#yui.stack]
 	child.onActive = child.onActive or noop
+	
 	table.insert(yui.stack, child.yui and child or gui.Ui:new(child))
 	refresh_stack(yui.stack)
 end

@@ -1160,7 +1160,7 @@ function imgui.window.main()
 		
 		imgui.table(debug.getregistry(), "debug.getregistry()")
 		
-		imgui.table(fonts, "i'm too lazy, fonts", {fancy=true,imagescale=1})
+		imgui.table(onee.persist, "i'm too lazy, fonts", {fancy=true,imagescale=1})
 		
 		gui.End()
 	end

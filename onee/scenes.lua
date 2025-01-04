@@ -25,6 +25,8 @@ Scene = class({
 	__init = function(self)
 		self.objects = {}
 		self.instances = {}
+		--self.layers = {}
+		--self.cameras = {}
 		
 		self.assets = {}
 		self.sprites = {}
@@ -54,12 +56,8 @@ function scene.add(path, i, data, name)
 	name = name or string.tokenize(path, "/", -1)
 	
 	local t = files.exists("scenes/"..path..".lua") and dofile("scenes/"..path) or Scene()
-	
 	table.append(t, data) -- additional data
-	
-	t.name = name
-	t.path = path
-	t.id = i
+	t.name, t.path, t.id = name, path, i
 	
 	scenes[i] = t -- done
 	
