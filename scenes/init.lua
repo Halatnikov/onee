@@ -10,12 +10,9 @@ _.assets = {
 function _:init()
 	-- init fonts
 	asset.spritefont("font_controls")
-	
-	asset.spritefont("font_12", {fallbacks = {"font_controls"}})
-	
-	asset.spritefont("font_16", {fallbacks = {"font_controls"}})
-	
-	asset.spritefont("font_titlecard", {fallbacks = {"font_controls"}})
+	asset.spritefont("font_12")
+	asset.spritefont("font_16")
+	asset.spritefont("font_titlecard")
 	
 	scene.set("menu")
 end

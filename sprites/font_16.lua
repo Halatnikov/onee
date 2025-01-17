@@ -12,6 +12,7 @@ sprite.font = {
 		{chars = "0123456789", y = 42, width = 111},
 		{chars = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", y = 63, width = 319},
 	},
+	fallback = "font_controls",
 	
 }
 

@@ -15,12 +15,10 @@ if onee.libtype and debug_mode then
 	gui = imgui_
 	
 	gui.love.Init()
-	
 	gui.GetIO().ConfigFlags = gui.love.ConfigFlags("NavEnableKeyboard", "DockingEnable")
 	
 	imgui.open.menubar = true
 	imgui.open.main = true
-	
 end
 
 -- main loop
@@ -105,6 +103,19 @@ local function _char(arg, default) -- char* pointer
 	ffi.copy(var, arg or default or ".")
 	return var
 end
+
+-- right align hack
+local function rightalign(name)
+	if gui.BeginTable(name or "", 2, gui.love.TableFlags("SizingFixedFit"), gui.ImVec2_Float(-1, 0)) then
+		gui.TableSetupColumn(name or "", gui.love.TableColumnFlags("WidthStretch"))
+		gui.TableNextColumn()
+		gui.TableNextColumn()
+		return true
+	else
+		return false
+	end
+end
+local rightalign_end = gui.EndTable
 
 ---------------------------------------------------------------- table browser
 do--#region TABLE BROWSER
@@ -300,17 +311,17 @@ function imgui.table_fancy_allow(arg)
 			local _v = _float({arg.rgb[1], arg.rgb[2], arg.rgb[3]})
 			gui.ColorEdit3("rgb", _v)
 			
-			arg.rgb[1] = _v[0]*255
-			arg.rgb[2] = _v[1]*255
-			arg.rgb[3] = _v[2]*255
+			arg.rgb[1] = _v[0]
+			arg.rgb[2] = _v[1]
+			arg.rgb[3] = _v[2]
 		elseif #arg.rgb == 4 then
 			local _v = _float({arg.rgb[1], arg.rgb[2], arg.rgb[3], arg.rgb[4]})
 			gui.ColorEdit4("rgb", _v)
 			
-			arg.rgb[1] = _v[0]*255
-			arg.rgb[2] = _v[1]*255
-			arg.rgb[3] = _v[2]*255
-			arg.rgb[4] = _v[3]*100
+			arg.rgb[1] = _v[0]
+			arg.rgb[2] = _v[1]
+			arg.rgb[3] = _v[2]
+			arg.rgb[4] = _v[3]
 		end
 	end
 	
@@ -392,7 +403,7 @@ function imgui.table_fancy_edit(arg)
 end
 end--#endregion
 
-local stepframe = false; local advance_frame = false; local old_frame
+local stepframe, advance_frame = false, false; local old_frame
 
 local instance_selected, object_selected, asset_selected, sprite_selected, model_selected
 
@@ -554,7 +565,6 @@ function imgui.window.menubar()
 		
 		------------------------------------------------ scenes menu
 		if gui.BeginMenu("Scenes") then
-			
 			local list = files.listdir("scenes")
 			for i=1, #list do
 				local name = string.remove(list[i], "scenes/", ".lua")
@@ -586,18 +596,23 @@ function imgui.window.menubar()
 		end
 		
 		------------------------------------------------ right corner fps and dt
-		gui.SameLine(windowwidth-120)
-		gui.Text(string.format("%d FPS %02.2fms", love.timer.getFPS(), 1000*love.timer.getAverageDelta()))
-		if gui.BeginItemTooltip() then
-			gui.Text(string.format("%02.2f FPS %02.2fms", 1/love.timer.getDelta(), 1000*love.timer.getDelta()))
-			gui.Text("v"..onee.version)
-			local date = os.date("*t")
-			gui.Text(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
+		if rightalign("fps") then
+			gui.TextColored(gui.ImVec4_Float(0.5,0.5,0.5,1), "v"..onee.version)
+			gui.SameLine()
+			gui.Text(string.format("%d FPS %02.2fms", love.timer.getFPS(), 1000*love.timer.getAverageDelta()))
+			if gui.BeginItemTooltip() then
+				gui.Text(string.format("%02.2f FPS %02.2fms", 1/love.timer.getDelta(), 1000*love.timer.getDelta()))
+				--gui.Text("v"..onee.version)
+				local date = os.date("*t")
+				gui.Text(string.format("%d-%02d-%02d %02d:%02d:%02d", date.year, date.month, date.day, date.hour, date.min, date.sec))
+				
+				gui.Text(string.format("internet time @%d", date.beats))
+				gui.ProgressBar(date.beats - math.floor(date.beats), gui.ImVec2_Float(128,1),"")
+				
+				gui.EndTooltip()
+			end
 			
-			gui.Text(string.format("internet time @%d", date.beats))
-			gui.ProgressBar(date.beats - math.floor(date.beats), gui.ImVec2_Float(128,1),"")
-			
-			gui.EndTooltip()
+			rightalign_end()
 		end
 		
 		gui.EndMainMenuBar()
@@ -725,7 +740,7 @@ function imgui.window.main()
 		-- reset scene button
 		gui.SameLine()
 		if gui.Button("Reset scene") then
-			scene.set(scenes[1].name)
+			scene.set(scenes[1].path)
 		end
 		-- to init scene
 		gui.SameLine()
@@ -801,6 +816,7 @@ function imgui.window.main()
 				gui.EndCombo()
 			end
 			
+			gui.Separator()
 			local _v = _int({onee.width, onee.height})
 			gui.SetNextItemWidth(128+64)
 			if gui.DragInt2("canvas width & height", _v) then
@@ -1157,10 +1173,12 @@ function imgui.window.main()
 		
 		------------------------------------------------ GLOBAL VARIABLES
 		imgui.table(_G, "Global variables")
-		
 		imgui.table(debug.getregistry(), "debug.getregistry()")
 		
-		imgui.table(onee.persist, "i'm too lazy, fonts", {fancy=true,imagescale=1})
+		gui.SeparatorText("curse of the eternal placeholders")
+		imgui.table(scenes, "scene stack")
+		imgui.table(scenes, "scene stack 2!!", {fancy=true,imagescale=1})
+		imgui.table(onee.persist, "persist scene", {fancy=true,imagescale=1})
 		
 		gui.End()
 	end
@@ -1520,10 +1538,9 @@ function imgui.window.docs()
 		
 		gui.Separator()
 		if file_current and gui.BeginChild_Str("docs") then
-			
 			for k,v in kpairs(docs[file_current]) do
-				
 				local current = v.tags
+				
 				if current["function"] then
 					local func = current["function"][1]
 					local params = current["param"]
@@ -1578,6 +1595,7 @@ function imgui.window.docs()
 						
 						gui.Separator()
 					end
+				
 				elseif current["raw"] then
 					local text = current["raw"]
 					
@@ -1601,7 +1619,7 @@ end
 ---------------------------------------------------------------- PROFILER
 
 local report, report_raw, deep_report = {}, {}, {}
-local frame, root = 1
+local frame = 1; local root
 local sorting, sortkey, sortdescending = "Time", "timer", true
 
 function imgui.window.profiler()
@@ -1610,6 +1628,7 @@ function imgui.window.profiler()
 	if gui.Begin("Profiler", open) then
 		if gui.BeginTabBar("", gui.love.TabBarFlags("Reorderable")) then
 			
+			------------------------------------------------ graph
 			local flags = debug_profiler and gui.love.TabItemFlags("UnsavedDocument") or nil
 			if gui.BeginTabItem("Graph", nil, flags) then
 				local text = debug_profiler and "Stop" or "Record"
@@ -1768,6 +1787,7 @@ function imgui.window.profiler()
 				gui.EndTabItem()
 			end
 			
+			------------------------------------------------ tracing
 			local flags = debug_profiler_deep and gui.love.TabItemFlags("UnsavedDocument") or nil
 			if gui.BeginTabItem("Trace", nil, flags) then
 				local text = debug_profiler_deep and "Stop" or "Record"

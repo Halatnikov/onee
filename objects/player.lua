@@ -34,7 +34,7 @@ function object.init(self, scene)
 	player.y = 200
 	
 	local skin = "1u_scruffy"
-	asset.sprite(skin, scene)
+	asset.sprite("characters/"..skin, scene)
 	self.sprite = sprite.init(self.sprite, scene, skin)
 	self.sprite.z = 1
 	

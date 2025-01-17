@@ -36,12 +36,13 @@
                  "y":104
                 }, 
                 {
+                 "gid":1,
                  "height":32,
                  "id":20,
                  "template":"..\/_tiled\/objects\/yorb.tj",
                  "width":32,
-                 "x":72,
-                 "y":200
+                 "x":64,
+                 "y":208
                 }, 
                 {
                  "id":22,
@@ -70,6 +71,7 @@
                 {
                  "id":25,
                  "template":"..\/_tiled\/objects\/yorb.tj",
+                 "visible":true,
                  "x":216,
                  "y":216
                 }],
@@ -89,7 +91,7 @@
          "value":"TEST"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.11.0",
+ "tiledversion":"2025.01.11",
  "tileheight":32,
  "tilesets":[
         {

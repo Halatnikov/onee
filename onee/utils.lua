@@ -11,12 +11,12 @@ function math.bool(arg)
 	return arg == true and 1 or 0
 end
 
-function math.is_int(arg)
-	return math.floor(arg) == arg and true or false
+function math.isint(arg)
+	return math.floor(arg) == arg
 end
 
-function math.is_float(arg)
-	return not math.is_int(arg)
+function math.isfloat(arg)
+	return not math.isint(arg)
 end
 
 function math.sign(arg)
@@ -149,7 +149,7 @@ function string.random(length)
 	return table.concat(t)
 end
 
--- TODO: use sha-384 for other stuff preferably
+-- TODO: use sha-384 for other stuff preferably, also make it ascii letters
 function string.md5(arg) -- alias
 	return love.data.hash("md5", tostring(arg))
 end
@@ -218,12 +218,6 @@ function table.compare(a, b)
 	return recursive(a, b)
 end
 
-function table.length(arg)
-	local i = 0
-	for k,v in pairs(arg) do i = i + 1 end
-	return i
-end
-
 function table.append(a, b)
 	a, b = a or {}, b or {}
 	if getmetatable(b) then setmetatable(a, getmetatable(b)) end
@@ -236,6 +230,12 @@ function table.append(a, b)
 		end
 	end
 	return a
+end
+
+function table.length(arg)
+	local i = 0
+	for k,v in pairs(arg) do i = i + 1 end
+	return i
 end
 
 function table.find(arg, result, result2)
@@ -255,7 +255,7 @@ end
 function table.fill(v, min, max)
 	if not max then min, max = 1, min end
 	local t = {}
-	for i = min, max do table.insert(t, type(v) == "function" and v() or v) end
+	for i = min, max do table.insert(t, type(v) == "function" and v(i) or v) end
 	return t
 end
 
@@ -353,6 +353,7 @@ function kpairs(arg, v)
 		return keys[i] == nil and nil or keys[i], arg[keys[i]]
 	end
 end
+
 function vpairs(arg) return kpairs(arg, true) end -- alias
 
 function ripairs(arg)

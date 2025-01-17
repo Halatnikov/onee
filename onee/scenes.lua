@@ -43,7 +43,7 @@ Scene = class({
 
 --! SWITCH CURRENT SCENE
 function scene.set(path, data, name)
-	for k,scene in ipairs(scenes) do scene:remove() end
+	for k,scene in ipairs(scenes) do scene:remove(); scenes[k] = nil end
 	collectgarbage()
 	log("recreated scene stack")
 	

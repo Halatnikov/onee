@@ -22,7 +22,10 @@ function love.errorhandler(msg)
 	end
 
 	-- Reset state.
-	if love.audio then love.audio.stop() end
+	if love.audio then
+		love.audio.setVolume(0)
+		love.audio.stop()
+	end
 	if love.mouse then
 		love.mouse.setVisible(true)
 		love.mouse.setGrabbed(false)

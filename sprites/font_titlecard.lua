@@ -10,6 +10,7 @@ sprite.font = {
 		{chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", y = 0},
 		{chars = "0123456789!?,: ", y = 33, width = 268},
 	},
+	fallback = "font_controls",
 	
 }
 

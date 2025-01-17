@@ -2,7 +2,7 @@ local object = {}
 
 function object.init(self, scene)
 	
-	asset.sprite("earless", scene)
+	asset.sprite("characters/earless", scene)
 	asset.sprite("example_tiled", scene)
 	asset.sprite("greyguy", scene)
 	asset.sprite("example_9slice", scene)

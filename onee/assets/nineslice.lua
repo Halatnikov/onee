@@ -102,14 +102,14 @@ function nineslice.add(name, anim, frame, image, animdef, framedef, export)
 	slices = nil -- clear from memory
 	collectgarbage()
 	
+	if ninedef.top ~= TILE.STRETCH then
+		images[2]:setWrap(ninedef.top, ninedef.top)
+	end
 	if ninedef.left ~= TILE.STRETCH then
 		images[4]:setWrap(ninedef.left, ninedef.left)
 	end
 	if ninedef.right ~= TILE.STRETCH then
 		images[6]:setWrap(ninedef.right, ninedef.right)
-	end
-	if ninedef.top ~= TILE.STRETCH then
-		images[2]:setWrap(ninedef.top, ninedef.top)
 	end
 	if ninedef.bottom ~= TILE.STRETCH then
 		images[8]:setWrap(ninedef.bottom, ninedef.bottom)

@@ -125,14 +125,12 @@ function debug.draw()
 			for k, v in pairs(arg) do
 				-- skip 3d models and yui, they cause a stack overflow
 				-- TODO: maybe handle recursive references? serpent
-				if type(v) == "table" and
-				(v.yui ~= true) and
-				(v.model ~= true and k ~= "models" and k ~= "assets") then
+				if type(v) == "table" then
 					if debug_draw_collisions and v.collision == true then
 						queue.add(debug.drawlist, 1, function()
 							collision.debug_draw(v)
 						end)
-					else
+					elseif getmetatable(v) == nil then
 						draw_recursively(v)
 					end
 				end
@@ -157,6 +155,25 @@ qqueue = {}
 function debug.draw_post()
 	if not debug_mode then return end
 	
+	local i = 0
+	for k, v in ripairs(qqueue) do
+		i = i + 1
+		v.timestamp = v.timestamp or 0
+		local padding = 4
+		local y = windowheight - ((onee.font:getHeight() + padding*2.5) * i)
+		
+		local w, h = onee.font:getWidth(v.text[2]) + padding*2, onee.font:getHeight() + padding*2
+		love.graphics.setColor(0.15,0.15,0.15, 0.66)
+		love.graphics.rectangle("fill", padding, y - padding, w, h, 6)
+		love.graphics.setColor(1,1,1, 0.25)
+		love.graphics.rectangle("line", padding, y - padding, w, h, 6)
+		love.graphics.reset()
+		love.graphics.print(v.text, padding*2, y)
+		
+		if love.timer.getTime() - v.timestamp > 4 then table.remove(qqueue, k) end
+	end
+	if #qqueue > 24 then table.remove(qqueue, 1) end
+	
 	imgui.draw()
 	
 	if mobile then
@@ -176,7 +193,7 @@ function debug.draw_post()
 		["TRACING"] = debug_profiler_deep,
 	}
 	local i = -1
-	love.graphics.setColor(hsl(math.loop(0, 1, 4), 1, 0.5))
+	love.graphics.setColor(hsl(math.loop(0, 1, 7), 1, 0.5))
 	for k, v in kpairs(labels) do
 		if v then
 			i = i + 1
@@ -184,25 +201,6 @@ function debug.draw_post()
 		end
 	end
 	love.graphics.reset()
-	
-	local i = 0
-	for k, v in ripairs(qqueue) do
-		i = i + 1
-		v.timestamp = v.timestamp or 0
-		local padding = 4
-		local y = windowheight - ((onee.font:getHeight() + padding*2.5) * i)
-		
-		local w, h = onee.font:getWidth(v.text[2]) + padding*2, onee.font:getHeight() + padding*2
-		love.graphics.setColor(0.15,0.15,0.15, 0.66)
-		love.graphics.rectangle("fill", padding, y - padding, w, h, 6)
-		love.graphics.setColor(1,1,1, 0.25)
-		love.graphics.rectangle("line", padding, y - padding, w, h, 6)
-		love.graphics.reset()
-		love.graphics.print(v.text, padding*2, y)
-		
-		if love.timer.getTime() - v.timestamp > 4 then table.remove(qqueue, k) end
-	end
-	if #qqueue > 24 then table.remove(qqueue, 1) end
 	
 	--local angle = (angle or 0) + 0.15
 	--b = poly.move(a, angle, angle, ox, oy)

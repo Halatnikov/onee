@@ -80,13 +80,17 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 	
 	-- single image, no spritedef
 	if not sprite and not files.exists("sprites/"..path..".lua") and files.exists("sprites/"..path..".png") then
-		sprite = {animations = {idle = {filename = path}}}
+		sprite = {filename = path}
 	end
 	
 	sprite = sprite or dofile("sprites/"..path) -- init
 	assert(not (sprite.font) or (sprite.font and sprite.font.verified), "asset.sprite() | attempted to load font in \""..name.."\" as a regular sprite")
 	scene.assets[name] = {}
 	sprite.cached_images = {}
+	
+	if not sprite.animations or (sprite.animations and table.length(sprite.animations) == 0) then
+		sprite.animations = {idle = {}}
+	end
 	
 	-- first pass
 	for anim, animdef in pairs(sprite.animations) do
@@ -211,6 +215,9 @@ function asset.sprite(path, scene, sprite) -- string, table, table=
 			framedef.x = framedef.x or animdef.x or 0
 			framedef.y = framedef.y or animdef.y or 0
 			
+			-- offsets as anchors, 0.5 meaning in the center
+			if math.isfloat(framedef.x) and math.between(0, framedef.x, 1) then framedef.x = framedef.width / framedef.x end
+			if math.isfloat(framedef.y) and math.between(0, framedef.y, 1) then framedef.y = framedef.height / framedef.y end
 		end
 		
 		-- add missing animation variables
@@ -290,9 +297,6 @@ function sprite.update(sprite, scene)
 	local animdef = spritedef.animations[sprite.animation]
 	assert(animdef, "sprite.update() | no such animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	
-	-- update animations
-	sprite.timer = sprite.timer + dt
-	
 	-- animation was changed from outside
 	if sprite.animation ~= sprite.animation_old then
 		sprite.speed = nil
@@ -300,11 +304,11 @@ function sprite.update(sprite, scene)
 		sprite.seq = "seq_start"
 		sprite.seq_index = 1
 		sprite.loops = 0
-	
+
 		sprite.animation_old = sprite.animation
 		sprite.frame = animdef[sprite.seq][sprite.seq_index]
 	end
-	
+
 	-- frame was changed from outside
 	if sprite.frame ~= animdef[sprite.seq][sprite.seq_index] then
 		sprite.timer = 0
@@ -312,36 +316,41 @@ function sprite.update(sprite, scene)
 		sprite.seq_index = table.find(animdef[sprite.seq], sprite.frame)
 	end
 	
-	local speed = sprite.speed or animdef.speed or 0 -- overwrite speed
-	
 	local framedef = animdef.frames[sprite.frame]
 	assert(framedef, "sprite.update() | no such frame "..sprite.frame.." of animation \""..sprite.animation.."\" in \""..sprite.name.."\"")
 	
-	-- advance frame
-	if sprite.timer > 1 / (speed / framedef.length) then
-		sprite.timer = 0
-		sprite.frame_end(sprite.frame, sprite.seq_index) -- callback
+	if #animdef.frames > 1 then
+		-- update animations
+		sprite.timer = sprite.timer + dt
 		
-		sprite.seq_index = sprite.seq_index + 1
-		if sprite.seq_index > #animdef[sprite.seq] then -- animation reached end
-			sprite.anim_end(sprite.animation) -- callback
+		local speed = sprite.speed or animdef.speed or 0 -- overwrite speed
+		
+		-- advance frame
+		if sprite.timer > 1 / (speed / framedef.length) then
+			sprite.timer = 0
+			sprite.frame_end(sprite.frame, sprite.seq_index) -- callback
 			
-			-- loop
-			if not (animdef.loops == false) or (animdef.loops and sprite.loops < animdef.loops) then
-				sprite.loops = sprite.loops + 1
+			sprite.seq_index = sprite.seq_index + 1
+			if sprite.seq_index > #animdef[sprite.seq] then -- animation reached end
+				sprite.anim_end(sprite.animation) -- callback
 				
-				sprite.seq = "seq"
-				sprite.seq_index = 1
+				-- loop
+				if not (animdef.loops == false) or (animdef.loops and sprite.loops < animdef.loops) then
+					sprite.loops = sprite.loops + 1
+					
+					sprite.seq = "seq"
+					sprite.seq_index = 1
+				end
+				
+				-- stop
+				if (animdef.loops == false) or (animdef.loops and sprite.loops > animdef.loops) then
+					sprite.seq_index = #animdef[sprite.seq]
+				end
 			end
 			
-			-- stop
-			if (animdef.loops == false) or (animdef.loops and sprite.loops > animdef.loops) then
-				sprite.seq_index = #animdef[sprite.seq]
-			end
+			sprite.frame = animdef[sprite.seq][sprite.seq_index]
+			
 		end
-		
-		sprite.frame = animdef[sprite.seq][sprite.seq_index]
-		
 	end
 	
 	-- update nine-slice canvas size
@@ -773,7 +782,7 @@ do--#region SPRITEFONTS
 
 --! LOAD NEW SPRITEFONT ASSET
 -- an extension of sprite
-function asset.spritefont(path, data)
+function asset.spritefont(path)
 	local name = string.tokenize(path, "/", -1)
 	if onee.persist.assets[name] then return end -- already loaded
 	
@@ -794,6 +803,7 @@ function asset.spritefont(path, data)
 	fontdef.spacing = fontdef.spacing or 0
 	fontdef.linespacing = fontdef.linespacing or 0
 	assert(fontdef.baseheight, "asset.spritefont() | no baseheight specified") --todo
+	if fontdef.fallback and type(fontdef.fallback) == "string" then fontdef.fallback = {fontdef.fallback} end
 	
 	-- static character rows helper
 	if fontdef.rows then
@@ -847,8 +857,6 @@ function asset.spritefont(path, data)
 			
 		end
 	end
-	
-	table.append(sprite.font, data)
 	
 	log(string.format("font '%s' took %.4f (now %.2fMB)", path, (love.timer.getTime() - time_start), love.graphics.getStats().texturememory/1024/1024))
 	
@@ -932,7 +940,7 @@ function text.print(arg, font, x, y, r, sx, sy, ox, oy, kx, ky, limit, alignh, a
 		if onee.persist.assets[font][char] then -- main font takes priority
 			curfont = font
 		else
-			for k, font in pairs(fontdef.fallbacks) do -- look in other fonts
+			for k, font in pairs(fontdef.fallback) do -- look in fallback fonts
 				if onee.persist.assets[font] and onee.persist.assets[font][char] then 
 					curfont = font
 					break
