@@ -1,5 +1,5 @@
 ---------------------------------------------------------------- MATH
--- TODO: lerp (and pingpong), smoothstep, decay, closest to ^2, construct 2, vector 2?
+-- TODO: lerp (and pingpong), smoothstep, decay, closest to ^2, construct 2, vector2?
 -- angle from x1 y1 to x2 y2
 
 pi = math.pi

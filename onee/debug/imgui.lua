@@ -6,8 +6,10 @@ imgui = {
 -- init
 local gui
 if onee.libtype and debug_mode then
-	if not files.exists("libs/cimgui."..onee.libtype) then
-		local lib = love.filesystem.read("onee/debug/libs/cimgui-love/cimgui."..onee.libtype)
+	local lib = love.filesystem.read("onee/debug/libs/cimgui-love/cimgui."..onee.libtype)
+	local exists = files.exists("libs/cimgui."..onee.libtype)
+	local same = lib == love.filesystem.read("libs/cimgui."..onee.libtype)
+	if not exists or not same then
 		love.filesystem.write("libs/cimgui."..onee.libtype, lib)
 	end
 	
@@ -27,6 +29,12 @@ function imgui.update()
 	
 	gui.love.Update(dt)
     gui.NewFrame()
+	
+	if gui.love.GetWantCaptureMouse() then
+		input.ignore = true
+	elseif input.ignore == true then
+		input.ignore = false
+	end
 end
 
 function imgui.draw()
